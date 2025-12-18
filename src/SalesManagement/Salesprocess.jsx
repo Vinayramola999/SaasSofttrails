@@ -57,7 +57,7 @@ const Salesprocess = () => {
       const fetchUserData = async () => {
         try {
           const response = await axios.get(
-            `http://13.204.15.86:3002/users/id_user/${userId}`,
+            `https://devapi.softtrails.net/saas/test/users/id_user/${userId}`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -89,11 +89,10 @@ const Salesprocess = () => {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-5 py-2 text-sm font-medium transition-colors duration-200 ${
-                activeTab === tab.id
+              className={`px-5 py-2 text-sm font-medium transition-colors duration-200 ${activeTab === tab.id
                   ? "bg-gradient-to-r from-blue-600 to-blue-900 text-white rounded-full shadow-md"
                   : "text-gray-700 hover:text-gray-900"
-              }`}
+                }`}
             >
               {tab.label}
             </button>

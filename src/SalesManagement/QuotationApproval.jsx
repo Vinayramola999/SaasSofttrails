@@ -187,6 +187,7 @@ const QuotationApproval = () => {
   useEffect(() => {
     const fetchQuotations = async () => {
       try {
+        setLoading(true);
         const token = sessionStorage.getItem("token");
         const response = await axios.get(
           `${baseUrl}/salesmanagement/quotation/allquotation`,
@@ -227,7 +228,17 @@ const QuotationApproval = () => {
       );
       if (res.data.success) {
         toast.success(`Quotation ${newStatus} successfully!`);
-        // setSelectedQuotation(null);
+        // Refresh list after status change
+        try {
+          // call fetchQuotations defined in useEffect scope
+          await (async () => {
+            const token2 = sessionStorage.getItem("token");
+            const resp = await axios.get(`${baseUrl}/salesmanagement/quotation/allquotation`, { headers: { Authorization: `Bearer ${token2}` } });
+            setData(resp.data?.data || []);
+          })();
+        } catch (e) {
+          console.warn('Failed to refresh quotations after status update', e);
+        }
       } else {
         toast.error("Something went wrong!");
       }

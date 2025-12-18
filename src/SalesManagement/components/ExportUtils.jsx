@@ -30,7 +30,7 @@ export const exportToExcel = (data, headers, rowMapper, filename = "export.csv")
 
     // Build CSV string
     const csvString = [headers, ...csvContent]
-      .map((row) => row.map(cell => `"${cell}"`).join(","))
+      .map((row) => row.map(cell => '"' + cell + '"').join(","))
       .join("\n");
 
     // Create blob and download

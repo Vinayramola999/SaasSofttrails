@@ -50,20 +50,21 @@ export default function QuotationListWithPreview() {
     }
   };
 
+  // Fetch all quotations (exposed so other components can trigger a refresh)
+  const fetchQuotations = async () => {
+    try {
+      const token = sessionStorage.getItem("token");
+      const response = await axios.get(
+        `${baseUrl}/salesmanagement/quotation/allquotation`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setAllQuotations(response.data?.data || []);
+    } catch (error) {
+      console.error("Error fetching quotations:", error);
+    }
+  };
+
   useEffect(() => {
-    const fetchQuotations = async () => {
-      try {
-        const token = sessionStorage.getItem("token");
-        const response = await axios.get(
-          `${baseUrl}/salesmanagement/quotation/allquotation`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setAllQuotations(response.data?.data || []);
-      } catch (error) {
-        console.error("Error fetching quotations:", error);
-      }
-    };
-    fetchQuotations();
     fetchQuotations();
   }, []);
 
@@ -479,6 +480,7 @@ export default function QuotationListWithPreview() {
               setNegotiationQuotation(null);
             }}
             quotationData={negotiationQuotation}
+            onSuccess={() => fetchQuotations()}
           />
         )}
 

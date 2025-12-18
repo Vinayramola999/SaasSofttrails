@@ -5,8 +5,10 @@ import { useLocation } from "react-router-dom";
 import * as XLSX from "xlsx";
 
 const baseUrl = process.env.REACT_APP_URL_sales || '';
+const baseUrld = process.env.REACT_APP_URL_dms || '';
 const baseUrlp = process.env.REACT_APP_URL_purchase || '';
 const baseUrlw = process.env.REACT_APP_URL_workflow || '';
+
 // const baseUrl = process.env.REACT_APP_URL || "${baseUrlp}";
 
 
@@ -250,7 +252,7 @@ export default function RequirementDocumentForm() {
     const token = sessionStorage.getItem("token");
     const fetchServiceOptions = async () => {
       try {
-        const response = await fetch(`${baseUrlp}/service`, {
+        const response = await fetch(`${baseUrld}/service`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (response.ok) {
@@ -264,7 +266,7 @@ export default function RequirementDocumentForm() {
 
     const fetchMap = async () => {
       try {
-        const response = await fetch(`${baseUrlp}/mapping`, {
+        const response = await fetch(`${baseUrld}/mapping`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (response.ok) {

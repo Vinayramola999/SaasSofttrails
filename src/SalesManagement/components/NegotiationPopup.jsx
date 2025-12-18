@@ -5,7 +5,7 @@ import CenteredModal from './CenteredModal';
 
 const baseUrl = process.env.REACT_APP_URL_sales || '';
 
-const NegotiationPopup = ({ isOpen, onClose, quotationData }) => {
+const NegotiationPopup = ({ isOpen, onClose, quotationData, onSuccess }) => {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
@@ -93,6 +93,13 @@ const NegotiationPopup = ({ isOpen, onClose, quotationData }) => {
 
       if (response.data?.success) {
         setShowSuccess(true);
+        if (typeof onSuccess === 'function') {
+          try {
+            onSuccess();
+          } catch (e) {
+            console.warn('onSuccess callback error:', e);
+          }
+        }
       } else {
         alert('Error: ' + (response.data?.message || 'Failed to submit negotiation'));
       }

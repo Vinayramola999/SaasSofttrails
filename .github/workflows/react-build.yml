@@ -13,28 +13,25 @@ jobs:
       CI: false
 
     steps:
-      # 1️⃣ Checkout code
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2️⃣ Setup Node (CRA + React 18 safe)
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: "npm"
 
-      # 3️⃣ Install dependencies (important for your deps)
       - name: Install dependencies
-        run: npm install --legacy-peer-deps
+        run: npm ci
 
-      # 4️⃣ Build React app
       - name: Build project
         run: npm run build
 
-      # 5️⃣ Upload build artifact
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: react-build
           path: build
+          compression-level: 0
+ 

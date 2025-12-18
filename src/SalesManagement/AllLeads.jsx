@@ -16,6 +16,8 @@ import "./components/Modal.css";
 // Base URL for sales APIs (can be overridden with REACT_APP_URL_sales)
 // Default to empty string so requests become relative (e.g. /salesmanagement/...)
 const baseUrl = process.env.REACT_APP_URL_sales || '';
+const baseUrlc = process.env.REACT_APP_URL_crm || ''; 
+const baseUrlu = process.env.REACT_APP_URL_users || ''; 
 
 /* eslint-disable no-unused-vars */
 
@@ -88,7 +90,7 @@ export default function QueryAndLeads() {
 
       try {
         console.log("Token ➕", token);
-        const response = await axios.get("${baseUrlp}/customers/", {
+        const response = await axios.get(`${baseUrlc}/customers/`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -128,7 +130,7 @@ export default function QueryAndLeads() {
       if (!token) return;
 
       try {
-        const res = await axios.get("${baseUrlp}/users/getusers", {
+        const res = await axios.get(`${baseUrlu}/users/getusers`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

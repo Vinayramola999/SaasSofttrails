@@ -9,8 +9,10 @@ import ShareQuotationPopup from './components/ShareQuotationPopup';
 import CenteredModal from './components/CenteredModal';
 import { showCustomAlert } from "./components/CustomAlert";
 
+
 export default function FullQuotationForm() {
   const baseUrl = process.env.REACT_APP_URL_sales || '';
+  const baseUrld = process.env.REACT_APP_URL_dms || '';
   const [selectedRfpId, setSelectedRfpId] = useState("");
   const [showSharePopup, setShowSharePopup] = useState(false);
   const [quotationToShare, setQuotationToShare] = useState(null);
@@ -203,7 +205,7 @@ export default function FullQuotationForm() {
 
       const token = sessionStorage.getItem("token");
       const response = await axios.post(
-        "https://devapi.softtrails.net/saas/dms/test/dmsapi/upload-documents",
+        `${baseUrld}/dmsapi/upload-documents`,
         formData,
         {
           headers: {
@@ -371,7 +373,7 @@ export default function FullQuotationForm() {
         formData.append("metadata", JSON.stringify(metadataArr));
         const token = sessionStorage.getItem("token");
         const dmsRes = await axios.post(
-          "https://devapi.softtrails.net/saas/dms/test/dmsapi/upload-documents",
+          `${baseUrld}/dmsapi/upload-documents`,
           formData,
           {
             headers: {
@@ -454,9 +456,11 @@ export default function FullQuotationForm() {
       })),
     };
 
+    const token = sessionStorage.getItem("token");
     const response = await axios.post(
       `${baseUrl}/salesmanagement/quotation/quotation-created`,
-      quotationData
+      quotationData,
+      { headers: { Authorization: token ? `Bearer ${token}` : undefined, "Content-Type": "application/json" } }
     );
 
     if (response.data?.success) {
@@ -537,8 +541,10 @@ const handleRfpChange = async (e) => {
     // Generate a new quotation number
     const newQuotationNumber = generateQuotationNumber();
     setQuotationNo(newQuotationNumber);
+    const token = sessionStorage.getItem("token");
     const res = await axios.get(
-      `${baseUrl}/salesmanagement/indent/get-allindent/${selectedRfp}`
+      `${baseUrl}/salesmanagement/indent/get-allindent/${selectedRfp}`,
+      { headers: { Authorization: token ? `Bearer ${token}` : undefined } }
     );
 
     if (res.data && res.data.data && res.data.data.length > 0) {
@@ -609,7 +615,7 @@ const handleRfpChange = async (e) => {
 
   const getDmsPublishId = async () => {
     const service_name = "Sales Management";
-    const url = "https://devapi.softtrails.net/saas/dms/test/mapping/check";
+    const url = `${baseUrld}/mapping/check`;
     const token = sessionStorage.getItem("token");
     // First: Product Quotation
     try {
