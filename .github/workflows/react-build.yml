@@ -1,9 +1,6 @@
-name: React Production Build
+name: React Production Build (CRA)
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
@@ -11,30 +8,31 @@ jobs:
     name: Build React App
     runs-on: ubuntu-latest
 
+    env:
+      GENERATE_SOURCEMAP: false
+
     steps:
-      # 1️⃣ Repo checkout
+      # 1️⃣ Checkout code
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2️⃣ Node setup
+      # 2️⃣ Setup Node (CRA + React 18 safe)
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: "npm"
 
-      # 3️⃣ Install dependencies
+      # 3️⃣ Install dependencies (important for your deps)
       - name: Install dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps
 
-      # 4️⃣ Build (source map OFF to save memory)
+      # 4️⃣ Build React app
       - name: Build project
-        env:
-          GENERATE_SOURCEMAP: false
         run: npm run build
 
-      # 5️⃣ Upload build artifact (optional but recommended)
-      - name: Upload build folder
+      # 5️⃣ Upload build artifact
+      - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: react-build
