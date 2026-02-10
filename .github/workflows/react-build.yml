@@ -11,6 +11,7 @@ jobs:
     env:
       GENERATE_SOURCEMAP: false
       CI: false
+      NODE_OPTIONS: --max_old_space_size=6144   # 🔥 MAIN FIX
 
     steps:
       - name: Checkout repository
@@ -34,4 +35,3 @@ jobs:
           name: react-build
           path: build
           compression-level: 0
- 
