@@ -9,7 +9,7 @@
 //     const fetchEmails = async () => {
 //       try {
 //         const response = await axios.get(
-//           "https://devapi.softtrails.net/saas/test/users/email_users",
+//           "https://devdemo.softtrails.net/users/email_users",
 //           {
 //             headers: {
 //               Authorization: `Bearer ${sessionStorage.getItem("token")}`,
@@ -34,8 +34,6 @@
 // };
 // export default useFetchEmails;
 
-
-
 ///////////////////////////////////
 import { useState, useEffect } from "react";
 import axios from "axios";
@@ -48,7 +46,7 @@ const useFetchEmails = () => {
     const fetchEmails = async () => {
       try {
         const response = await axios.get(
-          "https://devapi.softtrails.net/saas/test/users/getusers",
+          "https://devdemo.softtrails.net/users/getusers",
           {
             headers: {
               Authorization: `Bearer ${sessionStorage.getItem("token")}`,

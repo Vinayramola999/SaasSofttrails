@@ -3,6 +3,7 @@ import { FaUser } from "react-icons/fa";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import Swal from 'sweetalert2';
+import {MAIN_API_BASE } from "../../config/apiBase";
 
 function EmployeeRow({ employee, isAlternate }) {
   // Define a conditional class name for alternating row styles
@@ -32,15 +33,13 @@ function EmployeeRow({ employee, isAlternate }) {
       });
   
       if (result.isConfirmed) {
-        // Proceed with API call if confirmed
         try {
-          const response = await axios.put("https://devapi.softtrails.net/hrms/test/users/user/update", {
+          const response = await axios.put(`${MAIN_API_BASE}/users/user/update`, {
             user_id: employee.user_id,
             user_status: newStatus,
           });
-  
           if (response.status === 200) {
-            setStatus(newStatus); // Update the local state if API call succeeds
+            setStatus(newStatus); 
             Swal.fire({
               icon: "success",
               title: "Status Updated",

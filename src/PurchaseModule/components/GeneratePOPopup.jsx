@@ -6,6 +6,8 @@ import TermsConditionsForm from "./TermsConditionsForm;";
 import generatePurchaseOrderPDF from "./Generate";
 import generatePOPDF from "./GeneratePOPDF";
 import PopupModal from "../PopupModal";
+import Select from "react-select";
+
 const GeneratePOPopup = ({ open, fetchPOs, onClose }) => {
   const [form, setForm] = useState({
     quotationId: "",
@@ -50,9 +52,12 @@ const GeneratePOPopup = ({ open, fetchPOs, onClose }) => {
 
   const fetchQuotations = async () => {
     try {
-      const res = await axios.get(`${API.PURCHASE_API}/supplier_quotation/Allquotations`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(
+        `${API.PURCHASE_API}/supplier_quotation/Allquotations`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       if (res.data && Array.isArray(res.data.data)) {
         setQuotations(res.data.data);
       }
@@ -64,9 +69,12 @@ const GeneratePOPopup = ({ open, fetchPOs, onClose }) => {
 
   const fetchCompanyDetails = async (quotationId) => {
     try {
-      const res = await axios.get(`${API.PURCHASE_API}/supplier_quotation/vendor_details/${quotationId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(
+        `${API.PURCHASE_API}/supplier_quotation/vendor_details/${quotationId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       const org = res.data?.data?.organization || {};
       setCompany({
         name: org.name || "",
@@ -87,54 +95,87 @@ const GeneratePOPopup = ({ open, fetchPOs, onClose }) => {
       });
     }
   };
+  const fetchVendorData = async (vendorId) => {
+    if (!vendorId) return null;
+    try {
+      const res = await axios.get(
+        `${API.PURCHASE_API}/purchase_order/vendors_data/${vendorId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return res.data?.data || null;
+    } catch (err) {
+      console.error("Error fetching vendor data:", err);
+      return null;
+    }
+  };
+
   const fetchQuotationDetails = async (id) => {
     if (!id) return;
     try {
       // Fetch main quotation details
-      const res = await axios.get(`${API.PURCHASE_API}/supplier_quotation/Allquotations/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await axios.get(
+        `${API.PURCHASE_API}/supplier_quotation/Allquotations/${id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       // Fetch vendor details (NEW API)
-      const vendorRes = await axios.get(`${API.PURCHASE_API}/supplier_quotation/vendor_details/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const vendorRes = await axios.get(
+        `${API.PURCHASE_API}/supplier_quotation/vendor_details/${id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       // Merge both API responses
-      const detail = res.data?.data || {};
+      let detail = res.data?.data || [];
       const vendorDetail = vendorRes.data?.data || {};
       await fetchCompanyDetails(id);
+      
+      // If detail is not an array, wrap it in one for consistency
+      if (!Array.isArray(detail)) {
+        detail = [detail];
+      }
+      
+      // Fetch additional vendor data from the new API if vendor_id exists (from first item)
+      let additionalVendorData = null;
+      const firstItem = detail[0] || {};
+      if (firstItem.vendor_id || vendorDetail.vendor_id) {
+        additionalVendorData = await fetchVendorData(firstItem.vendor_id || vendorDetail.vendor_id);
+      }
 
       // Store all data from both APIs
-      setVendorName(detail.vendor_name || vendorDetail.vendor_name || "");
-      setProductItems([
-        {
-          product_name: detail.asset_name,
-          unit: detail.uom,
-          quantity: detail.quantity,
-          unit_price: detail.unit_price,
-          vendor_address: vendorDetail.vendor_address || detail.vendor_address,
-          vendor_city: vendorDetail.vendor_city || detail.vendor_city,
-          vendor_phone: vendorDetail.vendor_phone || detail.vendor_phone,
-          vendor_gst: vendorDetail.vendor_gst || detail.vendor_gst,
-          description: detail.description,
-          tax: detail.tax,
-        },
-      ]);
+      setVendorName(firstItem.vendor_name || vendorDetail.vendor_name || "");
+      setProductItems(detail.map(item => ({
+        product_name: item.asset_name || item.item_name || "",
+        unit: item.uom || "",
+        quantity: item.quantity || 0,
+        unit_price: item.unit_price || "",
+        vendor_address: vendorDetail.vendor_address || item.vendor_address || "",
+        vendor_city: vendorDetail.vendor_city || item.vendor_city || "",
+        vendor_phone: vendorDetail.vendor_phone || item.vendor_phone || "",
+        vendor_gst: vendorDetail.vendor_gst || item.vendor_gst || "",
+        description: item.description || "",
+        tax: item.tax_percentage || item.tax || "",
+      })));
       setForm((prev) => ({
         ...prev,
-        quotationId: detail.quotation_id,
-        vendorName: detail.vendor_name || vendorDetail.vendor_name || "",
-        productName: detail.asset_name || "",
-        unit: detail.uom || "",
-        quantity: detail.quantity || 0,
-        unitPrice: detail.unit_price || "",
+        quotationId: firstItem.quotation_id || "",
+        vendorName: firstItem.vendor_name || vendorDetail.vendor_name || "",
+        productName: firstItem.asset_name || firstItem.item_name || "",
+        unit: firstItem.uom || "",
+        quantity: firstItem.quantity || 0,
+        unitPrice: firstItem.unit_price || "",
       }));
+      // Merge vendor data from all sources - prioritize additionalVendorData
       setSupplier({
-        name: detail.supplier_name || vendorDetail.vendor_name,
-        address: vendorDetail.vendor_address || detail.vendor_address,
-        city: vendorDetail.city || detail.city,
-        phone: vendorDetail.landline_num || detail.landline_num,
-        gst: vendorDetail.gst_number || detail.gst_number,
+        name: additionalVendorData?.vendor_name || firstItem.supplier_name || vendorDetail.vendor_name,
+        address: additionalVendorData?.vendor_address || vendorDetail.vendor_address || firstItem.vendor_address,
+        city: additionalVendorData?.vendor_city || vendorDetail.city || firstItem.city,
+        phone: additionalVendorData?.vendor_phone || vendorDetail.landline_num || firstItem.landline_num,
+        gst: additionalVendorData?.vendor_gst || additionalVendorData?.gst_number || vendorDetail.gst_number || firstItem.gst_number,
       });
     } catch (err) {
       setVendorName("");
@@ -142,58 +183,6 @@ const GeneratePOPopup = ({ open, fetchPOs, onClose }) => {
       setSearchError("Quotation details not found");
     }
   };
-
-  // const fetchQuotationDetails = async (id) => {
-  //   if (!id) return;
-  //   try {
-  //     const res = await axios.get(
-  //       `https://devapi.softtrails.net/saas/purchase/test/purchase/supplier_quotation/Allquotations/${id}`,
-  //       { headers: { Authorization: `Bearer ${token}` } }
-  //     );
-  //     if (res.data && res.data.data) {
-  //       const detail = res.data.data;
-  //       setVendorName(detail.vendor_name || "");
-  //       setProductItems([
-  //         {
-  //           product_name: detail.asset_name,
-  //           unit: detail.uom,
-  //           quantity: detail.quantity,
-  //           unit_price: detail.unit_price,
-  //           vendor_address: detail.vendor_address,
-  //           vendor_city: detail.vendor_city,
-  //           vendor_phone: detail.vendor_phone,
-  //           vendor_gst: detail.vendor_gst,
-  //           description: detail.description,
-  //           tax: detail.tax,
-  //         },
-  //       ]);
-  //       setForm((prev) => ({
-  //         ...prev,
-  //         quotationId: detail.quotation_id,
-  //         vendorName: detail.vendor_name || "",
-  //         productName: detail.asset_name || "",
-  //         unit: detail.uom || "",
-  //         quantity: detail.quantity || 0,
-  //         unitPrice: detail.unit_price || "",
-  //       }));
-  //       setSupplier({
-  //         name: detail.vendor_name,
-  //         address: detail.vendor_address,
-  //         city: detail.vendor_city,
-  //         phone: detail.vendor_phone,
-  //         gst: detail.vendor_gst,
-  //       });
-  //     } else {
-  //       setVendorName("");
-  //       setProductItems([]);
-  //       setSearchError("Quotation details not found.");
-  //     }
-  //   } catch (err) {
-  //     setVendorName("");
-  //     setProductItems([]);
-  //     setSearchError("Quotation details not found");
-  //   }
-  // };
 
   const getDmsPublishId = async (service_name, doctype, doc_name) => {
     try {
@@ -220,6 +209,13 @@ const GeneratePOPopup = ({ open, fetchPOs, onClose }) => {
         "Purchase Order"
       );
 
+      // Calculate total amount including tax
+      const totalAmount = productItems.reduce((sum, item) => {
+        const base = (item.quantity || 0) * (item.unit_price || 0);
+        const taxRate = parseFloat(item.tax) || 0;
+        return sum + base * (1 + taxRate / 100);
+      }, 0);
+
       // Prepare PO data for PDF
       const poData = {
         company,
@@ -227,22 +223,24 @@ const GeneratePOPopup = ({ open, fetchPOs, onClose }) => {
         order: {
           number: poNumber,
           date: form.deliveryDate || new Date().toLocaleDateString(),
-          totalAmount:
-            (productItems[0]?.quantity || 0) *
-            (productItems[0]?.unit_price || 0),
+          totalAmount,
           amountInWords: "", // Add conversion if needed
         },
-        items: productItems.map((item, idx) => ({
-          sr: idx + 1,
-          item: item.product_name,
-          description: item.description || "",
-          uom: item.unit,
-          unitPrice: item.unit_price,
-          qty: item.quantity,
-          tax: item.tax || "",
-          total: (item.quantity || 0) * (item.unit_price || 0),
-          totalWithTax: "", // optional
-        })),
+        items: productItems.map((item, idx) => {
+          const base = (item.quantity || 0) * (item.unit_price || 0);
+          const taxRate = parseFloat(item.tax) || 0;
+          return {
+            sr: idx + 1,
+            item: item.product_name,
+            description: item.description || "",
+            uom: item.unit,
+            unitPrice: item.unit_price,
+            qty: item.quantity,
+            tax: item.tax || "",
+            total: base,
+            totalWithTax: base * (1 + taxRate / 100),
+          };
+        }),
         terms: form.terms || [],
         returnBlob: true,
       };
@@ -290,55 +288,131 @@ const GeneratePOPopup = ({ open, fetchPOs, onClose }) => {
         po_file: fileUrl,
       };
 
-      await axios.post(`${API.PURCHASE_API}/purchase_order/createPO`, poPayload, {
-        headers: { Authorization: `Bearer ${token}` },
+      await axios.post(
+        `${API.PURCHASE_API}/purchase_order/createPO`,
+        poPayload,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+ let successMessage = "Purchase Order generated and uploaded successfully.";
+      let successType = "success";
+
+      // Try to send the PO via UCS (same approach as PurchaseProcess)
+    try {
+        // 1) Get modules to determine uniqueIdentifierName
+        const modulesRes = await axios.get(
+          `${API.API_BASE}/ucs/test/api/modules`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+        const modules = modulesRes.data;
+        const productModule = Array.isArray(modules)
+          ? modules.find((m) => m.applicationName === "Product Management")
+          : null;
+        const uniqueIdentifierName =
+          productModule?.uniqueIdentifierName || "PM-R-SR";
+
+        // 2) Determine recipient email and contact person
+        const recipientEmail =
+          supplier?.email || supplier?.email_id || company?.email || "";
+
+        const contactPerson =
+          supplier?.name || company?.name || vendorName || "Contact Person";
+
+        if (recipientEmail) {
+          const payload = {
+            uniqueIdentifierName,
+            contact_person: contactPerson,
+            email_id: recipientEmail,
+            rfp_id: quotationId || poNumber,
+            rfp_file_link: fileUrl || "",
+            email: recipientEmail,
+          };
+
+          try {
+            const sendRes = await axios.post(
+              `${API.API_BASE}/ucs/test/ucs/send`,
+              payload,
+              {
+                headers: { Authorization: `Bearer ${token}` },
+              }
+            );
+
+            if (
+              sendRes.data === "Sent Successfully" ||
+              sendRes.data?.message === "Sent Successfully" ||
+              sendRes.data?.success === true
+            ) {
+              successMessage = "Purchase Order generated, uploaded and sent successfully.";
+              successType = "success";
+            } else {
+              successMessage = "Purchase Order created successfully. Sending to vendor failed - please send manually.";
+              successType = "warning";
+            }
+          } catch (sendErr) {
+            console.error("UCS send error:", sendErr);
+            successMessage = "Purchase Order created successfully. Sending to vendor failed - please send manually.";
+            successType = "warning";
+          }
+        } else {
+          successMessage = "Purchase Order created successfully. No vendor email found to send automatically.";
+          successType = "info";
+        }
+      } catch (ucserr) {
+        console.error("Error while preparing UCS send:", ucserr);
+        successMessage = "Purchase Order created successfully.";
+        successType = "success";
+      }
+
+      // Show success modal with appropriate message
+      setModalProps({
+        type: successType,
+        title: "Success!",
+        message: successMessage,
+        onClose: () => {
+          setShowModal(false);
+          // Refresh parent table and close popup
+          if (fetchPOs) {
+            try {
+              fetchPOs();
+            } catch (e) {
+              console.warn("fetchPOs threw:", e);
+            }
+          }
+          if (onClose) onClose();
+
+          // Reset form/state
+          setForm({
+            quotationId: "",
+            vendorName: "",
+            productName: "",
+            unit: "",
+            quantity: 0,
+            unitPrice: "",
+            deliveryDate: "",
+            deliveryAddress: "",
+            terms: "",
+          });
+          setCompany({
+            name: "",
+            address: "",
+            city: "",
+            country: "",
+            gst: "",
+            pan: "",
+          });
+          setSupplier({});
+          setPoNumber("");
+          setQuotationId("");
+          setVendorName("");
+          setProductItems([]);
+          setSearchError("");
+        },
       });
 
-    // Refresh parent table and close popup immediately
-    if (fetchPOs) {
-      try {
-        await fetchPOs();
-      } catch (e) {
-        console.warn("fetchPOs threw:", e);
-      }
-    }
-    if (onClose) onClose();
-
-    // Reset form/state
-    setForm({
-      quotationId: "",
-      vendorName: "",
-      productName: "",
-      unit: "",
-      quantity: 0,
-      unitPrice: "",
-      deliveryDate: "",
-      deliveryAddress: "",
-      terms: "",
-    });
-    setCompany({
-      name: "",
-      address: "",
-      city: "",
-      country: "",
-      gst: "",
-      pan: "",
-    });
-    setSupplier({});
-    setPoNumber("");
-    setQuotationId("");
-    setVendorName("");
-    setProductItems([]);
-    setSearchError("");
-
-    // Show success modal to user (non-blocking)
-    setModalProps({
-      type: "success",
-      title: "Success!",
-      message: "Purchase Order generated and uploaded successfully.",
-      onClose: () => setShowModal(false),
-    });
-    setShowModal(true);
+      setShowModal(true);
     } catch (error) {
       alert(
         error.response?.data?.message ||
@@ -347,7 +421,7 @@ const GeneratePOPopup = ({ open, fetchPOs, onClose }) => {
           "Failed to generate Purchase Order."
       );
     }
-  };
+  }; 
 
   if (!open) return null;
 
@@ -377,21 +451,44 @@ const GeneratePOPopup = ({ open, fetchPOs, onClose }) => {
           <div className="flex gap-4 mb-6">
             <div className="flex-1">
               <label className="block mb-1 font-medium">Quotation ID</label>
-              <select
-                className="w-full border rounded-lg px-3 py-2"
-                value={quotationId}
-                onChange={(e) => {
-                  setQuotationId(e.target.value);
-                  fetchQuotationDetails(e.target.value);
+              <Select
+                options={quotations.map((q) => ({
+                  value: q.quotation_id,
+                  label: q.quotation_id,
+                }))}
+                value={
+                  quotationId
+                    ? {
+                        value: quotationId,
+                        label: quotationId,
+                      }
+                    : null
+                }
+                onChange={(option) => {
+                  setQuotationId(option?.value || "");
+                  fetchQuotationDetails(option?.value || "");
                 }}
-              >
-                <option value="">Select Quotation</option>
-                {quotations.map((q) => (
-                  <option key={q.quotation_id} value={q.quotation_id}>
-                    {q.quotation_id}
-                  </option>
-                ))}
-              </select>
+                placeholder="Select or Search Quotation"
+                isClearable
+                isSearchable
+                styles={{
+                  control: (base) => ({
+                    ...base,
+                    borderRadius: "0.5rem",
+                    border: "1px solid #d1d5db",
+                    padding: "2px",
+                  }),
+                  option: (base, state) => ({
+                    ...base,
+                    backgroundColor: state.isSelected
+                      ? "#0057FF"
+                      : state.isFocused
+                      ? "#e0e7ff"
+                      : "white",
+                    color: state.isSelected ? "white" : "black",
+                  }),
+                }}
+              />
               {searchError && (
                 <div className="text-red-500 text-sm mt-1">{searchError}</div>
               )}
@@ -498,10 +595,11 @@ const GeneratePOPopup = ({ open, fetchPOs, onClose }) => {
             <div className="font-semibold text-gray-700">Total Amount:</div>
             <div className="text-[#0057FF] text-xl font-bold">
               ₹
-              {(
-                (productItems[0]?.quantity || 0) *
-                (productItems[0]?.unit_price || 0)
-              ).toLocaleString()}
+              {productItems.reduce((sum, item) => {
+                const base = (item.quantity || 0) * (item.unit_price || 0);
+                const taxRate = parseFloat(item.tax) || 0;
+                return sum + base * (1 + taxRate / 100);
+              }, 0).toLocaleString()}
             </div>
           </div>
 
@@ -509,18 +607,18 @@ const GeneratePOPopup = ({ open, fetchPOs, onClose }) => {
           <div className="flex gap-4 mb-2">
             <button
               type="button"
-              className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg font-semibold"
+              className="flex-1 bg-green-600 text-white py-2 rounded-lg font-semibold"
               onClick={handleGeneratePO}
             >
-              Save as Draft
+              Save and Send
             </button>
-            <button
+            {/* <button
               type="submit"
               className="flex-1 bg-[#0057FF] text-white py-2 rounded-lg font-semibold"
               // You can add your send PO logic here
             >
               Send Purchase Order
-            </button>
+            </button> */}
           </div>
         </form>
       </div>

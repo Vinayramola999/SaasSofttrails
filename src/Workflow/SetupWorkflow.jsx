@@ -40,6 +40,8 @@ export default function SetupWorkflow() {
   const [availableUsers, setAvailableUsers] = useState([]);
   const [selectedWorkflowId, setSelectedWorkflowId] = useState("");
 
+  const baseUrlu = process.env.REACT_APP_URL_users || '';
+
   //for assigned users
   useEffect(() => {
     const ids = assignedUsers.map((user) => user.user_id);
@@ -51,7 +53,7 @@ export default function SetupWorkflow() {
     try {
       const token = sessionStorage.getItem("token");
       const response = await fetch(
-        `${BASE_URL}/uniworkflow/userworkflows/present-users/${workflowId}`,
+        `${BASE_URL}uniworkflow/userworkflows/present-users/${workflowId}`,
         {
           method: "GET",
           headers: {
@@ -82,7 +84,7 @@ export default function SetupWorkflow() {
       const fetchUserData = async () => {
         try {
           const response = await axios.get(
-            `https://devapi.softtrails.net/saas/test/users/id_user/${userId}`,
+            `${baseUrlu}/users/id_user/${userId}`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -115,7 +117,7 @@ export default function SetupWorkflow() {
 
       const token = sessionStorage.getItem("token");
       const response = await fetch(
-        `${BASE_URL}/uniworkflow/userworkflows/available-users/${workflowId}`,
+        `${BASE_URL}uniworkflow/userworkflows/available-users/${workflowId}`,
         {
           method: "GET",
           headers: {
@@ -150,7 +152,7 @@ export default function SetupWorkflow() {
       }
 
       const response = await axios.get(
-        `${BASE_URL}/uniworkflow/modules/with-submodules`,
+        `${BASE_URL}uniworkflow/modules/with-submodules`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -183,7 +185,7 @@ export default function SetupWorkflow() {
         return;
       }
       const response = await axios.get(
-        `${BASE_URL}/uniworkflow/workflow`,
+        `${BASE_URL}uniworkflow/workflow`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -247,7 +249,7 @@ export default function SetupWorkflow() {
     try {
       const token = sessionStorage.getItem("token");
       const response = await fetch(
-        `${BASE_URL}/uniworkflow/workflow/get-modules/module?module_name=${ModuleName}&sub_module_name=${sub_module}`,
+        `${BASE_URL}uniworkflow/workflow/get-modules/module?module_name=${ModuleName}&sub_module_name=${sub_module}`,
         {
           method: "GET",
           headers: {
@@ -296,7 +298,7 @@ export default function SetupWorkflow() {
       console.log("payload: ", payload);
 
       const response = await axios.post(
-        `${BASE_URL}/uniworkflow/workflow`,
+        `${BASE_URL}uniworkflow/workflow`,
         payload,
         {
           headers: {
@@ -317,24 +319,18 @@ export default function SetupWorkflow() {
           icon: "success",
           title: "Workflow Created",
           html: `
-          <p><strong>Workflow Name:</strong> ${
-            wf.Workflow_workflow_name || workflowName
-          }</p>
-          <p><strong>Description:</strong> ${
-            wf.Workflow_description || description
-          }</p>
-          <p><strong>Module Name:</strong> ${
-            wf.Workflow_module_name || ModuleName
-          }</p>
-          <p><strong>Module ID:</strong> ${
-            wf.Workflow_module_id || moduleId
-          }</p>
-          <p><strong>Sub Module Name:</strong> ${
-            wf.Workflow_sub_module_name || submodulename
-          }</p>
-          <p><strong>Sub Module ID:</strong> ${
-            wf.Workflow_sub_id || subModuleId
-          }</p>
+          <p><strong>Workflow Name:</strong> ${wf.Workflow_workflow_name || workflowName
+            }</p>
+          <p><strong>Description:</strong> ${wf.Workflow_description || description
+            }</p>
+          <p><strong>Module Name:</strong> ${wf.Workflow_module_name || ModuleName
+            }</p>
+          <p><strong>Module ID:</strong> ${wf.Workflow_module_id || moduleId
+            }</p>
+          <p><strong>Sub Module Name:</strong> ${wf.Workflow_sub_module_name || submodulename
+            }</p>
+          <p><strong>Sub Module ID:</strong> ${wf.Workflow_sub_id || subModuleId
+            }</p>
         `,
           confirmButtonText: "OK",
         }).then(() => {
@@ -379,7 +375,7 @@ export default function SetupWorkflow() {
       };
 
       const response = await axios.post(
-        `${BASE_URL}/uniworkflow/userworkflow/user`,
+        `${BASE_URL}uniworkflow/userworkflow/user`,
         payload,
         {
           headers: {
@@ -399,12 +395,11 @@ export default function SetupWorkflow() {
           icon: "success",
           title: "User assigned to workflow",
           html: `
-          <p><strong>Workflow Name:</strong> ${
-            result.Workflow?.Workflow_id || selectedWorkflowId
-          }</p>
+          <p><strong>Workflow Name:</strong> ${result.Workflow?.Workflow_id || selectedWorkflowId
+            }</p>
           <p><strong>Assigned Users:</strong> ${filteredUserIds.join(
-            ", "
-          )}</p>            
+              ", "
+            )}</p>            
         `,
           confirmButtonText: "OK",
         }).then(() => {
@@ -419,7 +414,7 @@ export default function SetupWorkflow() {
     } catch (error) {
       setError(
         error.response?.data?.message ||
-          "All provided users are already assigned to this workflow"
+        "All provided users are already assigned to this workflow"
       );
     }
   };
@@ -443,7 +438,7 @@ export default function SetupWorkflow() {
           return;
         }
         await axios.patch(
-          `${BASE_URL}/uniworkflow/workflow/deactivate/${id}`,
+          `${BASE_URL}uniworkflow/workflow/deactivate/${id}`,
           {},
           {
             headers: {
@@ -482,7 +477,7 @@ export default function SetupWorkflow() {
       }
 
       await axios.delete(
-        `${BASE_URL}/uniworkflow/userworkflow/${id}`,
+        `${BASE_URL}uniworkflow/userworkflow/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -571,7 +566,7 @@ export default function SetupWorkflow() {
       <style>{`.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 .hide-scrollbar::-webkit-scrollbar { display: none; }`}</style>
       <div className="flex flex-col w-full p-1">
-       
+
         <div className="flex flex-col h-[80vh] px-2 w-full">
           <div className="flex gap-3 ">
             <div className="flex s gap-4 items-center">
@@ -734,7 +729,7 @@ export default function SetupWorkflow() {
                       <label className="mb-1 font-medium">
                         Workflow : <span className="text-red-500">*</span>
                       </label>
-                        <SearchableDropdown
+                      <SearchableDropdown
                         options={Array.isArray(workflow) ? workflow : []}
                         placeholder="Choose workflow"
                         value={Array.isArray(workflow) ? workflow.find(wf => wf.workflow_id === selectedWorkflowId) || null : null}
@@ -1003,86 +998,85 @@ export default function SetupWorkflow() {
             <div className="w-full overflow-auto max-h-[58vh] border border-gray-200 rounded-lg bg-white hide-scrollbar">
               <table className="min-w-full text-sm">
                 <thead className="h-[70px] sticky top-0 bg-white border-b-black border-b-2">
-                <tr>
-                  <th className="py-2 px-4 border-b text-center">S.No.</th>
-                  <th className="py-2 px-4 border-b text-center"> Workflow</th>
-                  <th className="py-2 px-4 border-b text-center">Date</th>
-                  <th className="py-2 px-4 border-b text-center">Name</th>
-                  <th className="py-2 px-4 border-b text-center">
-                    Description
-                  </th>
-                  <th className="py-2 px-4 border-b text-center">
-                    Module Name
-                  </th>
-                  <th className="py-2 px-4 border-b text-center">
-                    SubModule Name
-                  </th>
-                  <th className="py-2 px-4 border-b text-center">Status</th>
-                  <th className="py-2 px-4 border-b text-center">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="h-3"></tr>
-                {paginatedWorkflows.length === 0 ? (
                   <tr>
-                    <td colSpan="9" className="text-center p-4 text-gray-500">
-                      No workflows available.
-                    </td>
+                    <th className="py-2 px-4 border-b text-center">S.No.</th>
+                    <th className="py-2 px-4 border-b text-center"> Workflow</th>
+                    <th className="py-2 px-4 border-b text-center">Date</th>
+                    <th className="py-2 px-4 border-b text-center">Name</th>
+                    <th className="py-2 px-4 border-b text-center">
+                      Description
+                    </th>
+                    <th className="py-2 px-4 border-b text-center">
+                      Module Name
+                    </th>
+                    <th className="py-2 px-4 border-b text-center">
+                      SubModule Name
+                    </th>
+                    <th className="py-2 px-4 border-b text-center">Status</th>
+                    <th className="py-2 px-4 border-b text-center">Action</th>
                   </tr>
-                ) : (
-                  paginatedWorkflows.map((wf, index) => (
-                    <tr
-                      key={wf.workflow_id || wf.id}
-                      className={`border-t h-[61px] ${
-                        index % 2 === 0 ? "bg-blue-50" : "bg-white"
-                      } hover:bg-blue-100 transition-colors`}
-                    >
-                      <td className="p-3 text-center align-middle font-medium text-gray-700">
-                        {(currentPage - 1) * itemsPerPage + index + 1}.
-                      </td>
-                      <td className="p-3 text-center align-middle">
-                        {wf.workflow_name}
-                      </td>
-                      <td className="p-3 text-center align-middle">
-                        {wf.created_time
-                          ? new Date(wf.created_time).toLocaleDateString(
-                              "en-GB"
-                            )
-                          : "-"}
-                      </td>
-                      <td className="p-3 text-center align-middle">
-                        {wf.madeby || ""}
-                      </td>
-                      <td className="p-3 text-center align-middle">
-                        {wf.description}
-                      </td>
-                      <td className="p-3 text-center align-middle">
-                        {wf.module_name}
-                      </td>
-                      <td className="p-3 text-center align-middle">
-                        {wf.sub_module_name || "Null"}
-                      </td>
-                      <td className="p-3 text-center align-middle">
-                        {wf.status}
-                      </td>
-                      <td className="p-3 text-center align-middle">
-                        <button
-                          className="text-blue-600 hover:text-blue-800"
-                          onClick={() => handleEditWorkflow(wf)}
-                        >
-                          <FontAwesomeIcon icon={faEdit} />
-                        </button>
-                        <button
-                          className="text-red-600 hover:text-red-800"
-                          onClick={() => handleDelete(wf.workflow_id || wf.id)}
-                        >
-                          <FontAwesomeIcon icon={faTrash} />
-                        </button>
+                </thead>
+                <tbody>
+                  <tr className="h-3"></tr>
+                  {paginatedWorkflows.length === 0 ? (
+                    <tr>
+                      <td colSpan="9" className="text-center p-4 text-gray-500">
+                        No workflows available.
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
+                  ) : (
+                    paginatedWorkflows.map((wf, index) => (
+                      <tr
+                        key={wf.workflow_id || wf.id}
+                        className={`border-t h-[61px] ${index % 2 === 0 ? "bg-blue-50" : "bg-white"
+                          } hover:bg-blue-100 transition-colors`}
+                      >
+                        <td className="p-3 text-center align-middle font-medium text-gray-700">
+                          {(currentPage - 1) * itemsPerPage + index + 1}.
+                        </td>
+                        <td className="p-3 text-center align-middle">
+                          {wf.workflow_name}
+                        </td>
+                        <td className="p-3 text-center align-middle">
+                          {wf.created_time
+                            ? new Date(wf.created_time).toLocaleDateString(
+                              "en-GB"
+                            )
+                            : "-"}
+                        </td>
+                        <td className="p-3 text-center align-middle">
+                          {wf.madeby || ""}
+                        </td>
+                        <td className="p-3 text-center align-middle">
+                          {wf.description}
+                        </td>
+                        <td className="p-3 text-center align-middle">
+                          {wf.module_name}
+                        </td>
+                        <td className="p-3 text-center align-middle">
+                          {wf.sub_module_name || "Null"}
+                        </td>
+                        <td className="p-3 text-center align-middle">
+                          {wf.status}
+                        </td>
+                        <td className="p-3 text-center align-middle">
+                          <button
+                            className="text-blue-600 hover:text-blue-800"
+                            onClick={() => handleEditWorkflow(wf)}
+                          >
+                            <FontAwesomeIcon icon={faEdit} />
+                          </button>
+                          <button
+                            className="text-red-600 hover:text-red-800"
+                            onClick={() => handleDelete(wf.workflow_id || wf.id)}
+                          >
+                            <FontAwesomeIcon icon={faTrash} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
               </table>
             </div>
             <div

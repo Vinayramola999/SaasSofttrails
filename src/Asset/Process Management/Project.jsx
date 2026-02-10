@@ -5,8 +5,8 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import ProjectRoles from "./ProjectRoles";
 import MessageModal from "../ApprovalAuthority/MessageModal";
-import ProfileDropdown from "../../ProfileDropdown";
-import { DMS_BASE,JAVA_BASE, ASSET_NODE_BASE, UCS_BASE ,MAIN_BASE,WORKFLOW_BASE } from "../../config/apiBase"
+//import ProfileDropdown from "../../ProfileDropdown";
+import { DMS_BASE, JAVA_BASE, ASSET_NODE_BASE, UCS_BASE, MAIN_BASE, WORKFLOW_BASE } from "../../config/apiBase"
 const Category = () => {
   const [categoryData, setCategoryData] = useState({
     projectName: "",
@@ -71,7 +71,7 @@ const Category = () => {
   const [modalType, setModalType] = useState("success");
   const [isOpen, setIsOpen] = useState(false);
   const [categoryId, setCategoryId] = useState("");
-const [projectId, setProjectId] = useState(null);  // id naam confuse kar raha tha
+  const [projectId, setProjectId] = useState(null);  // id naam confuse kar raha tha
   const [isApprovalModalOpen, setIsApprovalModalOpen] = useState(false);
   const [approvalModalMessage, setApprovalModalMessage] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -132,80 +132,105 @@ const [projectId, setProjectId] = useState(null);  // id naam confuse kar raha t
     }
   }, [isCompositionModalOpen, selectedProject]);
 
-// Fetch categories with token
-useEffect(() => {
-  const token = sessionStorage.getItem("token"); // Get token from storage
+  // Fetch categories with token
+  useEffect(() => {
+    const token = sessionStorage.getItem("token"); // Get token from storage
 
-  fetch(`${JAVA_BASE}api/categories/rawmaterials`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  })
-    .then((response) => response.json())
-    .then((data) => {
-      console.log("Fetched Categories:", data); 
-      if (Array.isArray(data)) {
-        setCategory(data);
-      }
+    fetch(`${JAVA_BASE}api/categories/rawmaterials`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     })
-    .catch((error) => console.error("Error fetching categories:", error));
-}, []);
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Fetched Categories:", data);
+        if (Array.isArray(data)) {
+          setCategory(data);
+        }
+      })
+      .catch((error) => console.error("Error fetching categories:", error));
+  }, []);
 
-// Fetch materials for selected category with token
-useEffect(() => {
-  if (selectedCategoryName) {
-    const token = sessionStorage.getItem("token");
+  // Fetch materials for selected category with token
+  useEffect(() => {
+    if (selectedCategoryName) {
+      const token = sessionStorage.getItem("token");
 
-    axios
-      .get(
-        `${ASSET_NODE_BASE}getColumnTypesAndData/${selectedCategoryName}`,
-        {
-           params: { 
-          type:"Raw material"
-         },
+      axios
+        .get(
+          `${ASSET_NODE_BASE}getColumnTypesAndData/${selectedCategoryName}`,
+          {
+            params: {
+              type: "Raw material"
+            },
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        )
+        .then((response) => {
+          const materialsData = response.data?.data || [];
+          setMaterials(materialsData);
+          setFilteredMaterials(materialsData);
+          setRequisitionMaterials(materialsData);
+        })
+        .catch((error) => console.error("Error fetching materials:", error));
+    }
+  }, [selectedCategoryName]);
+
+  // Fetch roles with token
+  useEffect(() => {
+    if (isEditCategoryModalOpen && categories) {
+      const token = sessionStorage.getItem("token");
+
+      axios
+        .get(`${MAIN_BASE}role`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
+        })
+        .then((response) => {
+          if (response && response.data) {
+            setRoles(response.data);
+          }
+        })
+        .catch((error) => console.error("Error fetching roles:", error));
+    }
+  }, [isEditCategoryModalOpen, categories]);
+
+  // Fetch workflows with token
+  useEffect(() => {
+    const fetchWorkflows = async () => {
+      try {
+        const token = sessionStorage.getItem("token");
+
+        const response = await axios.get(
+          `${WORKFLOW_BASE}uniworkflow/workflow/get-modules/module?module_name=Process Management`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response && response.data && Array.isArray(response.data.workflows)) {
+          setWorkflows(response.data.workflows);
         }
-      )
-      .then((response) => {
-        const materialsData = response.data?.data || [];
-        setMaterials(materialsData);
-        setFilteredMaterials(materialsData);
-        setRequisitionMaterials(materialsData);
-      })
-      .catch((error) => console.error("Error fetching materials:", error));
-  }
-}, [selectedCategoryName]);
+      } catch (error) {
+        console.error("Error fetching workflows:", error);
+      }
+    };
 
-// Fetch roles with token
-useEffect(() => {
-  if (isEditCategoryModalOpen && categories) {
-    const token = sessionStorage.getItem("token");
+    fetchWorkflows();
+  }, []);
 
-    axios
-      .get(`${MAIN_BASE}role`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-      .then((response) => {
-        if (response && response.data) {
-          setRoles(response.data);
-        }
-      })
-      .catch((error) => console.error("Error fetching roles:", error));
-  }
-}, [isEditCategoryModalOpen, categories]);
 
-// Fetch workflows with token
-useEffect(() => {
-  const fetchWorkflows = async () => {
+  const fetchCategories = async () => {
     try {
-      const token = sessionStorage.getItem("token");
+      const token = sessionStorage.getItem("token"); // Get token
 
       const response = await axios.get(
-        `${WORKFLOW_BASE}workflow/uniworkflow/workflow/get-modules/module?module_name=Process Management`,
+        `${JAVA_BASE}api/projects/fetch`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -213,58 +238,33 @@ useEffect(() => {
         }
       );
 
-      if (response && response.data && Array.isArray(response.data.workflows)) {
-        setWorkflows(response.data.workflows);
-      }
+      console.log("API response:", response.data);
+      setCategories(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
-      console.error("Error fetching workflows:", error);
+      console.error("Error fetching categories:", error);
+      setCategories([]);
     }
   };
 
-  fetchWorkflows();
-}, []);
+  const openModal = async () => {
+    setIsModalOpen(true);
+    try {
+      const token = sessionStorage.getItem("token"); // Get token
 
+      const response = await axios.get(
+        `${JAVA_BASE}api/categories/rawmaterials`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-const fetchCategories = async () => {
-  try {
-    const token = sessionStorage.getItem("token"); // Get token
-
-    const response = await axios.get(
-   `${JAVA_BASE}api/projects/fetch`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    console.log("API response:", response.data);
-    setCategories(Array.isArray(response.data) ? response.data : []);
-  } catch (error) {
-    console.error("Error fetching categories:", error);
-    setCategories([]);
-  }
-};
-
-const openModal = async () => {
-  setIsModalOpen(true);
-  try {
-    const token = sessionStorage.getItem("token"); // Get token
-
-    const response = await axios.get(
-      `${JAVA_BASE}api/categories/rawmaterials`,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    setCategories(response.data || []);
-  } catch (error) {
-    console.error("Error fetching categories:", error);
-  }
-};
+      setCategories(response.data || []);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
 
   const handleCompositionMaterialChange = (e) => {
     const selectedName = e.target.value;
@@ -280,189 +280,189 @@ const openModal = async () => {
   };
 
   // Add Material to Local Table
-const handleAddComposition = async () => {
-  const userId = sessionStorage.getItem("userId");
-  const token = sessionStorage.getItem("token"); // ✅ Token fetch
+  const handleAddComposition = async () => {
+    const userId = sessionStorage.getItem("userId");
+    const token = sessionStorage.getItem("token"); // ✅ Token fetch
 
-  try {
-    const payload = {
-      action: "CompositionCreation",
-      user_id: Number(userId),
-      materials: [
+    try {
+      const payload = {
+        action: "CompositionCreation",
+        user_id: Number(userId),
+        materials: [
+          {
+            material_name: selectedMaterial,
+            quantity_per_unit: quantity,
+            unit: uom,
+            cost_per_unit: costPerUnit,
+            material_id: selectedMaterialId,
+            category_id: selectedCategoryId,
+          },
+        ],
+      };
+
+      await axios.post(
+        `${ASSET_NODE_BASE}process/commission/${selectedProject.project_Id}`,
+        payload,
         {
-          material_name: selectedMaterial,
-          quantity_per_unit: quantity,
-          unit: uom,
-          cost_per_unit: costPerUnit,
-          material_id: selectedMaterialId,
-          category_id: selectedCategoryId,
-        },
-      ],
-    };
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // ✅ Token pass
+          },
+        }
+      );
 
-    await axios.post(
-      `${ASSET_NODE_BASE}process/commission/${selectedProject.project_Id}`,
-      payload,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // ✅ Token pass
-        },
-      }
-    );
+      // Fetch updated table data
+      fetchCompositionData();
 
-    // Fetch updated table data
-    fetchCompositionData();
-
-    // Clear fields
-    setSelectedMaterial("");
-    setQuantity("");
-    setUom("");
-    setCostPerUnit("");
-  } catch (error) {
-    console.error("Add Composition Failed:", error);
-  }
-};
-
-
-const fetchCompositionData = async () => {
-  const token = sessionStorage.getItem("token"); // ✅ Token fetch
-
-  try {
-    const res = await axios.get(
-      `${ASSET_NODE_BASE}process/commission/${selectedProject.project_Id}`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // ✅ Token pass
-        },
-      }
-    );
-
-    if (res.data?.success) {
-      setCompositionMaterials(res.data.commissions);
+      // Clear fields
+      setSelectedMaterial("");
+      setQuantity("");
+      setUom("");
+      setCostPerUnit("");
+    } catch (error) {
+      console.error("Add Composition Failed:", error);
     }
-  } catch (error) {
-    console.error("Fetching composition data failed:", error);
-  }
-};
+  };
+
+
+  const fetchCompositionData = async () => {
+    const token = sessionStorage.getItem("token"); // ✅ Token fetch
+
+    try {
+      const res = await axios.get(
+        `${ASSET_NODE_BASE}process/commission/${selectedProject.project_Id}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // ✅ Token pass
+          },
+        }
+      );
+
+      if (res.data?.success) {
+        setCompositionMaterials(res.data.commissions);
+      }
+    } catch (error) {
+      console.error("Fetching composition data failed:", error);
+    }
+  };
 
 
   // Delete from table
-const handleDeleteComposition = async (id) => {
-  const token = sessionStorage.getItem("token"); // ✅ Token fetch
+  const handleDeleteComposition = async (id) => {
+    const token = sessionStorage.getItem("token"); // ✅ Token fetch
 
-  try {
-    const res = await axios.delete(
-      `${ASSET_NODE_BASE}process/commission/${selectedProject.project_Id}/${id}`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // ✅ Token pass
-        },
+    try {
+      const res = await axios.delete(
+        `${ASSET_NODE_BASE}process/commission/${selectedProject.project_Id}/${id}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // ✅ Token pass
+          },
+        }
+      );
+
+      if (res.status === 200) {
+        // Refresh the list after successful deletion
+        fetchCompositionData();
       }
-    );
-
-    if (res.status === 200) {
-      // Refresh the list after successful deletion
-      fetchCompositionData();
+    } catch (error) {
+      console.error("Delete Composition Failed:", error);
+      alert("Failed to delete material.");
     }
-  } catch (error) {
-    console.error("Delete Composition Failed:", error);
-    alert("Failed to delete material.");
-  }
-};
+  };
 
 
   // Submit API
-const handleSubmitComposition = async () => {
-  const token = sessionStorage.getItem("token"); // ✅ Token fetch
+  const handleSubmitComposition = async () => {
+    const token = sessionStorage.getItem("token"); // ✅ Token fetch
 
-  try {
-    const res = await axios.post(
-      `${ASSET_NODE_BASE}process/commission/${selectedProject.project_Id}`,
-      { materials: compositionMaterials },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // ✅ Token pass
-        },
+    try {
+      const res = await axios.post(
+        `${ASSET_NODE_BASE}process/commission/${selectedProject.project_Id}`,
+        { materials: compositionMaterials },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // ✅ Token pass
+          },
+        }
+      );
+
+      if (res.status === 200) {
+        // Proceed to Project Material Request modal
+        setIsCompositionModalOpen(false);
+        setIsProjectSelectionModalOpen(false);
+        setIsMaterialRequisitionFormOpen(false);
       }
-    );
-
-    if (res.status === 200) {
-      // Proceed to Project Material Request modal
-      setIsCompositionModalOpen(false);
-      setIsProjectSelectionModalOpen(false);
-      setIsMaterialRequisitionFormOpen(false);
+    } catch (error) {
+      console.error("Submit Composition Failed", error);
     }
-  } catch (error) {
-    console.error("Submit Composition Failed", error);
-  }
-};
-
-const handleMaterialChange = (e) => {
-  const selectedMaterialName = e.target.value;
-  setSelectedMaterial(selectedMaterialName);
-
-  const selectedMaterialObj = filteredMaterials.find(
-    (material) => material.material_name === selectedMaterialName
-  );
-
-  if (selectedMaterialObj) {
-    setUom(selectedMaterialObj.uom || "N/A");
-    setAvailableMaterial(selectedMaterialObj["Available Materials"] || 0);
-
-    // ⭐ Most Important Fix
-    setSelectedMaterialId(selectedMaterialObj.unique_id || null);
-
-    console.log("Selected Material UOM:", selectedMaterialObj.uom);
-    console.log("Material ID:", selectedMaterialObj.unique_id);
-    console.log(
-      "Available Material:",
-      selectedMaterialObj["Available Materials"]
-    );
-  } else {
-    setUom("N/A");
-    setAvailableMaterial(null);
-    setSelectedMaterialId(null); // Reset ID
-  }
-};
-
-
- const handleAddToTable = () => {
-  if (!selectedMaterial || !quantity) {
-    alert("Please select a material and enter a quantity.");
-    return;
-  }
-
-  if (!selectedMaterialId) {
-    alert("Material ID missing! Please reselect the material.");
-    return;
-  }
-
-  const newData = {
-    project_Id: selectedProject?.project_Id,
-    projectName: selectedProject?.projectName,
-
-    categoryId: selectedCategory?.categoryId,
-    categoryName: selectedCategory?.categoriesname,
-
-    materialName: selectedMaterial,
-    material_Id: selectedMaterialId,   // ⭐ MOST IMPORTANT LINE
-
-    quantity,
-    uom,
   };
 
-  setTempData((prev) => [...prev, newData]);
+  const handleMaterialChange = (e) => {
+    const selectedMaterialName = e.target.value;
+    setSelectedMaterial(selectedMaterialName);
 
-  // Reset fields
-  setSelectedMaterial("");
-  setSelectedMaterialId(null);
-  setQuantity("");
-  // uom apne aap next selection me set hoga
-};
+    const selectedMaterialObj = filteredMaterials.find(
+      (material) => material.material_name === selectedMaterialName
+    );
+
+    if (selectedMaterialObj) {
+      setUom(selectedMaterialObj.uom || "N/A");
+      setAvailableMaterial(selectedMaterialObj["Available Materials"] || 0);
+
+      // ⭐ Most Important Fix
+      setSelectedMaterialId(selectedMaterialObj.unique_id || null);
+
+      console.log("Selected Material UOM:", selectedMaterialObj.uom);
+      console.log("Material ID:", selectedMaterialObj.unique_id);
+      console.log(
+        "Available Material:",
+        selectedMaterialObj["Available Materials"]
+      );
+    } else {
+      setUom("N/A");
+      setAvailableMaterial(null);
+      setSelectedMaterialId(null); // Reset ID
+    }
+  };
+
+
+  const handleAddToTable = () => {
+    if (!selectedMaterial || !quantity) {
+      alert("Please select a material and enter a quantity.");
+      return;
+    }
+
+    if (!selectedMaterialId) {
+      alert("Material ID missing! Please reselect the material.");
+      return;
+    }
+
+    const newData = {
+      project_Id: selectedProject?.project_Id,
+      projectName: selectedProject?.projectName,
+
+      categoryId: selectedCategory?.categoryId,
+      categoryName: selectedCategory?.categoriesname,
+
+      materialName: selectedMaterial,
+      material_Id: selectedMaterialId,   // ⭐ MOST IMPORTANT LINE
+
+      quantity,
+      uom,
+    };
+
+    setTempData((prev) => [...prev, newData]);
+
+    // Reset fields
+    setSelectedMaterial("");
+    setSelectedMaterialId(null);
+    setQuantity("");
+    // uom apne aap next selection me set hoga
+  };
 
 
   const handleCategoryChange = (e) => {
@@ -480,55 +480,55 @@ const handleMaterialChange = (e) => {
     setSelectedCategoryName(categoryName);
   };
 
-const fetchFilteredCategories = async (
-  status = "",
-  stages = "",
-  startDate = "",
-  endDate = ""
-) => {
-  const token = sessionStorage.getItem("token"); // ✅ Token fetch
+  const fetchFilteredCategories = async (
+    status = "",
+    stages = "",
+    startDate = "",
+    endDate = ""
+  ) => {
+    const token = sessionStorage.getItem("token"); // ✅ Token fetch
 
-  try {
-    let url = `${JAVA_BASE}categories?`;
-    if (status) url += `status=${status}&`;
-    if (stages) url += `stages=${stages}&`;
-    if (startDate && endDate) url += `&startDate=${startDate}&endDate=${endDate}`;
+    try {
+      let url = `${JAVA_BASE}categories?`;
+      if (status) url += `status=${status}&`;
+      if (stages) url += `stages=${stages}&`;
+      if (startDate && endDate) url += `&startDate=${startDate}&endDate=${endDate}`;
 
-    const response = await axios.get(url, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`, // ✅ Token pass
-      },
-    });
-
-    console.log("Filtered API response:", response.data);
-    setCategories(Array.isArray(response.data) ? response.data : []);
-  } catch (error) {
-    console.error("Error fetching filtered categories:", error);
-    setCategories([]); // Ensures categories is an array even if fetch fails
-  }
-};
-
-const fetchCategoryFields = async () => {
-  const token = sessionStorage.getItem("token"); // ✅ Token fetch
-
-  try {
-    const response = await axios.get(
-      `${JAVA_BASE}api/assets/fetch`,
-      {
+      const response = await axios.get(url, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`, // ✅ Token pass
         },
-      }
-    );
+      });
 
-    console.log("response", response.data);
-    setExistingFields(response.data);
-  } catch (error) {
-    console.error("Error fetching categories fields:", error);
-  }
-};
+      console.log("Filtered API response:", response.data);
+      setCategories(Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error("Error fetching filtered categories:", error);
+      setCategories([]); // Ensures categories is an array even if fetch fails
+    }
+  };
+
+  const fetchCategoryFields = async () => {
+    const token = sessionStorage.getItem("token"); // ✅ Token fetch
+
+    try {
+      const response = await axios.get(
+        `${JAVA_BASE}api/assets/fetch`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // ✅ Token pass
+          },
+        }
+      );
+
+      console.log("response", response.data);
+      setExistingFields(response.data);
+    } catch (error) {
+      console.error("Error fetching categories fields:", error);
+    }
+  };
 
 
   const closedModal = () => {
@@ -574,12 +574,12 @@ const fetchCategoryFields = async () => {
     setIsMaterialRequisitionFormOpen(false);
   };
 
-const handleSubmits = async () => {
-  const token = sessionStorage.getItem("token");
+  const handleSubmits = async () => {
+    const token = sessionStorage.getItem("token");
 
-  const payload =
-    tempData.length > 0
-      ? tempData.map((item) => ({
+    const payload =
+      tempData.length > 0
+        ? tempData.map((item) => ({
           project_Id: item.project_Id,
           projectName: item.projectName,
           categoryId: item.categoryId,
@@ -590,7 +590,7 @@ const handleSubmits = async () => {
           createdAt: new Date().toISOString(),
           projectQuantity: item.quantity,
         }))
-      : [
+        : [
           {
             project_Id: selectedProject.project_Id,
             projectName: selectedProject.projectName,
@@ -604,32 +604,32 @@ const handleSubmits = async () => {
           },
         ];
 
-  console.log("Payload to Send:", payload);
+    console.log("Payload to Send:", payload);
 
-  try {
-    await axios.post(
-      `${JAVA_BASE}api/fine-goods/create`,
-      payload,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    try {
+      await axios.post(
+        `${JAVA_BASE}api/fine-goods/create`,
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-    setMessage("Data submitted successfully!");
-    setMessageType("success");
+      setMessage("Data submitted successfully!");
+      setMessageType("success");
 
-    setTempData([]);
-    resetFields();
-    handleCloseProjectSelectionModal();
-  } catch (error) {
-    console.error("Error submitting data:", error);
-    setMessage("Failed to submit data. Try again.");
-    setMessageType("error");
-  }
-};
+      setTempData([]);
+      resetFields();
+      handleCloseProjectSelectionModal();
+    } catch (error) {
+      console.error("Error submitting data:", error);
+      setMessage("Failed to submit data. Try again.");
+      setMessageType("error");
+    }
+  };
 
 
 
@@ -667,23 +667,23 @@ const handleSubmits = async () => {
   const removeField = (index) => {
     setNewFields(newFields.filter((_, i) => i !== index));
   };
-const removeExistingField = async (id) => {
-  const token = sessionStorage.getItem("token"); // ✅ Token fetch
+  const removeExistingField = async (id) => {
+    const token = sessionStorage.getItem("token"); // ✅ Token fetch
 
-  try {
-    await axios.delete(`${JAVA_BASE}api/assets/${id}`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`, // ✅ Token pass
-      },
-    });
+    try {
+      await axios.delete(`${JAVA_BASE}api/assets/${id}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // ✅ Token pass
+        },
+      });
 
-    window.location.reload();
-    setUpdatedOn((prev) => prev + 1);
-  } catch (error) {
-    console.error("Error deleting category:", error);
-  }
-};
+      window.location.reload();
+      setUpdatedOn((prev) => prev + 1);
+    } catch (error) {
+      console.error("Error deleting category:", error);
+    }
+  };
 
   const handleWorkflowChange = (e) => {
     const selectedId = e.target.value;
@@ -709,64 +709,64 @@ const removeExistingField = async (id) => {
     console.log("Selected Workflow Name:", selectedWorkflow.workflow_name);
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  if (!categoryData.workflow_id) {
-    setModalMessage("Please select a workflow.");
-    setModalType("error");
-    setIsModalOpen(true);
-    return;
-  }
+    if (!categoryData.workflow_id) {
+      setModalMessage("Please select a workflow.");
+      setModalType("error");
+      setIsModalOpen(true);
+      return;
+    }
 
-  const userId = sessionStorage.getItem("userId");
-  const token = sessionStorage.getItem("token"); // ✅ Token fetch
+    const userId = sessionStorage.getItem("userId");
+    const token = sessionStorage.getItem("token"); // ✅ Token fetch
 
-  if (!userId) {
-    setModalMessage("User ID is not available.");
-    setModalType("error");
-    setIsModalOpen(true);
-    return;
-  }
+    if (!userId) {
+      setModalMessage("User ID is not available.");
+      setModalType("error");
+      setIsModalOpen(true);
+      return;
+    }
 
-  try {
-    const newCategory = {
-      projectName: categoryData.projectName,
-      description: categoryData.description,
-      wrokflowId: categoryData.workflow_id,
-      createdby: Number(userId),
-    };
+    try {
+      const newCategory = {
+        projectName: categoryData.projectName,
+        description: categoryData.description,
+        wrokflowId: categoryData.workflow_id,
+        createdby: Number(userId),
+      };
 
-    console.log("Submitting category: ", newCategory);
+      console.log("Submitting category: ", newCategory);
 
-    const response = await axios.post(
-      `${JAVA_BASE}api/projects/create`,
-      newCategory,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // ✅ Token pass
-        },
-      }
-    );
+      const response = await axios.post(
+        `${JAVA_BASE}api/projects/create`,
+        newCategory,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // ✅ Token pass
+          },
+        }
+      );
 
-    console.log("API Response:", response);
-    setProjectId(response.data.id);
-    setUpdatedOn(new Date());
-    setCategories(
-      Array.isArray(response.data.categories) ? response.data.categories : []
-    );
+      console.log("API Response:", response);
+      setProjectId(response.data.id);
+      setUpdatedOn(new Date());
+      setCategories(
+        Array.isArray(response.data.categories) ? response.data.categories : []
+      );
 
-    resetForm();
-    setModalMessage("Product added successfully!");
-    setModalType("success");
-    setIsModalOpen(true);
-  } catch (error) {
-    console.error("Error Adding Product:", error);
-    setModalMessage("Error Adding Product Name. Please try again.");
-    setModalType("error");
-  }
-};
+      resetForm();
+      setModalMessage("Product added successfully!");
+      setModalType("success");
+      setIsModalOpen(true);
+    } catch (error) {
+      console.error("Error Adding Product:", error);
+      setModalMessage("Error Adding Product Name. Please try again.");
+      setModalType("error");
+    }
+  };
 
 
   const resetForm = () => {
@@ -869,7 +869,7 @@ const handleSubmit = async (e) => {
         try {
           console.log("Fetching data for userId:", userId);
           const response = await axios.get(
-           `${MAIN_BASE}users/id_user/${userId}`,
+            `${MAIN_BASE}users/id_user/${userId}`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -899,7 +899,7 @@ const handleSubmit = async (e) => {
     }
     try {
       const response = await axios.post(
-       `${MAIN_BASE}users/verify-token`,
+        `${MAIN_BASE}users/verify-token`,
         {
           token: token,
         }
@@ -942,7 +942,7 @@ const handleSubmit = async (e) => {
 
       // Fetch roles from API
       const response = await fetch(
-       `${JAVA_BASE}api/roles/category/${category.categoryId}`
+        `${JAVA_BASE}api/roles/category/${category.categoryId}`
       );
       const roles = await response.json();
 
@@ -958,9 +958,9 @@ const handleSubmit = async (e) => {
   const renderRoles = (roles, action) => {
     return roles
       ? roles
-          .filter((item) => item.action === action)
-          .map((item) => item.groups)
-          .join(", ") || "No roles assigned"
+        .filter((item) => item.action === action)
+        .map((item) => item.groups)
+        .join(", ") || "No roles assigned"
       : "No roles found";
   };
 
@@ -1031,96 +1031,96 @@ const handleSubmit = async (e) => {
     updated.splice(index, 1);
     setRequisitionTable(updated);
   };
-const handleSubmitRequisition = async () => {
-  if (!selectedProject?.project_Id) {
-    setMessage("Please select a project before submitting.");
-    setMessageType("error");
-    return;
-  }
+  const handleSubmitRequisition = async () => {
+    if (!selectedProject?.project_Id) {
+      setMessage("Please select a project before submitting.");
+      setMessageType("error");
+      return;
+    }
 
-  let tempTable = [...requisitionTable];
+    let tempTable = [...requisitionTable];
 
-  // If the current form has unadded data, add that too
-  if (requisitionSelectedMaterial && requisitionQuantity) {
-    tempTable.push({
-      material: requisitionSelectedMaterial,
-      quantity: requisitionQuantity,
-      uom: requisitionUOM,
-      remarks: requisitionRemarks,
-      available: requisitionAvailableQuantity,
+    // If the current form has unadded data, add that too
+    if (requisitionSelectedMaterial && requisitionQuantity) {
+      tempTable.push({
+        material: requisitionSelectedMaterial,
+        quantity: requisitionQuantity,
+        uom: requisitionUOM,
+        remarks: requisitionRemarks,
+        available: requisitionAvailableQuantity,
+      });
+    }
+
+    if (tempTable.length === 0) {
+      setMessage("Please add at least one material before submitting.");
+      setMessageType("error");
+      return;
+    }
+
+    const payload = tempTable.map((item) => {
+      const selectedCategoryObj = category.find(
+        (cat) =>
+          cat.categoriesname?.toLowerCase().trim() ===
+          requisitionCategory?.toLowerCase().trim()
+      );
+
+      const selectedMaterialObj = requisitionMaterials.find(
+        (mat) =>
+          mat.material_name?.toLowerCase().trim() ===
+          item.material?.toLowerCase().trim()
+      );
+
+      return {
+        projectId: selectedProject.project_Id,
+        projectName: selectedProject.projectName,
+        categoryId: selectedCategoryObj?.categoryId || 0,
+        categoryName: requisitionCategory,
+        materialId: selectedMaterialObj?.unique_id || 0,
+        requestedQuantity: Number(item.quantity),
+        uom: item.uom || "N/A",
+        availableQuantity: item.available || 0,
+        description: item.remarks || "",
+        materialName: selectedMaterialObj?.material_name || item.material,
+      };
     });
-  }
 
-  if (tempTable.length === 0) {
-    setMessage("Please add at least one material before submitting.");
-    setMessageType("error");
-    return;
-  }
+    const token = sessionStorage.getItem("token"); // ✅ Token fetch
 
-  const payload = tempTable.map((item) => {
-    const selectedCategoryObj = category.find(
-      (cat) =>
-        cat.categoriesname?.toLowerCase().trim() ===
-        requisitionCategory?.toLowerCase().trim()
-    );
+    try {
+      const response = await fetch(
+        `${JAVA_BASE}api/raw-material`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // ✅ Token pass
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
-    const selectedMaterialObj = requisitionMaterials.find(
-      (mat) =>
-        mat.material_name?.toLowerCase().trim() ===
-        item.material?.toLowerCase().trim()
-    );
+      if (response.ok) {
+        setMessage("Requisition submitted successfully!");
+        setMessageType("success");
 
-    return {
-      projectId: selectedProject.project_Id,
-      projectName: selectedProject.projectName,
-      categoryId: selectedCategoryObj?.categoryId || 0,
-      categoryName: requisitionCategory,
-      materialId: selectedMaterialObj?.unique_id || 0,
-      requestedQuantity: Number(item.quantity),
-      uom: item.uom || "N/A",
-      availableQuantity: item.available || 0,
-      description: item.remarks || "",
-      materialName: selectedMaterialObj?.material_name || item.material,
-    };
-  });
-
-  const token = sessionStorage.getItem("token"); // ✅ Token fetch
-
-  try {
-    const response = await fetch(
-      `${JAVA_BASE}api/raw-material`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // ✅ Token pass
-        },
-        body: JSON.stringify(payload),
+        // Reset everything
+        setRequisitionTable([]);
+        setIsMaterialRequisitionFormOpen(false);
+        setRequisitionSelectedMaterial("");
+        setRequisitionQuantity("");
+        setRequisitionRemarks("");
+        setRequisitionAvailableQuantity(null);
+        setRequisitionUOM("");
+      } else {
+        setMessage("Failed to submit requisition.");
+        setMessageType("error");
       }
-    );
-
-    if (response.ok) {
-      setMessage("Requisition submitted successfully!");
-      setMessageType("success");
-
-      // Reset everything
-      setRequisitionTable([]);
-      setIsMaterialRequisitionFormOpen(false);
-      setRequisitionSelectedMaterial("");
-      setRequisitionQuantity("");
-      setRequisitionRemarks("");
-      setRequisitionAvailableQuantity(null);
-      setRequisitionUOM("");
-    } else {
-      setMessage("Failed to submit requisition.");
+    } catch (error) {
+      console.error("Error submitting requisition:", error);
+      setMessage("Server error occurred.");
       setMessageType("error");
     }
-  } catch (error) {
-    console.error("Error submitting requisition:", error);
-    setMessage("Server error occurred.");
-    setMessageType("error");
-  }
-};
+  };
 
   const handleOpenCompositionModal = (project) => {
     setSelectedProject({
@@ -1141,36 +1141,36 @@ const handleSubmitRequisition = async () => {
     setIsCompositionModalOpen(true);
   };
 
-const handleStatusChange = async (requestId) => {
-  const token = sessionStorage.getItem("token"); // ✅ Token fetch
-  const userId = sessionStorage.getItem("userId");
+  const handleStatusChange = async (requestId) => {
+    const token = sessionStorage.getItem("token"); // ✅ Token fetch
+    const userId = sessionStorage.getItem("userId");
 
-  if (!userId) {
-    alert("User not logged in");
-    return;
-  }
-
-  try {
-    const res = await axios.post(
-      `${ASSET_NODE_BASE}process/comissionRequest/${requestId}/${userId}`,
-      { actionapprove: "SUBMITTEDFORAPPROVAL", action: "CompositionCreation" },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // ✅ Token pass
-        },
-      }
-    );
-
-    if (res.status === 200) {
-      fetchCompositionData();
-      setShowStatusModal(false); // ✅ Close the modal
+    if (!userId) {
+      alert("User not logged in");
+      return;
     }
-  } catch (error) {
-    console.error("Status change failed:", error);
-    alert("Failed to update status.");
-  }
-};
+
+    try {
+      const res = await axios.post(
+        `${ASSET_NODE_BASE}process/comissionRequest/${requestId}/${userId}`,
+        { actionapprove: "SUBMITTEDFORAPPROVAL", action: "CompositionCreation" },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // ✅ Token pass
+          },
+        }
+      );
+
+      if (res.status === 200) {
+        fetchCompositionData();
+        setShowStatusModal(false); // ✅ Close the modal
+      }
+    } catch (error) {
+      console.error("Status change failed:", error);
+      alert("Failed to update status.");
+    }
+  };
 
   // ✅ First, only keep items with status "Active" and stages "Approved"
   const approvedCompositionMaterials = useMemo(() => {
@@ -1317,9 +1317,8 @@ const handleStatusChange = async (requestId) => {
                       categories.map((category, index) => (
                         <tr
                           key={category.categoryId}
-                          className={`transition-colors duration-300 hover:bg-blue-100 ${
-                            index % 2 === 0 ? "bg-white" : "bg-blue-50"
-                          }`}
+                          className={`transition-colors duration-300 hover:bg-blue-100 ${index % 2 === 0 ? "bg-white" : "bg-blue-50"
+                            }`}
                         >
                           <td className="p-4 text-center">{index + 1}</td>
                           <td className="p-4 text-center">
@@ -1929,7 +1928,7 @@ const handleStatusChange = async (requestId) => {
                             <td className="px-3 py-2">{item.stages}</td>
                             <td className="px-3 py-2 flex justify-center gap-2">
                               {item.status === "Active" &&
-                              item.stages === "Approved" ? (
+                                item.stages === "Approved" ? (
                                 <span
                                   className="text-gray-500 text-lg"
                                   title="Locked"

@@ -31,6 +31,11 @@ const AllRequest = () => {
   const [assetOptions, setAssetOptions] = useState([]);
   const [departmentOptions, setDepartmentOptions] = useState([]);
   const [statusOptions, setStatusOptions] = useState([]);
+  // reference some variables to avoid lint "assigned but never used" warnings
+  // these are intentionally kept because their values are set elsewhere and used in UI later
+  void setDepartment;
+  void assetOptions;
+  void departmentOptions;
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteId, setDeleteId] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -39,6 +44,7 @@ const AllRequest = () => {
     title: "",
     message: "",
   });
+  const [budgetOptions, setBudgetOptions] = useState([]);
   const columns = [
     { header: "S. No.", accessor: "sno" },
     { header: "Request for", accessor: "request_for" },
@@ -52,11 +58,15 @@ const AllRequest = () => {
     let matches = true;
 
     if (search) {
-      const searchTerm = search.toLowerCase();
-      const inAssetName = item.asset_name?.toLowerCase().includes(searchTerm);
-      const inCategory = item.category?.toLowerCase().includes(searchTerm);
-      const inRequestFor = item.request_for?.toLowerCase().includes(searchTerm);
-      if (!(inAssetName || inCategory || inRequestFor)) {
+      // normalize search term (trim + lowercase)
+      const searchTerm = search.trim().toLowerCase();
+      const inAssetName = item.asset_name?.toString().toLowerCase().includes(searchTerm);
+      const inCategory = item.category?.toString().toLowerCase().includes(searchTerm);
+      const inRequestFor = item.request_for?.toString().toLowerCase().includes(searchTerm);
+      const inIndentId = item.indent_id?.toString().toLowerCase().includes(searchTerm) ||
+        item.id?.toString().toLowerCase().includes(searchTerm);
+      const inUserId = item.user_id?.toString().toLowerCase().includes(searchTerm);
+      if (!(inAssetName || inCategory || inRequestFor || inIndentId || inUserId)) {
         matches = false;
       }
     }
@@ -89,35 +99,85 @@ const AllRequest = () => {
     currentPage * rowsPerPage
   );
 
+  // Reset to first page whenever the filters/search change so results aren't hidden
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, asset, requestfor, department, status, requests]);
+
   useEffect(() => {
     const fetchRequests = async () => {
       try {
         const [indentingRes, salesIndentingRes] = await Promise.all([
-          axios.get(`${API.PURCHASE_API}/indenting`, { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get(`${API.PURCHASE_API}/sales/salesIndenting`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${API.PURCHASE_API}/indenting`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get(`${API.PURCHASE_API}/sales/salesIndenting`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
         ]);
 
-        // ✅ Indenting response is array directly
-        const indentingData = Array.isArray(indentingRes.data)
+        // Responses may include nested products array. Normalize each record
+        const rawIndenting = Array.isArray(indentingRes.data)
           ? indentingRes.data
           : [];
-
-        // ✅ Sales response has `data` inside `data`
-        const salesData = Array.isArray(salesIndentingRes.data)
+        const rawSales = Array.isArray(salesIndentingRes.data)
           ? salesIndentingRes.data
           : [];
 
-        // Merge both
+        const normalize = (item) => {
+          const firstProduct =
+            Array.isArray(item.products) && item.products.length > 0
+              ? item.products[0]
+              : {};
+          return {
+            // keep original ids but ensure `id` exists for legacy code
+            id: item.id ?? item.indent_id ?? item.indentId ?? null,
+            indent_id: item.indent_id ?? item.id ?? null,
+            user_id: item.user_id,
+            dept_id: item.dept_id,
+            status: item.status,
+            stage: item.stage || "",
+            workflow_id: item.workflow_id,
+            budget_id: item.budget_id ?? firstProduct.budget_id ?? null,
+            created_at: item.created_at,
+            updated_at: item.updated_at,
+            // expose top-level product fields (first product) for table rows
+            products: Array.isArray(item.products) ? item.products : [],
+            product_count:
+              item.product_count ??
+              (Array.isArray(item.products) ? item.products.length : 0),
+            asset_name: firstProduct.asset_name || item.asset_name || "",
+            quantity: firstProduct.quantity ?? item.quantity ?? "",
+            uom: firstProduct.uom || item.uom || "",
+            category: firstProduct.category || item.category || "",
+            request_for: firstProduct.request_for || item.request_for || "",
+            remarks: firstProduct.remarks || item.remarks || "",
+            // keep original object for full-detail modal
+            raw: item,
+          };
+        };
+
+        const indentingData = rawIndenting.map(normalize);
+        const salesData = rawSales.map(normalize);
+
+        // Merge both and sort by newest created_at (fallback to updated_at)
         const combinedRequests = [...indentingData, ...salesData];
+        combinedRequests.sort((a, b) => {
+          const aTime = new Date(a.created_at || a.updated_at || 0).getTime();
+          const bTime = new Date(b.created_at || b.updated_at || 0).getTime();
+          return bTime - aTime; // newest first
+        });
         setRequests(combinedRequests);
 
         if (combinedRequests.length > 0) {
           // Asset Options
-          const uniqueAssetNames = [
-            ...new Set(
-              combinedRequests.map((item) => item.asset_name).filter(Boolean)
-            ),
-          ];
+          // collect asset names from products arrays (all products) first, fallback to top-level asset_name
+          const allAssetNames = combinedRequests.flatMap((item) =>
+            Array.isArray(item.products) && item.products.length > 0
+              ? item.products.map((p) => p.asset_name)
+              : [item.asset_name]
+          );
+          const uniqueAssetNames = [...new Set(allAssetNames.filter(Boolean))];
           setAssetOptions(uniqueAssetNames.sort());
 
           // Department Options
@@ -166,9 +226,37 @@ const AllRequest = () => {
     fetchRequests();
   }, [token]);
 
+  useEffect(() => {
+    const userId = sessionStorage.getItem("userId");
+    if (!userId) return;
+
+    axios
+      .get(`${API.PURCHASE_API}/budget/department/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => {
+        console.log("Budget API response:", res.data);
+        // API returns { budgets: [...] }
+        const budgets = Array.isArray(res.data.budgets)
+          ? res.data.budgets.map((b) => ({
+              id: b.id,
+              budget_name: b.name, // Map name to budget_name for consistency
+              name: b.name,
+              workflow_id: b.workflow_id,
+              workflow_name: b.workflow_name,
+            }))
+          : [];
+        console.log("Parsed budgets:", budgets);
+        setBudgetOptions(budgets);
+      })
+      .catch((err) => console.error("Error fetching budgets:", err));
+  }, [token]);
+
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`${API.PURCHASE_API}/indenting/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+      await axios.delete(`${API.PURCHASE_API}/indenting/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setRequests((prev) => prev.filter((request) => request.id !== id));
       setModalProps({
         type: "success",
@@ -188,7 +276,24 @@ const AllRequest = () => {
   };
 
   const handleEdit = (item) => {
-    setEditData({ ...item }); // item has request_for (lowercase f)
+    // Ensure products array exists for editing
+    const products =
+      Array.isArray(item.products) && item.products.length > 0
+        ? item.products.map((p) => ({ ...p }))
+        : [
+            {
+              id: item.id ?? null,
+              asset_name: item.asset_name || "",
+              quantity: item.quantity ?? "",
+              uom: item.uom || "",
+              category: item.category || "",
+              request_for: item.request_for || "",
+              remarks: item.remarks || "",
+              budget: item.budget ?? item.budget_id ?? null,
+            },
+          ];
+
+    setEditData({ ...item, products }); // item has request_for (lowercase f)
     setIsEditOpen(true);
     setIsRequestMaterialOpen(false);
   };
@@ -197,30 +302,54 @@ const AllRequest = () => {
     if (!editData) return;
 
     try {
+      // Build products payload from editData.products
+      const productsPayload = (
+        Array.isArray(editData.products) ? editData.products : []
+      ).map((p) => ({
+        id: p.id ?? null,
+        asset_name: p.asset_name || "",
+        quantity: Number(p.quantity) || 0,
+        uom: p.uom || "",
+        category: p.category || "",
+        request_for: p.request_for || "",
+        remarks: p.remarks || "",
+        budget: p.budget ?? p.budget_id ?? null,
+      }));
+
       const payload = {
-        asset_name: editData.asset_name || "Default Asset",
-        remarks: editData.remarks || "",
-        quantity: Number(editData.quantity) || 0,
-        user_id: createdBy,
-        request_for: editData.request_for,
-        category: editData.category,
+        user_id: Number(createdBy) || null,
+        indent_id: editData.indent_id ?? editData.id ?? null,
+        products: productsPayload,
       };
 
-      const response = await axios.put(
-        `${API.PURCHASE_API}/indenting/update-details/${editData.id}`,
-        payload, // ✅ request body
-        {
-          headers: { Authorization: `Bearer ${token}` }, // ✅ config
-        }
-      );
+      // Build URL and append indent_id as query parameter when available
+        // await axios.delete(`${API.PURCHASE_API}/indenting/${id}`
+      const baseUrl =
+        `${API.PURCHASE_API}/indenting/update-details/`;
+      const indentParam = payload.indent_id
+        ? `${encodeURIComponent(payload.indent_id)}`
+        : "";
+      const url = `${baseUrl}${indentParam}`;
 
-      if (response.status === 200) {
+      const response = await axios.put(url, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.status === 200 || response.status === 201) {
+        // Update local list: optimistic refresh using response.updatedIndenting or by mapping changed products
+        // If backend returns updated indent, use it; otherwise, update locally from editData
+        const updated = response.data?.updatedIndenting ?? null;
         setRequests((prev) =>
-          prev.map((item) =>
-            item.id === editData.id
-              ? { ...item, ...response.data.updatedIndenting }
-              : item
-          )
+          prev.map((item) => {
+            if (
+              (item.id && item.id === editData.id) ||
+              (item.indent_id && item.indent_id === editData.indent_id)
+            ) {
+              if (updated) return { ...item, ...updated };
+              return { ...item, ...editData };
+            }
+            return item;
+          })
         );
         setIsEditOpen(false);
         setModalProps({
@@ -229,16 +358,14 @@ const AllRequest = () => {
           message: "Request updated successfully!",
         });
         setShowModal(true);
+      } else {
+        throw new Error("Unexpected response from server");
       }
     } catch (error) {
       const errorMessage =
         error.response?.data?.message ||
         "Failed to update request. Please try again.";
-      setModalProps({
-        type: "error",
-        title: "Error!",
-        message: errorMessage,
-      });
+      setModalProps({ type: "error", title: "Error!", message: errorMessage });
       setShowModal(true);
       console.error("Update error:", error.response || error);
     }
@@ -250,11 +377,33 @@ const AllRequest = () => {
     setIsEditOpen(false);
   };
 
+  // Update product field in editData
+  const handleProductChange = (index, field, value) => {
+    setEditData((prev) => {
+      if (!prev) return prev;
+      const products = Array.isArray(prev.products) ? [...prev.products] : [];
+      products[index] = { ...products[index], [field]: value };
+      return { ...prev, products };
+    });
+  };
+
+  const handleRemoveProduct = (index) => {
+    setEditData((prev) => {
+      if (!prev) return prev;
+      const products = Array.isArray(prev.products) ? [...prev.products] : [];
+      products.splice(index, 1);
+      return { ...prev, products };
+    });
+  };
+
   useEffect(() => {
     const fetchCategoryOptions = async () => {
       if (requestfor) {
         try {
-          const response = await axios.get(`${API.PURCHASE_API}/assets?request_for=${requestfor}`, { headers: { Authorization: `Bearer ${token}` } });
+          const response = await axios.get(
+            `${API.PURCHASE_API}/assets?request_for=${requestfor}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
           const categories = Array.isArray(response.data)
             ? response.data.map((item) => item.category)
             : [];
@@ -319,6 +468,10 @@ const AllRequest = () => {
     value: cat,
     label: cat,
   }));
+    const statusSelectOptions = statusOptions.map((s) => ({ value: s, label: s }));
+  const handleStatusSelectChange = (opt) => {
+    setStatus(opt?.value || "");
+  };
   const exportData = filteredRequests.map((item, idx) => ({
     sno: idx + 1,
     request_for: item.request_for,
@@ -328,7 +481,15 @@ const AllRequest = () => {
     uom: item.uom,
     status: item.status,
   }));
-  return (
+  const getBudgetDisplayName = (budgetVal) => {
+    if (budgetVal === null || budgetVal === undefined) return "";
+    const found = budgetOptions.find(
+      (b) =>
+        String(b.id) === String(budgetVal) ||
+        String(b.budget_name) === String(budgetVal)
+    );
+    return found ? found.budget_name : String(budgetVal);
+  };  return (
     <div className="p-2">
       <div className="flex flex-wrap gap-4 mb-4">
         <input
@@ -367,18 +528,15 @@ const AllRequest = () => {
           />
         </div>
 
-        <select
-          value={status}
-          onChange={handleStatusChange}
-          className="border p-2 rounded-xl"
-        >
-          <option value="">All Status</option>
-          {statusOptions.map((statusName) => (
-            <option key={statusName} value={statusName}>
-              {statusName}
-            </option>
-          ))}
-        </select>
+         <div style={{ minWidth: 180 }}>
+          <Select
+            options={statusSelectOptions}
+            value={statusSelectOptions.find((opt) => opt.value === status) || null}
+            onChange={(opt) => handleStatusSelectChange(opt)}
+            placeholder="All Status"
+            isClearable
+          />
+        </div>
         <div className="flex-1 flex justify-end">
           <DownloadTableButtons
             data={exportData}
@@ -388,18 +546,18 @@ const AllRequest = () => {
         </div>
       </div>
       <div
-        className="overflow-x-auto rounded-lg shadow bg-white p-4"
-        style={{ maxHeight: 400, overflowY: "auto", minWidth: 900 }}
+        className=" rounded-lg shadow bg-white p-4"
+        style={{ maxHeight: 600, overflowY: "auto", minWidth: 900 }}
       >
         <table className="w-full bg-white rounded-lg border-collapse">
           <thead className="border-b-2 border-black  bg-white z-10">
             <tr>
               <th className="p-2 text-center">S. No.</th>
-              <th className="p-2 text-center">Request for</th>
-              <th className="p-2 text-center">Category</th>
-              <th className="p-2 text-center">Request Material</th>
-              <th className="p-2 text-center">Quantity</th>
-              <th className="p-2 text-center">UOM</th>
+              <th className="p-2 text-center">Indent ID</th>
+              <th className="p-2 text-center"> User ID</th>
+
+              <th className="p-2 text-center"> Created At</th>
+              <th className="p-2 text-center"> Stage </th>
               <th className="p-2 text-center">Status</th>
               <th className="p-2 text-center">Action</th>
             </tr>
@@ -407,20 +565,21 @@ const AllRequest = () => {
           <tbody>
             {paginatedRequests.length > 0 ? (
               paginatedRequests.map((item, index) => (
-                <tr key={item.id} className="odd:bg-blue-50">
+                <tr key={item.indent_id || item.id} className="odd:bg-blue-50">
                   <td className="p-2 text-center">
                     {(currentPage - 1) * rowsPerPage + index + 1}
                   </td>{" "}
-                  <td className="p-2 text-center">{item.request_for}</td>
-                  <td className="p-2 text-center">{item.category}</td>
                   <td
                     className="p-2 text-center text-blue-600 cursor-pointer"
                     onClick={() => handleRequestMaterialClick(item)}
                   >
-                    {item.asset_name}
+                    {item.indent_id}
                   </td>
-                  <td className="p-2 text-center">{item.quantity}</td>
-                  <td className="p-2 text-center">{item.uom}</td>
+                  <td className="p-2 text-center">{item.user_id}</td>
+                  <td className="p-2 text-center">
+                    {new Date(item.created_at).toLocaleDateString()}
+                  </td>
+                  <td className="p-2 text-center">{item.stage || "N/A"}</td>
                   <td
                     className={`p-2 text-center ${
                       item.status === "Pending"
@@ -472,7 +631,7 @@ const AllRequest = () => {
                       }`}
                       onClick={() => {
                         if (item.status !== "Approved") {
-                          setDeleteId(item.id);
+                          setDeleteId(item.id ?? item.indent_id);
                           setShowDeleteModal(true);
                         }
                       }}
@@ -525,104 +684,152 @@ const AllRequest = () => {
       </div>
 
       {isEditOpen && editData && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-20">
-          <div className="bg-white p-5 rounded-xl w-[40%]">
-            {" "}
-            {/* Adjusted width for better fit */}
-            <div className="flex justify-between items-center">
-              <h2 className="font-bold mb-4 text-left">Edit Raise Request</h2>
-              <button onClick={() => setIsEditOpen(false)}>
-                <span className="text-red-500 text-2xl">✖</span>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-xl w-[90%] md:w-[50%] max-h-[80vh] overflow-y-auto shadow-lg mx-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Edit Raise Request</h2>
+              <button
+                onClick={() => setIsEditOpen(false)}
+                aria-label="Close"
+                className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"
+              >
+                <span className="text-gray-600 text-lg">✖</span>
               </button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {" "}
-              {/* Responsive grid */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Request For
-                </label>
-                <Select
-                  options={requestForOptions}
-                  value={
-                    requestForOptions.find(
-                      (opt) => opt.value === editData.request_for
-                    ) || null
-                  }
-                  onChange={(opt) =>
-                    setEditData({
-                      ...editData,
-                      request_for: opt?.value || "",
-                      category: "",
-                    })
-                  }
-                  placeholder="Select Request For"
-                  isClearable
-                  className="w-full"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Category
-                </label>
-                <Select
-                  options={categorySelectOptions}
-                  value={
-                    categorySelectOptions.find(
-                      (opt) => opt.value === editData.category
-                    ) || null
-                  }
-                  onChange={(opt) =>
-                    setEditData({
-                      ...editData,
-                      category: opt?.value || "",
-                    })
-                  }
-                  placeholder="Select Category"
-                  isClearable
-                  className="w-full"
-                  isDisabled={
-                    !editData.request_for || categoryOptions.length === 0
-                  }
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Quantity
-                </label>
-                <input
-                  type="number"
-                  value={editData.quantity || ""}
-                  onChange={(e) =>
-                    setEditData({ ...editData, quantity: e.target.value })
-                  }
-                  className="border p-2 w-full rounded-xl"
-                  min="0"
-                />
+
+            <div className="mb-4 text-sm">
+                <div className="flex justify-between items-center mb-2">
+                <div>
+                  <span className="text-xs text-gray-500">Indent Id</span>
+                  <span className="font-medium">
+                    {editData.indent_id || editData.id || "N/A"}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-xs text-gray-500">Created By</span>
+                  <span className="font-medium">
+                    {editData.user_id || "N/A"}
+                  </span>
+                </div>
               </div>
             </div>
-            <label className="block text-sm font-medium text-gray-700 mt-4 mb-1">
-              Description (Remarks)
-            </label>
-            <textarea
-              placeholder="Enter description here..."
-              value={editData.remarks || ""}
-              onChange={(e) =>
-                setEditData({ ...editData, remarks: e.target.value })
-              }
-              className="p-2 border rounded-lg w-full mb-6"
-              rows="3"
-            />
-            <div className="flex justify-start gap-4 mt-4">
+
+            <div className="overflow-x-auto border rounded-lg">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="p-3 text-left">Sr.No.</th>
+                    <th className="p-3 text-left">Request for</th>
+                    <th className="p-3 text-left">Category</th>
+                    <th className="p-3 text-left">Material</th>
+                    <th className="p-3 text-left">Quantity</th>
+                    <th className="p-3 text-left">Uom</th>
+                    <th className="p-3 text-left">Budget</th>
+                    <th className="p-3 text-left"> </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(Array.isArray(editData.products)
+                    ? editData.products
+                    : []
+                  ).map((p, idx) => (
+                    <tr
+                      key={idx}
+                      className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                    >
+                      <td className="p-3 align-top">{idx + 1}.</td>
+                      <td className="p-3 align-top">
+                        <input
+                          type="text"
+                          value={p.request_for || ""}
+                          onChange={(e) =>
+                            handleProductChange(
+                              idx,
+                              "request_for",
+                              e.target.value
+                            )
+                          }
+                          className="border p-2 rounded w-full"
+                        />
+                      </td>
+                      <td className="p-3 align-top">
+                        <input
+                          type="text"
+                          value={p.category || ""}
+                          onChange={(e) =>
+                            handleProductChange(idx, "category", e.target.value)
+                          }
+                          className="border p-2 rounded w-full"
+                        />
+                      </td>
+                      <td className="p-3 align-top">
+                        <input
+                          type="text"
+                          value={p.asset_name || ""}
+                          onChange={(e) =>
+                            handleProductChange(
+                              idx,
+                              "asset_name",
+                              e.target.value
+                            )
+                          }
+                          className="border p-2 rounded w-full"
+                        />
+                      </td>
+                      <td className="p-3 align-top">
+                        <input
+                          type="number"
+                          value={p.quantity ?? ""}
+                          onChange={(e) =>
+                            handleProductChange(idx, "quantity", e.target.value)
+                          }
+                          className="border p-2 rounded w-24"
+                        />
+                      </td>
+                      <td className="p-3 align-top">
+                        <input
+                          type="text"
+                          value={p.uom || ""}
+                          onChange={(e) =>
+                            handleProductChange(idx, "uom", e.target.value)
+                          }
+                          className="border p-2 rounded w-28"
+                        />
+                      </td>
+                      <td className="p-3 align-top">
+                        <input
+                          type="number"
+                          value={p.budget ?? p.budget_id ?? ""}
+                          onChange={(e) =>
+                            handleProductChange(idx, "budget", e.target.value)
+                          }
+                          className="border p-2 rounded w-28"
+                        />
+                      </td>
+                      <td className="p-3 align-top text-right">
+                        <button
+                          onClick={() => handleRemoveProduct(idx)}
+                          className="text-gray-400 hover:text-red-500"
+                        >
+                          ✖
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex justify-start gap-4 mt-6">
               <button
                 onClick={handleUpdate}
-                className="bg-[#005AE6] min-w-[100px] text-white p-2 rounded-lg hover:bg-blue-700" // Added min-width
+                className="bg-[#005AE6] min-w-[140px] text-white p-3 rounded-lg hover:bg-blue-700"
               >
                 Update
               </button>
               <button
                 onClick={() => setIsEditOpen(false)}
-                className="border border-black min-w-[100px] p-2 rounded-lg hover:bg-gray-100" // Added min-width
+                className="border border-black min-w-[140px] p-3 rounded-lg hover:bg-gray-100"
               >
                 Cancel
               </button>
@@ -663,72 +870,112 @@ const AllRequest = () => {
           <div className="bg-white p-6 rounded-xl w-[90%] md:w-[50%] max-h-[80vh] overflow-y-auto shadow-lg">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Raise request details</h2>
-              <button onClick={() => setIsRequestMaterialOpen(false)}>
-                <span className="text-red-500 text-2xl">✖</span>
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-6 text-sm">
-              <div className="flex">
-                <span className="font-semibold w-32 shrink-0">Indent Id:</span>
-                <span>{selectedRequest.id || "N/A"}</span>
-              </div>
-              <div className="flex">
-                <span className="font-semibold w-32 shrink-0">
-                  Request for:
-                </span>
-                <span>{selectedRequest.request_for || "N/A"}</span>
-              </div>
-              <div className="flex">
-                <span className="font-semibold w-32 shrink-0">Category:</span>
-                <span>{selectedRequest.category || "N/A"}</span>
-              </div>
-              <div className="flex">
-                <span className="font-semibold w-32 shrink-0">
-                  Request material:
-                </span>
-                <span>{selectedRequest.asset_name || "N/A"}</span>
-              </div>
-              <div className="flex">
-                <span className="font-semibold w-32 shrink-0">Quantity:</span>
-                <span>{selectedRequest.quantity || "N/A"}</span>
-              </div>
-              <div className="flex">
-                <span className="font-semibold w-32 shrink-0">UOM:</span>
-                <span>{selectedRequest.uom || "N/A"}</span>
-              </div>
-              <div className="flex">
-                <span className="font-semibold w-32 shrink-0">Workflow:</span>
-                <span>{selectedRequest.workflow_id || "N/A"}</span>
-              </div>
-              <div className="flex">
-                <span className="font-semibold w-32 shrink-0">Budget ID:</span>
-                <span>{selectedRequest.budget_id || "N/A"}</span>
-              </div>
-              <div className="flex md:col-span-2">
-                <span className="font-semibold w-32 shrink-0">
-                  Created By User ID:
-                </span>
-                <span>{selectedRequest.user_id || "N/A"}</span>
-              </div>
-              <div className="flex md:col-span-2">
-                <span className="font-semibold w-32 shrink-0">Department:</span>
-                <span>
-                  {selectedRequest.dept_id
-                    ? `${
-                        deptIdToNameMap[selectedRequest.dept_id] ||
-                        "Unknown Dept."
-                      }`
-                    : "N/A"}
-                </span>
+              <div className="flex items-center gap-3">
+                {selectedRequest?.status && (
+                  <span className="px-3 py-1 rounded-full bg-red-50 text-red-600 text-sm font-medium">
+                    {selectedRequest.status}
+                  </span>
+                )}
+                <button
+                  onClick={() => setIsRequestMaterialOpen(false)}
+                  aria-label="Close"
+                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"
+                >
+                  <span className="text-gray-600 text-lg">✖</span>
+                </button>
               </div>
             </div>
 
-            <div className="mt-4">
-              <p className="font-semibold mb-1">Description (Remarks):</p>
-              <p className="text-justify text-sm break-words">
-                {selectedRequest.remarks || "No description provided."}
-              </p>
+            <div className="text-sm">
+              <div className="mb-4 text-sm">
+                <div className="flex justify-between items-center mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500">Indent Id:</span>
+                    <span className="font-medium">
+                      {selectedRequest.indent_id || selectedRequest.id || "N/A"}
+                    </span>
+                  </div>
+
+                  <div className="text-right">
+                    <span className="text-xs text-gray-500">Created By:</span>
+                    <span className="font-medium">
+                      {selectedRequest.user_id || "N/A"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Products table */}
+              <div className="overflow-x-auto border rounded-lg">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="p-3 text-left">Sr.No.</th>
+                      <th className="p-3 text-left">Request for</th>
+                      <th className="p-3 text-left">Category</th>
+                      <th className="p-3 text-left">Material</th>
+                      <th className="p-3 text-left">Quantity</th>
+                      <th className="p-3 text-left">Uom</th>
+                      {/* <th className="p-3 text-left">Workflow</th> */}
+                      <th className="p-3 text-left">Budget</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(Array.isArray(selectedRequest.products) &&
+                    selectedRequest.products.length > 0
+                      ? selectedRequest.products
+                      : [
+                          {
+                            asset_name: selectedRequest.asset_name,
+                            category: selectedRequest.category,
+                            quantity: selectedRequest.quantity,
+                            uom: selectedRequest.uom,
+                            request_for: selectedRequest.request_for,
+                            budget_id: selectedRequest.budget_id,
+                          },
+                        ]
+                    ).map((p, idx) => (
+                      <tr
+                        key={idx}
+                        className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                      >
+                        <td className="p-3 align-top">{idx + 1}.</td>
+                        <td className="p-3 align-top">
+                          <div className="font-medium">
+                            {p.request_for || "-"}
+                          </div>
+                          {p.remarks && (
+                            <div className="text-xs text-gray-500">
+                              {p.remarks}
+                            </div>
+                          )}
+                        </td>
+                        <td className="p-3 align-top">{p.category || "-"}</td>
+                        <td className="p-3 align-top">{p.asset_name || "-"}</td>
+                        <td className="p-3 align-top">{p.quantity ?? "-"}</td>
+                        <td className="p-3 align-top">{p.uom || "-"}</td>
+                        {/* <td className="p-3 align-top">
+                          {selectedRequest.workflow_id || "-"}
+                        </td> */}
+                        <td className="p-3 align-top">
+                          {getBudgetDisplayName(p.budget_id ?? selectedRequest.budget_id)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Remarks shown only for Rejected and Resubmitted statuses */}
+              {(selectedRequest.status === "Rejected" ||
+                selectedRequest.status === "Resubmitted") && (
+                <div className="mt-4">
+                  <p className="font-semibold mb-1">Remark</p>
+                  <div className="p-3 border rounded-lg bg-white text-sm text-justify">
+                    {selectedRequest.remarks || "No description provided."}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

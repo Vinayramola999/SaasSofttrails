@@ -9,8 +9,6 @@ import folderIcon from "../../../assests/folder.png";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
-
-
 // Import constants
 import {
   VALIDATION_REGEX,
@@ -27,12 +25,10 @@ import {
   DEFAULT_CONTACT,
   TABLE_CONFIG,
 } from "../utils/constants";
-
 // Custom hooks
 import useCustomerData from "../../hooks/useCustomerData";
 import useFormValidation from "../../hooks/useFormValidation";
 import useAccessControl from "../../hooks/useAccessControl";
-
 // Component imports
 import ContactFormModal from "../modals/ContactFormModal";
 import CustomerFormModal from "../modals/CustomerFormModal";
@@ -45,9 +41,7 @@ import LoadingSpinner from "../component/LoadingSpinner";
 import ErrorBoundary from "../component/ErrorBoundary";
 import ConfirmationModal from "../../../NewComponents/ConfirmationModal";
 import MessageModal from "../../../NewComponents/MessageModal";
-
 import "../../../App.css";
-
 const Customer = () => {
   const API_BASE_URL = process.env.REACT_APP_API_CRM_BASE_URL;
   const navigate = useNavigate();
@@ -55,7 +49,6 @@ const Customer = () => {
   // ============================================================================
   // CUSTOM HOOKS
   // ============================================================================
-
   // Data management hook
   const {
     customers,
@@ -73,7 +66,6 @@ const Customer = () => {
     updateContactData,
     deleteContact,
   } = useCustomerData();
-
   // Form validation hook
   const {
     errors: validationErrors,
@@ -88,7 +80,6 @@ const Customer = () => {
   // ============================================================================
   // LOCAL STATE MANAGEMENT
   // ============================================================================
-
   // Modal states
   const [modals, setModals] = useState({
     customer: false,
@@ -98,7 +89,6 @@ const Customer = () => {
     contactDetails: false,
     flagReason: false,
   });
-
   // Form states
   const [newCustomer, setNewCustomer] = useState(DEFAULT_CUSTOMER);
   const [newContact, setNewContact] = useState(DEFAULT_CONTACT);
@@ -112,7 +102,6 @@ const Customer = () => {
     selectedContact: null,
     editingContact: null,
   });
-
   // Error states
   const [errors, setErrors] = useState({
     general: "",
@@ -121,19 +110,16 @@ const Customer = () => {
     phone: "",
     email: "",
   });
-
   // Flag functionality states 
   const [flagState, setFlagState] = useState({
     reasonText: "",
     customerId: null,
   });
-
   // Filter and pagination states
   const [locationData, setLocationData] = useState({
     states: [],
     cities: [],
   });
-
   const [filterState, setFilterState] = useState({
     searchQuery: "",
     selectedState: "",
@@ -158,11 +144,9 @@ const Customer = () => {
     message: "",
     type: "",
   });
-
   // ============================================================================
   // UTILITY FUNCTIONS
   // ============================================================================
-
   const getToken = useCallback(() => sessionStorage.getItem("token"), []);
 
   const validateGST = useCallback((gst) => VALIDATION_REGEX.GST.test(gst), []);
@@ -211,7 +195,7 @@ const Customer = () => {
     }
 
     try {
-      const response = await axios.post(`https://devapi.softtrails.net/saas/test/users/verify-token`, { token });
+      const response = await axios.post(`https://devdemo.softtrails.net/users/verify-token`, { token });
       console.log("Token is valid:", response.data);
     } catch (error) {
       console.error("Token verification failed:", error.response?.data || error.message);

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import RegularizationTab from './RegularizationTab';
 import AttendanceTab from './AttendanceTab';
@@ -9,6 +10,7 @@ const HRCorner = () => {
     const [userData, setUserData] = useState(null);
     const [loading, setLoading] = useState(null);
     const [activeTab, setActiveTab] = useState("RegularizationTab");
+    const navigate = useNavigate();
     const userId = sessionStorage.getItem('userId');
     const [tabs, setTabs] = useState([{ id: "RegularizationTab", label: "RegularizationTab" }]);
 
@@ -24,7 +26,7 @@ const HRCorner = () => {
         if (userId) {
             const fetchUserData = async () => {
                 try {
-                    const response = await axios.get(`https://devapi.softtrails.net/saas/test/users/id_user/${userId}`, {
+                    const response = await axios.get(`https://devdemo.softtrails.net/users/id_user/${userId}`, {
                         headers: {
                             Authorization: `Bearer ${token}`,
                         },
@@ -41,44 +43,43 @@ const HRCorner = () => {
         }
     }, [token, userId]);
 
-   useEffect(() => {
-    const checkAMSAccess = async () => {
-        setLoading(true);
-        try {
-            const userId = sessionStorage.getItem('userId');
-            const token = sessionStorage.getItem('token');
-            if (!userId || !token) {
-                console.error('userId or token is missing');
-                return;
+    useEffect(() => {
+        const checkAMSAccess = async () => {
+            setLoading(true);
+            try {
+                const userId = sessionStorage.getItem('userId');
+                const token = sessionStorage.getItem('token');
+                if (!userId || !token) {
+                    console.error('userId or token is missing');
+                    return;
+                }
+
+                const response = await axios.get(`https://devdemo.softtrails.net/access/access/${userId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` },
+                });
+
+                const userAccess = Array.isArray(response.data) ? response.data : [];
+
+                const accessibleTabs = [];
+                // if (userAccess.some(access => access.api_name === 'AttendanceTab')) {
+                //     accessibleTabs.push({ id: "AttendanceTab", label: "Attendance" });
+                // }
+                if (userAccess.some(access => access.api_name === 'RegularizationTab')) {
+                    accessibleTabs.push({ id: "RegularizationTab", label: "Regularization" });
+                }
+                setTabs(accessibleTabs.length > 0 ? accessibleTabs : [{ id: "RegularizationTab", label: "Regularization" }]);
+                if (accessibleTabs.length > 0) {
+                    setActiveTab(accessibleTabs[0].id);
+                }
+            } catch (error) {
+                console.error('Error during API call: ', error);
+            } finally {
+                setLoading(false);
             }
+        };
 
-            const response = await axios.get(`https://devapi.softtrails.net/saas/test/access/access/${userId}`, {
-                headers: { 'Authorization': `Bearer ${token}` },
-            });
-
-            const userAccess = Array.isArray(response.data) ? response.data : [];
-
-            const accessibleTabs = [];
-            if (userAccess.some(access => access.api_name === 'AttendanceTab')) {
-                accessibleTabs.push({ id: "AttendanceTab", label: "Attendance" });
-            }
-            if (userAccess.some(access => access.api_name === 'RegularizationTab')) {
-                accessibleTabs.push({ id: "RegularizationTab", label: "Regularization" });
-            }
-
-            setTabs(accessibleTabs.length > 0 ? accessibleTabs : [{ id: "RegularizationTab", label: "Regularization" }]);
-            if (accessibleTabs.length > 0) {
-                setActiveTab(accessibleTabs[0].id);
-            }
-        } catch (error) {
-            console.error('Error during API call: ', error);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    checkAMSAccess();
-}, []);
+        checkAMSAccess();
+    }, []);
 
     const tabRefs = useRef({});
     const [indicatorStyle, setIndicatorStyle] = useState({ width: 0, left: 0 });
@@ -131,7 +132,7 @@ const HRCorner = () => {
 
                     {/* Tab Content */}
                     <div className="flex-grow border-gray-300">
-                        {activeTab === "AttendanceTab" && <AttendanceTab />}
+                        {/* {activeTab === "AttendanceTab" && <AttendanceTab />} */}
                         {activeTab === "RegularizationTab" && <RegularizationTab />}
                     </div>
                 </div>

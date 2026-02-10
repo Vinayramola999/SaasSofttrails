@@ -571,14 +571,14 @@ for (let indent of editableIndents) {
                 { key: 'date', label: 'Date', render: (r) => r.date || '-' },
                 { key: 'lead_uid', label: 'Lead ID', render: (r) => r.lead_uid || '-' },
                 { key: 'customer_uid', label: 'Customer UID', render: (r) => r.customer_uid || r.customer_id || '-' },
-                { 
+                {
                   key: 'customer_name', 
                   label: 'Customer Name', 
                   render: (r) => {
                     const name = r.customer_name || '-';
                     const isExpanded = expandedRow === `customer_${r.lead_uid}`;
                     return (
-                      <div className="text-left whitespace-normal break-words max-w-[150px]">
+                      <div className="text-center whitespace-normal break-words max-w-[150px] mx-auto">
                         {isExpanded ? name : (name.length > 20 ? `${name.slice(0, 20)}...` : name)}
                         {name.length > 20 && (
                           <button
@@ -591,7 +591,7 @@ for (let indent of editableIndents) {
                       </div>
                     );
                   },
-                  cellClass: 'text-left whitespace-normal',
+                  cellClass: 'text-center whitespace-normal',
                 },
                 { key: 'requirement_document_name', label: 'Requirement Doc.', render: (r) => r.requirement_document_name || '-' },
                 { key: 'status', label: 'Status', render: (r) => {
@@ -653,7 +653,7 @@ for (let indent of editableIndents) {
                 <div className="grid grid-cols-3 gap-x-8 gap-y-2">
                   <p><strong>Lead ID:</strong> {selectedDoc.lead_uid}</p>
                   <p><strong>Customer UID:</strong> {selectedDoc.customer_uid || selectedDoc.customer_id}</p>
-                  <p><strong>Customer Name:</strong> {selectedDoc.customer_name}</p>
+                  <p className="text-center"><strong>Customer Name:</strong> {selectedDoc.customer_name}</p>
                   <p><strong>Require Doc Name:</strong> {selectedDoc.requirement_document_name}</p>
                   <p><strong>Query No:</strong> {selectedDoc.reference_number}</p>
                   <p><strong>Description:</strong> {selectedDoc.remarks || "—"}</p>
@@ -776,7 +776,7 @@ for (let indent of editableIndents) {
                 <div className="grid grid-cols-3 gap-x-8 gap-y-2">
                   <p><strong>Lead ID:</strong> {selectedRe.lead_uid}</p>
                   <p><strong>Customer UID:</strong> {selectedRe.customer_uid || selectedRe.customer_id}</p>
-                  <p><strong>Customer Name:</strong> {selectedRe.customer_name}</p>
+                  <p className="text-center"><strong>Customer Name:</strong> {selectedRe.customer_name}</p>
                   <p><strong>Require Doc Name:</strong> {selectedRe.requirement_document_name}</p>
                   <p><strong>Query No:</strong> {selectedRe.reference_number}</p>
                   <p><strong>Description:</strong> {selectedRe.remarks || "—"}</p>

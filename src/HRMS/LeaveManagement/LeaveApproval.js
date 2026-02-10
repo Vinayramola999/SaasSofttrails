@@ -6,6 +6,7 @@ import excel from "../../assests/excel.png";
 import folder from '../../assests/folder.png';
 import * as XLSX from 'xlsx';
 import 'jspdf-autotable';
+import { HRMS_API_BASE } from '../../config/apiBase';
 
 const getUniqueOptions = (array, key) => {
     return [...new Set(array.map((item) => item[key]))];
@@ -129,8 +130,7 @@ const LeaveModal = ({ leave, onClose, onUpdateLeaves }) => {
                 status: status,
                 remarks: finalRemarks, // Include final remarks in the payload
             };
-            const response = await axios.put(
-                `https://devapi.softtrails.net/hrms/test/leave/leave-requests/${leave.id}`,
+            const response = await axios.put(`${HRMS_API_BASE}/leave/leave-requests/${leave.id}`,
                 payload,
                 {
                     headers: {
@@ -139,7 +139,9 @@ const LeaveModal = ({ leave, onClose, onUpdateLeaves }) => {
                 }
             );
             // Update the remarks and status in the parent component immediately
+            // onUpdateLeaves(leave.id, status, finalRemarks);
             onUpdateLeaves(leave.id, status, finalRemarks);
+
             setIsEditable(false); // Disable editing of remarks after the action
             onClose(); // Close the modal
             console.log('Leave status updated:', response.data);
@@ -154,146 +156,125 @@ const LeaveModal = ({ leave, onClose, onUpdateLeaves }) => {
         }
     };
 
-    // Handle change in remarks field
-    const handleRemarksChange = (e) => {
-        setRemarks(e.target.value); // Update remarks state
+    const openModal = (actionType) => {
+        setErrorMessage("");
+
+        if (remarks.trim() === "") {
+            setAction(actionType);
+            setIsModalOpen(true);
+            return;
+        }
+
+        // if remarks exist → directly call API
+        handleRequest(actionType);
     };
 
-    const openModal = (actionType) => {
-        setAction(actionType);
-        setIsModalOpen(true);
-    };
 
     const closeModal = () => {
         setIsModalOpen(false);
         setAction('');
     };
 
-    const confirmAction = () => {
-        handleRequest(action);
-        closeModal();
-    };
-    const placeholderText = leave.status === 'pending' && isEditable
-        ? "Type your remarks here..."
-        : (remarks.trim() === '' ? 'NA' : remarks); // Show 'NA' if remarks is empty
-
     return (
         <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center z-30">
-            <div className="bg-white p-6 rounded-lg shadow-lg w-96 max-h-[80vh] overflow-y-auto scrollbar-hide">
+            <div className="bg-white p-6 rounded-lg shadow-lg w-[55%] max-h-[80vh] overflow-y-auto scrollbar-hide">
                 {/* Header */}
                 <div className="flex justify-between items-center border-b pb-2">
                     <h2 className="text-[16px] font-semibold">Leave Details</h2>
-                    <button className="text-black-600 text-lg" onClick={onClose}>
-                        &times;
-                    </button>
+                    <button className="text-black-600 text-lg" onClick={onClose}> &times; </button>
                 </div>
 
                 {/* Modal Body */}
-                <div className="mt-3 grid grid-cols-2 gap-4">
-                    {/* Display leave details */}
-                    {[
-                        'User Name',
-                        'Leave Type',
-                        'Start Date',
-                        'End Date',
-                        'Status',
-                        'Leave Days',
-                        'Half Day Start',
-                        'Half Day End',
-                    ].map((label, index) => {
-                        let value;
-                        switch (label) {
-                            case 'User Name':
-                                value = `${leave.employee_first_name || ''} ${leave.employee_last_name || ''}`.trim();
-                                break;
-                            case 'Start Date':
-                            case 'End Date':
-                                value = (leave[label.toLowerCase().replace(/ /g, '_')] || 'N/A').split('T')[0];
-                                break;
-                            case 'Leave Days':
-                                value = leave.leave_days || 'N/A';
-                                break;
-                            case 'Half Day Start':
-                                value = leave.half_day_start ? 'Yes' : 'No';
-                                break;
-                            case 'Half Day End':
-                                value = leave.half_day_end ? 'Yes' : 'No';
-                                break;
-                            default:
-                                value = leave[label.toLowerCase().replace(/ /g, '_')] || 'N/A';
-                        }
+                <div className="mt-3">
+                    {/* ROW 1: User Name, Leave Type, Start Date, End Date */}
+                    <div className="grid grid-cols-4 gap-4">
+                        {/* User Name */}
+                        <div>
+                            <label className="text-sm font-medium">User Name</label>
+                            <input disabled className="mt-1 p-2 border w-full bg-gray-100 rounded" value={`${leave.employee_first_name || ''} ${leave.employee_last_name || ''}`} />
+                        </div>
+                        {/* Leave Type */}
+                        <div>
+                            <label className="text-sm font-medium">Leave Type</label>
+                            <input disabled className="mt-1 p-2 border w-full bg-gray-100 rounded"
+                                value={leave.leave_type || 'N/A'} />
+                        </div>
+                        {/* Start Date */}
+                        <div>
+                            <label className="text-sm font-medium">Start Date</label>
+                            <input disabled className="mt-1 p-2 border w-full bg-gray-100 rounded" value={(leave.start_date || '').split('T')[0]} />
+                        </div>
+                        {/* End Date */}
+                        <div>
+                            <label className="text-sm font-medium">End Date</label>
+                            <input disabled className="mt-1 p-2 border w-full bg-gray-100 rounded" value={(leave.end_date || '').split('T')[0]} />
+                        </div>
+                    </div>
 
-                        return (
-                            <div key={index} className="flex flex-col">
-                                <label className="block text-sm font-medium text-gray-700">{label}</label>
-                                <input
-                                    type="text"
-                                    value={value}
-                                    disabled
-                                    className="mt-1 p-2 border w-full rounded-lg bg-gray-100"
-                                />
-                            </div>
-                        );
-                    })}
+                    {/* ROW 2: Status, Leave Days, Half Day Start, Half Day End */}
+                    <div className="grid grid-cols-4 gap-4 mt-3">
+                        <div>
+                            <label className="text-sm font-medium">Status</label>
+                            <input disabled className="mt-1 p-2 border w-full bg-gray-100 rounded" value={leave.status} />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Leave Days</label>
+                            <input disabled className="mt-1 p-2 border w-full bg-gray-100 rounded" value={leave.leave_days || 'N/A'} />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Half Day Start</label>
+                            <input disabled className="mt-1 p-2 border w-full bg-gray-100 rounded" value={leave.half_day_start ? "Yes" : "No"} />
+                        </div>
+                        <div>
+                            <label className="text-sm font-medium">Half Day End</label>
+                            <input disabled className="mt-1 p-2 border w-full bg-gray-100 rounded" value={leave.half_day_end ? "Yes" : "No"} />
+                        </div>
+                    </div>
+
+                    {/* ROW 3: Document (ONLY IF EXISTS) */}
                     {leave.document_url && leave.document_url !== "false" && (
-                        <div className="flex flex-col mt-2 justify-between">
-                            <label className="block text-sm font-medium text-gray-700">Document</label>
-                            <button onClick={() => window.open(leave.document_url, "_blank")} className="text-red-500 hover:text-red-700 flex gap-1" title="View Document" >
-                                <img src={folder} alt="preview" className="w-5 h-5" />
+                        <div className="mt-3 flex items-center gap-3">
+                            <label className="text-sm font-medium">Document:</label>
+
+                            <button
+                                onClick={() => window.open(leave.document_url, "_blank")}
+                                className="hover:opacity-80 flex items-center"
+                            >
+                                <img src={folder} alt="PDF" className="w-6 h-6" />
                             </button>
                         </div>
                     )}
 
-                    {/* Reason Field (Full Width) */}
-                    <div className="flex flex-col col-span-2">
-                        <label className="block text-sm font-medium text-gray-700">Reason</label>
-                        <textarea
-                            value={leave.reason || 'N/A'}
-                            disabled
-                            className="mt-1 p-2 border w-full rounded-lg bg-gray-100 h-[70px] overflow-y-auto"
-                        />
+
+                    {/* ROW 4: Reason */}
+                    <div className="mt-3">
+                        <label className="text-sm font-medium">Reason</label>
+                        <textarea disabled className="mt-1 p-2 border w-full bg-gray-100 rounded h-20" value={leave.reason || "N/A"} />
                     </div>
-                    {/* Remarks Field (Full Width with Scroll) */}
-                    <div className="flex flex-col col-span-2">
-                        <label className="block text-sm font-medium text-gray-700">Remarks</label>
-                        <textarea
-                            value={remarks}
-                            onChange={handleRemarksChange}
-                            disabled={!isEditable}
-                            className={`mt-1 p-2 border w-full rounded-lg h-[70px] overflow-y-auto ${isEditable ? 'bg-white' : 'bg-gray-100'}`}
-                            placeholder={placeholderText}
-                        />
+
+                    {/* ROW 5: Remarks */}
+                    <div className="mt-3">
+                        <label className="text-sm font-medium">Remarks</label>
+                        <textarea className={`mt-1 p-2 border w-full rounded h-20 ${isEditable ? 'bg-white' : 'bg-gray-100'}`} disabled={!isEditable} value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="Type your remarks..." />
                     </div>
                 </div>
 
                 {errorMessage && (
-                    <div className="p-3 text-sm text-red-600">
-                        {typeof errorMessage === 'object' ? JSON.stringify(errorMessage) : errorMessage}
-                    </div>
+                    <div className="p-3 text-sm text-red-600">{typeof errorMessage === 'object' ? JSON.stringify(errorMessage) : errorMessage}</div>
                 )}
 
                 {/* Action Buttons for Pending Status Only */}
                 {leave.status === 'pending' && isEditable && (
                     <div className="flex justify-between mt-4">
-                        <button
-                            className="bg-red-500 text-white py-2 px-4 rounded"
-                            onClick={() => openModal('rejected')}
-                        >
-                            Reject
-                        </button>
-                        <button
-                            className="bg-blue-600 text-white py-2 px-4 rounded"
-                            onClick={() => openModal('approved')}
-                        >
-                            Approve
-                        </button>
+                        <button className="bg-red-500 text-white py-2 px-4 rounded" onClick={() => openModal('rejected')} > Reject </button>
+                        <button className="bg-blue-600 text-white py-2 px-4 rounded" onClick={() => openModal('approved')} > Approve </button>
                     </div>
                 )}
 
                 <ConfirmationModal
                     isOpen={isModalOpen}
-                    message={`Are you sure you want to ${action} this request?`}
-                    onConfirm={confirmAction}
+                    message={remarks.trim() === "" ? `You haven't added remarks. Do you still want to ${action}?` : `Are you sure you want to ${action} this request?`}
+                    onConfirm={() => { handleRequest(action); closeModal(); }}
                     onCancel={closeModal}
                 />
             </div>
@@ -315,15 +296,13 @@ const LeaveManagement = () => {
     const fetchLeaves = async () => {
         if (!userId || !token) return;
         try {
-            const response = await axios.get(`https://devapi.softtrails.net/hrms/test/leave/manager/${userId}`, {
+            const response = await axios.get(`${HRMS_API_BASE}/leave/manager/${userId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
 
             const leaveRequests = response.data.leave_requests || [];
-
-            // Sort by `created_at` field, newest date first
             leaveRequests.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
             setLeaves(leaveRequests);
@@ -356,25 +335,37 @@ const LeaveManagement = () => {
 
     useEffect(() => {
         filterLeaves();
-    }, [usernameFilter, leaveTypeFilter, statusFilter, dateRange]);
+    }, [usernameFilter, leaveTypeFilter, statusFilter, dateRange,leaveTypeFilter, statusFilter, dateRange]);
 
     useEffect(() => {
         fetchLeaves();
     }, [userId, token]);
 
-    useEffect(() => {
-        filterLeaves();
-    }, [leaveTypeFilter, statusFilter, dateRange]);
+    // useEffect(() => {
+    //     filterLeaves();
+    // }, []);
 
     const handleLeaveSelect = (leave) => {
         setSelectedLeave(leave);
     };
 
-    const handleUpdateLeaves = (id, status) => {
-        const updatedLeaves = filteredLeaves.map((leave) =>
-            leave.id === id ? { ...leave, status } : leave
+    // const handleUpdateLeaves = (id, status) => {
+    //     const updatedLeaves = filteredLeaves.map((leave) =>
+    //         leave.id === id ? { ...leave, status } : leave
+    //     );
+    //     setFilteredLeaves(updatedLeaves);
+    // };
+
+    const handleUpdateLeaves = (id, status, remarks) => {
+        // update main list
+        const updatedLeaves = leaves.map((leave) =>
+            leave.id === id ? { ...leave, status, remarks } : leave
         );
-        setFilteredLeaves(updatedLeaves);
+        setLeaves(updatedLeaves);
+        const updatedFiltered = filteredLeaves.map((leave) =>
+            leave.id === id ? { ...leave, status, remarks } : leave
+        );
+        setFilteredLeaves(updatedFiltered);
     };
 
     const downloadExcel = () => {
@@ -411,28 +402,16 @@ const LeaveManagement = () => {
                 {/* Filters Container */}
                 <div className="flex flex-wrap items-center gap-4">
                     <div className="w-auto sm:w-auto flex flex-col sm:flex-row sm:items-center gap-2">
-                        <input
-                            type="text"
-                            value={usernameFilter}
-                            onChange={(e) => setUsernameFilter(e.target.value)}
-                            placeholder="Search by username"
-                            className="p-2 border rounded w-full sm:w-auto"
-                        />
+                        <input type="text" value={usernameFilter} onChange={(e) => setUsernameFilter(e.target.value)} placeholder="Search by username" className="p-2 border rounded w-full sm:w-auto" />
                     </div>
 
                     {/* Leave Type Filter */}
                     <div className="w-auto sm:w-auto flex flex-col sm:flex-row sm:items-center gap-2">
                         <label className="w-full sm:w-auto">Leave Type</label>
-                        <select
-                            value={leaveTypeFilter}
-                            onChange={(e) => setLeaveTypeFilter(e.target.value)}
-                            className="p-2 border rounded w-full sm:w-auto"
-                        >
+                        <select value={leaveTypeFilter} onChange={(e) => setLeaveTypeFilter(e.target.value)} className="p-2 border rounded w-full sm:w-auto" >
                             <option value="">All</option>
                             {leaveTypes.map((type) => (
-                                <option key={type} value={type}>
-                                    {type}
-                                </option>
+                                <option key={type} value={type}>{type}</option>
                             ))}
                         </select>
                     </div>
@@ -487,6 +466,7 @@ const LeaveManagement = () => {
                     leave={selectedLeave}
                     onClose={() => setSelectedLeave(null)}
                     onUpdateLeaves={handleUpdateLeaves}
+                    
                 />
             )}
         </div>

@@ -267,7 +267,7 @@ const SetupLeadCategory = () => {
             { key: 'description', label: 'Description', render: (r) => {
               const isExpanded = expandedRow === r.id;
               return (
-                <div className="text-left max-w-[300px] break-words whitespace-normal">
+                <div className="text-center max-w-[300px] break-words whitespace-normal mx-auto">
                   {isExpanded ? r.description : (r.description?.length > 50 ? `${r.description.slice(0, 50)}...` : r.description)}
                   {r.description && r.description.length > 50 && (
                     <button 
@@ -279,7 +279,7 @@ const SetupLeadCategory = () => {
                   )}
                 </div>
               );
-            }},
+            }, cellClass: 'text-center whitespace-normal'},
             { key: 'activeDuration', label: 'Active Duration', render: (r) => r.activeDuration || '-' }
           ]}
           data={paginatedData}

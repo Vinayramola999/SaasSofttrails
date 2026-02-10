@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit } from '@fortawesome/free-solid-svg-icons';
+import {EditIcon} from "../../NewComponents/ReactIcons";
 import Swal from 'sweetalert2';
 import Modal from "react-modal";
 import axios from "axios";
 import Pagination from "../../NewComponents/Pagination";
+import { HRMS_API_BASE} from '../../config/apiBase';
 
 const AllBalances = () => {
     const [leaveData, setLeaveData] = useState([]);
@@ -21,7 +21,7 @@ const AllBalances = () => {
 
     const fetchLeaveData = async () => {
         try {
-            const response = await fetch("https://devapi.softtrails.net/hrms/test/leave/leave-balances", {
+            const response = await fetch(`${HRMS_API_BASE}/leave/leave-balances`, {
                 method: "GET",
                 headers: {
                     Authorization: `Bearer ${sessionStorage.getItem("token")}`,
@@ -47,7 +47,6 @@ const AllBalances = () => {
         setCurrentPage(1);
     }, [searchTerm, selectedLeaveType]);
 
-    // Extract unique leave types for filter
     const leaveTypes = useMemo(() => {
         const types = leaveData.map((leave) => leave.leave_type);
         return [...new Set(types)];
@@ -90,7 +89,7 @@ const AllBalances = () => {
 
             try {
                 await axios.put(
-                    `https://devapi.softtrails.net/hrms/test/leave/leave-balances-update/${id}`,
+                    `${HRMS_API_BASE}/leave/leave-balances-update/${id}`,
                     {
                         balance: updatedBalance,
                         previous_balance: updatedPreviousBalance,
@@ -156,22 +155,13 @@ const AllBalances = () => {
                             {paginatedLeaves.map((leave, index) => (
                                 <tr key={leave.id} className={`${(index + 1) % 2 === 0 ? 'bg-white' : 'bg-tableblue'}`}>
                                     <td className="px-5 py-4 text-left text-[14px] text-black">{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                                    <td
-                                        className="px-5 py-4 text-left text-[14px] text-blue-600 cursor-pointer"
-                                        onClick={() => handleUserClick(leave)}
-                                    >
-                                        {leave.name || "N/A"}
-                                    </td>
+                                    <td className="px-5 py-4 text-left text-[14px] text-blue-600 cursor-pointer" onClick={() => handleUserClick(leave)} > {leave.name || "N/A"} </td>
                                     <td className="px-5 py-4 text-left text-[14px] text-black">{leave.leave_type || "N/A"}</td>
                                     <td className="px-5 py-4 text-left text-[14px] text-black">{leave.previous_balance || "N/A"}</td>
                                     <td className="px-5 py-4 text-left text-[14px] text-black">{leave.balance || "N/A"}</td>
-                                    <td className={`px-5 py-4 text-left ${leave.status === "pending" ? "text-blue-500" : leave.status === "approved" ? "text-green-500" : leave.status === "rejected" ? "text-red-500" : "text-gray-500"}`}>
-                                        {leave.status
-                                            ? leave.status.charAt(0).toUpperCase() + leave.status.slice(1)
-                                            : "N/A"}
-                                    </td>
+                                    <td className={`px-5 py-4 text-left ${leave.status === "pending" ? "text-blue-500" : leave.status === "approved" ? "text-green-500" : leave.status === "rejected" ? "text-red-500" : "text-gray-500"}`}> {leave.status ? leave.status.charAt(0).toUpperCase() + leave.status.slice(1) : "N/A"} </td>
                                     <td className="px-5 py-4 text-left flex gap-2">
-                                        <button onClick={() => handleEditClick(leave)} className="text-blue-500 hover:text-blue-700" > <FontAwesomeIcon icon={faEdit} /> </button>
+                                        <button onClick={() => handleEditClick(leave)} className="text-blue-500 hover:text-blue-700" > <EditIcon /></button>
                                     </td>
                                 </tr>
                             ))}
@@ -199,37 +189,11 @@ const AllBalances = () => {
                             <label className="block mb-2">
                                 Leave Type: <strong>{selectedLeave.leave_type}</strong>
                             </label>
-                            <label className="block mb-2">
-                                Previous Year Balance:
-                                <input
-                                    type="number"
-                                    value={updatedPreviousBalance}
-                                    onChange={(e) => setUpdatedPreviousBalance(e.target.value)}
-                                    className="border border-gray-300 p-2 rounded w-full"
-                                />
-                            </label>
-                            <label className="block mb-2">
-                                Current Balance:
-                                <input
-                                    type="number"
-                                    value={updatedBalance}
-                                    onChange={(e) => setUpdatedBalance(e.target.value)}
-                                    className="border border-gray-300 p-2 rounded w-full"
-                                />
-                            </label>
+                            <label className="block mb-2"> Previous Year Balance: <input type="number" value={updatedPreviousBalance} onChange={(e) => setUpdatedPreviousBalance(e.target.value)} className="border border-gray-300 p-2 rounded w-full" /> </label>
+                            <label className="block mb-2"> Current Balance: <input type="number" value={updatedBalance} onChange={(e) => setUpdatedBalance(e.target.value)} className="border border-gray-300 p-2 rounded w-full" /> </label>
                             <div className="flex justify-end mt-4">
-                                <button
-                                    onClick={handleUpdate}
-                                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mr-2"
-                                >
-                                    Update
-                                </button>
-                                <button
-                                    onClick={closeModal}
-                                    className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
-                                >
-                                    Cancel
-                                </button>
+                                <button onClick={handleUpdate} className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mr-2" > Update </button>
+                                <button onClick={closeModal} className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400" > Cancel </button>
                             </div>
                         </>
                     )}
@@ -245,7 +209,7 @@ const AllBalances = () => {
             >
                 <div className="bg-white p-6 rounded-lg">
                     <h2 className="text-xl font-semibold mb-4 text-gray-800 border-b pb-2">
-                        User Leave Details
+                    User Leave Details
                     </h2>
 
                     {detailsLeave && (
@@ -298,8 +262,6 @@ const AllBalances = () => {
 };
 export default AllBalances;
 
-
-
 ///////////////////////////UCS INTEGRATION///////////////////////////////
 // import React, { useEffect, useState, useMemo } from "react";
 // import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -334,7 +296,7 @@ export default AllBalances;
 //   // ---------------- Fetch Leave Data ----------------
 //   const fetchLeaveData = async () => {
 //     try {
-//       const response = await fetch("https://devapi.softtrails.net/hrms/test/leave/leave-balances", {
+//       const response = await fetch("https://devdemo.softtrails.net/leave/leave-balances", {
 //         method: "GET",
 //         headers: { Authorization: `Bearer ${token}` },
 //       });
@@ -402,7 +364,7 @@ export default AllBalances;
 
 //     try {
 //       const res = await axios.put(
-//         `https://devapi.softtrails.net/hrms/test/leave/leave-balances-update/${selectedLeave.id}`,
+//         `https://devdemo.softtrails.net/leave/leave-balances-update/${selectedLeave.id}`,
 //         {
 //           balance: updatedBalance,
 //           previous_balance: updatedPreviousBalance,
@@ -426,7 +388,7 @@ export default AllBalances;
 //   // ---------------- Fetch Manager Info ----------------
 //   const fetchManagerDetails = async (manager_id, user_id) => {
 //     try {
-//       const res = await axios.get("https://devapi.softtrails.net/hrms/test/users/getusers", {
+//       const res = await axios.get("https://devdemo.softtrails.net/users/getusers", {
 //         headers: { Authorization: `Bearer ${token}` },
 //       });
 //       if (res.data && res.data.users) {

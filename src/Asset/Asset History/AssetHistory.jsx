@@ -39,7 +39,8 @@ const AssetHistoryActivityFeed = () => {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((r) => r.json())
-      .then((d) => Array.isArray(d) && setUsers(d));
+      .then((d) => Array.isArray(d) && setUsers(d))
+      .catch((error) => console.warn("Failed to fetch users:", error));
   }, [token]);
 
   // Fetch history
@@ -53,6 +54,10 @@ const AssetHistoryActivityFeed = () => {
         const arr = Array.isArray(d) ? d : d.history || [];
         arr.sort((a, b) => new Date(b.updatedOn) - new Date(a.updatedOn));
         setLogs(arr);
+      })
+      .catch((error) => {
+        console.warn("Failed to fetch asset history:", error);
+        setLogs([]);
       })
       .finally(() => setLoading(false));
   }, [token]);
@@ -162,34 +167,34 @@ const AssetHistoryActivityFeed = () => {
   };
 
   const formatJSON = (obj) => {
-  if (!obj) return [];
+    if (!obj) return [];
 
-  return Object.entries(obj).map(([key, value]) => {
-    let type = typeof value;
+    return Object.entries(obj).map(([key, value]) => {
+      let type = typeof value;
 
-    return (
-      <div key={key} className="flex justify-between border-b py-1.5">
-        <span className="font-medium text-gray-700">{key}</span>
+      return (
+        <div key={key} className="flex justify-between border-b py-1.5">
+          <span className="font-medium text-gray-700">{key}</span>
 
-        <span
-          className={
-            type === "number"
-              ? "text-blue-600"
-              : type === "boolean"
-              ? "text-purple-600"
-              : value === null
-              ? "text-red-500"
-              : "text-gray-800"
-          }
-        >
-          {type === "object"
-            ? JSON.stringify(value)
-            : String(value)}
-        </span>
-      </div>
-    );
-  });
-};
+          <span
+            className={
+              type === "number"
+                ? "text-blue-600"
+                : type === "boolean"
+                  ? "text-purple-600"
+                  : value === null
+                    ? "text-red-500"
+                    : "text-gray-800"
+            }
+          >
+            {type === "object"
+              ? JSON.stringify(value)
+              : String(value)}
+          </span>
+        </div>
+      );
+    });
+  };
 
 
   return (
@@ -317,11 +322,10 @@ const AssetHistoryActivityFeed = () => {
                           )}
 
                           <span
-                            className={`px-2 py-0.5 rounded text-xs font-semibold ${
-                              log.currentStatus === "Inventory"
+                            className={`px-2 py-0.5 rounded text-xs font-semibold ${log.currentStatus === "Inventory"
                                 ? "bg-green-100 text-green-700"
                                 : "bg-yellow-100 text-yellow-700"
-                            }`}
+                              }`}
                           >
                             {log.currentStatus}
                           </span>
@@ -423,8 +427,8 @@ const AssetHistoryActivityFeed = () => {
               <div className="bg-white p-5 rounded-xl border shadow">
                 <h4 className="text-sm font-bold text-gray-800 mb-2">Quick tips</h4>
                 <p className="text-xs text-gray-500 leading-5">
-                  • Click any event to see details.  
-                  • Use filters to refine results.  
+                  • Click any event to see details.
+                  • Use filters to refine results.
                   • Export downloads only filtered logs.
                 </p>
               </div>
@@ -497,18 +501,18 @@ const AssetHistoryActivityFeed = () => {
                   </p>
                 </div>
 
-               {/* USER-FRIENDLY PAYLOAD */}
-<div className="md:col-span-2">
-  <p className="text-xs text-gray-500 mb-2">Full Event Payload</p>
+                {/* USER-FRIENDLY PAYLOAD */}
+                <div className="md:col-span-2">
+                  <p className="text-xs text-gray-500 mb-2">Full Event Payload</p>
 
-  <div className="bg-white border rounded-xl shadow-inner p-4 max-h-72 overflow-auto">
+                  <div className="bg-white border rounded-xl shadow-inner p-4 max-h-72 overflow-auto">
 
-    <div className="space-y-2 text-sm">
-      {formatJSON(selectedLog)}
-    </div>
+                    <div className="space-y-2 text-sm">
+                      {formatJSON(selectedLog)}
+                    </div>
 
-  </div>
-</div>
+                  </div>
+                </div>
 
               </div>
 

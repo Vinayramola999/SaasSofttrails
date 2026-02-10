@@ -10,6 +10,7 @@ import Swal from 'sweetalert2';
 import { FiLogOut } from "react-icons/fi";
 import AddButton from "../NewComponents/AddButton";
 import { FaPlus } from "react-icons/fa";
+import { MAIN_API_BASE } from '../config/apiBase';
 
 const RoleTable = () => {
     const navigate = useNavigate();
@@ -22,31 +23,25 @@ const RoleTable = () => {
     const [roleToDelete, setRoleToDelete] = useState(null);
     const token = sessionStorage.getItem('token');
     const userId = sessionStorage.getItem('userId');
-    const [newRoleDescription, setNewRoleDescription] = useState(''); // State for description
+    const [newRoleDescription, setNewRoleDescription] = useState(''); 
     const [newRoleAccess, setNewRoleAccess] = useState('');
     const [formError, setFormError] = useState('');
 
-    useEffect(() => {
+    useEffect(() => { 
         const userId = sessionStorage.getItem("userId");
-        console.log("UserId:", userId);
-
         if (userId) {
             const fetchUserData = async () => {
                 try {
-                    console.log("Fetching data for userId:", userId);
                     const response = await axios.get(
-                        `https://devapi.softtrails.net/saas/test/users/id_user/${userId}`,
+                        `${MAIN_API_BASE}/users/id_user/${userId}`,
                         {
                             headers: {
                                 Authorization: `Bearer ${token}`,
                             },
                         }
                     );
-                    console.log("API Response:", response.data);
-
-                    if (response.data?.user) {
-                        const user = response.data.user; // ✅ only take the user object
-                        console.log("User:", user);
+                    if (response.data.user) {
+                        const user = response.data.user;
                         setUserData(user);
                     } else {
                         console.log("No user data found");
@@ -68,7 +63,7 @@ const RoleTable = () => {
     const fetchRoles = async () => {
         const token = sessionStorage.getItem('token'); // Retrieve the token
         try {
-            const response = await axios.get('https://devapi.softtrails.net/saas/test/role', {
+            const response = await axios.get(`${MAIN_API_BASE}/role`, {
                 headers: {
                     Authorization: `Bearer ${token}`, // Add token to headers
                 }
@@ -93,8 +88,7 @@ const RoleTable = () => {
         try {
             setLoading(true);
             setFormError(''); // Clear any existing error
-            const response = await axios.post(
-                'https://devapi.softtrails.net/saas/test/role',
+            const response = await axios.post(`${MAIN_API_BASE}/role`,
                 {
                     role: newRoleName,
                     description: newRoleDescription,
@@ -137,7 +131,7 @@ const RoleTable = () => {
         try {
             await axios({
                 method: 'delete',
-                url: 'https://devapi.softtrails.net/saas/test/role',
+                url: `${MAIN_API_BASE}/role`,
                 data: { id },
                 headers: {
                     Authorization: `Bearer ${token}`,  // Add token to headers
@@ -157,12 +151,10 @@ const RoleTable = () => {
     };
 
     const handleDownloadExcel = () => {
-        // Map to rename fields
         const formattedRoles = roles.map((role) => ({
-            "Group Id ": role.role_id, // Rename 'name' to 'Role Name'
-            "Group Name": role.role, // Rename 'name' to 'Role Name'
-            "Description": role.description, // Rename 'description' to 'Description'
-            "Access": role.access, // Rename 'description' to 'Description'
+            "Group Id ": role.role_id, 
+            "Group Name": role.role, 
+            "Description": role.description, 
         }));
         const worksheet = XLSX.utils.json_to_sheet(formattedRoles);
         const workbook = XLSX.utils.book_new();
@@ -211,18 +203,15 @@ const RoleTable = () => {
             setLoading(true);
             try {
                 const userId = sessionStorage.getItem('userId');
-                console.log('Retrieved userId:', userId);
-
                 if (!userId || !token) {
                     console.error('userId or token is missing');
                     return;
                 }
-                const response = await axios.get(`https://devapi.softtrails.net/saas/test/access/access/${userId}`, {
+                const response = await axios.get(`${MAIN_API_BASE}/access/access/${userId}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                     },
                 });
-                console.log('Access API Response:', response.data);
                 const userAccess = response.data;
                 const hasGroupAccess = userAccess.some(access => access.module === 'ROLE');
                 setHasAMSAccessGroup(hasGroupAccess);
@@ -276,7 +265,7 @@ const RoleTable = () => {
             </div>
 
             {isAddModalOpen && (
-                <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-20">
+                <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
                     <div className="bg-white p-6 rounded-lg w-auto">
                         {formError && (<p className="text-red-500 mb-2"> {formError}</p>)}
                         <h2 className="text-xl font-bold mb-4">Create Group</h2>
@@ -334,7 +323,7 @@ const RoleTable = () => {
             )}
 
             {isDeleteModalOpen && (
-                <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-20">
+                <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
                     <div className="bg-white p-6 rounded-lg w-auto">
                         <h2 className="text-xl font-bold mb-4">Confirm Deletion</h2>
                         <p>

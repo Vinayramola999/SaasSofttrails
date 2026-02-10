@@ -161,3 +161,16 @@ export async function updateMappingVisibility(id, visibility, token) {
   if (!response.ok) throw new Error("Failed to update mapping visibility");
   return response;
 }
+
+export async function updateMapping(id, data, token) {
+  const response = await fetch(`${API_BASE}/mapping/${id}`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) throw new Error("Failed to update mapping");
+  return response.json();
+}

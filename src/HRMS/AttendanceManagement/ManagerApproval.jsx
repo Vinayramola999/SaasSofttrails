@@ -20,7 +20,7 @@ export default function AttendanceTable() {
   useEffect(() => {
     const fetchManagerAttendance = async () => {
       try {
-        const res = await axios.get(`https://devapi.softtrails.net/saas/test/attendance/manager/attendance/${managerId}`);
+        const res = await axios.get(`https://devdemo.softtrails.net/attendance/manager/attendance/${managerId}`);
         const data = res.data.attendance;
 
         const formattedData = data.map((item) => ({
@@ -110,7 +110,7 @@ export default function AttendanceTable() {
         return;
       }
 
-      await axios.post("https://devapi.softtrails.net/saas/test/attendance/manager-approval", {
+      await axios.post("https://devdemo.softtrails.net/attendance/manager-approval", {
         manager_id: managerId,
         ids, // always array
         stage,
@@ -251,7 +251,7 @@ export default function AttendanceTable() {
                     className="text-xl font-bold"
                   >
                     ⋮
-                  </button> 
+                  </button>
                   {/* Dropdown for bulk actions */}
                   {menuOpenIndex === "header" && (
                     <div className="absolute z-50 mt-2 right-0 w-36 bg-white shadow-md rounded-md">

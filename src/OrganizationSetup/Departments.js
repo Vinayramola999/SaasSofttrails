@@ -1,7 +1,6 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import excel from '../assests/excel.png';
 import swal from 'sweetalert2';
 import axios from 'axios';
@@ -13,9 +12,9 @@ import FolderTree from '../assests/foldertree.png';
 import { FaPlus } from "react-icons/fa";
 import AddButton from "../NewComponents/AddButton";
 import SearchButton from "../NewComponents/SearchButton";
+import { MAIN_API_BASE } from '../config/apiBase';
 
 const DepartmentsTable = () => {
-  const navigate = useNavigate();
   const [departments, setDepartments] = useState([]);
   const [newDeptName, setNewDeptName] = useState('');
   const [newDeptDesc, setNewDeptDesc] = useState('');
@@ -55,7 +54,7 @@ const DepartmentsTable = () => {
       setLoading(true);
       setError('');
       await axios.post(
-        'https://devapi.softtrails.net/saas/test/sub_dept',
+        `${MAIN_API_BASE}/sub_dept`,
         {
           dept_id: departmentToContact.dept_id,
           sub_dept_name: subDeptName,
@@ -92,7 +91,7 @@ const DepartmentsTable = () => {
     try {
       setLoading(true);
       setDeleteError(''); // Clear any previous error
-      await axios.delete(`https://devapi.softtrails.net/saas/test/sub_dept/${deleteSubDeptId}`, {
+      await axios.delete(`${MAIN_API_BASE}/sub_dept/${deleteSubDeptId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -138,7 +137,7 @@ const DepartmentsTable = () => {
     const token = sessionStorage.getItem('token'); // Get token from sessionStorage
 
     try {
-      const response = await fetch(`https://devapi.softtrails.net/saas/test/sub_dept/${editSubDept.sub_id}`, {
+      const response = await fetch(`${MAIN_API_BASE}/sub_dept/${editSubDept.sub_id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -153,7 +152,7 @@ const DepartmentsTable = () => {
 
       if (response.ok) {
         const fetchResponse = await axios.get(
-          `https://devapi.softtrails.net/saas/test/sub_dept/get/${selectedDepartment}`,
+          `${MAIN_API_BASE}/sub_dept/get/${selectedDepartment}`,
           {
             headers: {
               "Authorization": `Bearer ${token}`,
@@ -190,7 +189,7 @@ const DepartmentsTable = () => {
         text: 'An error occurred while updating the subdepartment.',
       });
     } finally {
-      setLoading(false); // Reset loading state
+      setLoading(false);
     }
   };
 
@@ -203,7 +202,7 @@ const DepartmentsTable = () => {
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
-        const response = await axios.get('https://devapi.softtrails.net/saas/test/departments', {
+        const response = await axios.get(`${MAIN_API_BASE}/departments`, {
           headers: {
             "Authorization": `Bearer ${token}`,
           },
@@ -232,7 +231,7 @@ const DepartmentsTable = () => {
       setError('');
 
       const response = await axios.post(
-        'https://devapi.softtrails.net/saas/test/departments',
+        `${MAIN_API_BASE}/departments`,
         {
           dept_name: newDeptName,
           dept_data: newDeptDesc,
@@ -276,7 +275,7 @@ const DepartmentsTable = () => {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`https://devapi.softtrails.net/saas/test/departments/${id}`, {
+      await axios.delete(`${MAIN_API_BASE}/departments/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -317,7 +316,7 @@ const DepartmentsTable = () => {
     const token = sessionStorage.getItem('token'); // Get token from sessionStorage
 
     try {
-      const response = await fetch(`https://devapi.softtrails.net/saas/test/departments/${editData.dept_id}`, {
+      const response = await fetch(`${MAIN_API_BASE}/departments/${editData.dept_id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -335,7 +334,7 @@ const DepartmentsTable = () => {
         console.log("Updated department:", updatedDepartment);
 
         try {
-          const res = await axios.get('https://devapi.softtrails.net/saas/test/departments', {
+          const res = await axios.get(`${MAIN_API_BASE}/departments`, {
             headers: {
               "Authorization": `Bearer ${token}`,
             },
@@ -371,12 +370,35 @@ const DepartmentsTable = () => {
     saveAs(data, 'Department.xlsx');
   };
 
+  // const handleDownloadExcel = () => {
+  //   const formattedData = departments.map((dept) => ({
+  //     "Department Name": dept.name,
+  //     "Department Description": dept.description,
+  //     "Department Status": dept.status,
+  //     "Sub-Departments": dept.subDepartments
+  //       ?.map(
+  //         (sub) =>
+  //           `${sub.name} (${sub.description}, ${sub.status})`
+  //       )
+  //       .join(" | ") || "—",
+  //   }));
+
+  //   const worksheet = XLSX.utils.json_to_sheet(formattedData);
+  //   const workbook = XLSX.utils.book_new();
+  //   XLSX.utils.book_append_sheet(workbook, worksheet, "Departments");
+
+  //   const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+  //   const data = new Blob([excelBuffer], { type: "application/octet-stream" });
+
+  //   saveAs(data, "Departments.xlsx");
+  // };
+
   const handleDepartmentClick = async (dept_id) => {
     try {
       setLoading(true);
       const token = sessionStorage.getItem("token"); // Get token from sessionStorage
 
-      const response = await axios.get(`https://devapi.softtrails.net/saas/test/sub_dept/get/${dept_id}`, {
+      const response = await axios.get(`${MAIN_API_BASE}/sub_dept/get/${dept_id}`, {
         headers: {
           Authorization: `Bearer ${token}`, // Add token to headers
         },
@@ -435,7 +457,7 @@ const DepartmentsTable = () => {
       </div>
 
       {isAddModalOpen && (
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-20">
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-lg w-1/3">
             {error && <p className="text-red-500">{error}</p>}
             <h2 className="text-xl font-bold mb-4">Create Department</h2>
@@ -570,7 +592,7 @@ const DepartmentsTable = () => {
       )}
 
       {isDeleteModalOpen && (
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-20">
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-lg w-11/12 sm:w-2/3 lg:w-1/3">
             {deleteError && (
               <p className="mt-4 text-red-500"> This department cannot be deleted because it is still in use by other records.</p>
@@ -621,7 +643,7 @@ const DepartmentsTable = () => {
       )}
 
       {isContactModalOpen && (
-        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-20">
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-lg w-1/3">
             {error && <p className="text-red-500">{error}</p>}
             <h2 className="text-xl font-bold mb-4">Create Verticals</h2>
@@ -715,7 +737,7 @@ const DepartmentsTable = () => {
                         <td className={`p-3 border-b text-left font-semibold ${subDept.status === "Active" ? "text-green-600" : "text-red-600"}`}>
                           {subDept.status}
                         </td>
-                        <td className="p-3 border-b text-left">
+                        <td className="p-3 text-left">
                           <button
                             onClick={() => confirmDeleteSubDept(subDept.sub_id)}
                             className="text-red-500 px-2 py-2 rounded-lg"
@@ -888,8 +910,8 @@ const DepartmentsTable = () => {
                   <td className="px-5 py-4 text-left text-[14px] text-black">{(currentPage - 1) * itemsPerPage + index + 1}</td>
                   <td className="px-5 py-4 text-left text-[14px] text-custome-blue underline cursor-pointer" onClick={() => handleDepartmentClick(department.dept_id)}>{department.dept_name}</td>
                   <td className="px-5 py-4 text-left text-[14px] text-black">{department.dept_data || "NA"}</td>
-                  <td className={`py-4 px-5 border-b text-[14px] font-semibold ${department.status === "Active" ? "text-green-600" : "text-red-600"}`}>{department.status}</td>
-                  <td className="py-4 px-4 border-b space-x-2">
+                  <td className={`py-4 px-5 text-[14px] font-semibold ${department.status === "Active" ? "text-green-600" : "text-red-600"}`}>{department.status}</td>
+                  <td className="py-4 px-4 space-x-2">
                     <button className="text-red-500 hover:text-red-700" onClick={() => confirmDelete(department)}><FontAwesomeIcon icon={faTrash} /></button>
                     <button className="text-blue-500 hover:text-blue-700" onClick={() => handleEdit(department)}><FontAwesomeIcon icon={faEdit} /></button>
                     <button className="text-blue-500 hover:text-blue-700" onClick={() => handleContact(department)}><img src={FolderTree} alt="Sub Icon" className="w-5 h-5 inline" /></button>

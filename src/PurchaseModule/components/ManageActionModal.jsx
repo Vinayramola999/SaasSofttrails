@@ -19,37 +19,36 @@ const ManageActionModal = ({ open, onClose, onActionsUpdated }) => {
   const [loading, setLoading] = useState(false);
   const [allworkflow, setAllWorkflows] = useState();
   const [showSuccess, setShowSuccess] = useState(false);
-    const [showError, setShowError] = useState(false);
+  const [showError, setShowError] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-
-  // touch `modules` so linters don't complain about unused state (keeps value available during debugging)
+  const [actionNameOptions, setActionNameOptions] = useState([]);
+  const [useSelectForActionName, setUseSelectForActionName] = useState(false);
   useEffect(() => {
-    // eslint-disable-next-line no-console
     console.log("ManageActionModal modules loaded:", modules?.length || 0);
   }, [modules]);
 
- const fetchActions = async () => {
-  try {
-    const token = sessionStorage.getItem("token");
+  const fetchActions = async () => {
+    try {
+      const token = sessionStorage.getItem("token");
 
-    const response = await axios.get(ACTIONS_API, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+      const response = await axios.get(ACTIONS_API, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    const actionsData = response.data?.actions || [];
+      const actionsData = response.data?.actions || [];
 
-    setActions(
-      Array.isArray(actionsData)
-        ? actionsData.map((a) => ({ ...a, enabled: !!a.enabled }))
-        : []
-    );
-  } catch (error) {
-    console.error("Failed to fetch actions:", error);
-    setActions([]);
-  }
-};
+      setActions(
+        Array.isArray(actionsData)
+          ? actionsData.map((a) => ({ ...a, enabled: !!a.enabled }))
+          : []
+      );
+    } catch (error) {
+      console.error("Failed to fetch actions:", error);
+      setActions([]);
+    }
+  };
 
   // Fetch workflows whenever submodule changes
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -57,77 +56,111 @@ const ManageActionModal = ({ open, onClose, onActionsUpdated }) => {
     if (!selectedSubModule) {
       setAllWorkflows([]);
       setSelectedWorkflow(null);
+      setActionNameOptions([]);
+      setUseSelectForActionName(false);
       return;
     }
-
-   
-
     fetchWorkflows();
   }, [selectedSubModule]);
 
-const fetchWorkflows = async () => {
-  try {
-    const token = sessionStorage.getItem("token");
+  
+ useEffect(() => {
+    const subName = (selectedSubModule?.sub_module || "").toString().trim().toLowerCase();
 
-    const res = await axios.get(`${API.WORKFLOW_API}/workflow/get-modules/module`, {
-      params: {
-        // prefer selectedModule.module_name when available
-        module_name: selectedModule?.module_name || "Purchase Management",
-        sub_module_name: selectedSubModule?.sub_module,
-      },
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    // default reset
+    setActionNameOptions([]);
+    setUseSelectForActionName(false);
 
-    setAllWorkflows(res.data?.workflows || []);
-    setSelectedWorkflow(null); // reset selection
-  } catch (error) {
-    console.error("Failed to fetch workflows:", error);
-    setAllWorkflows([]);
-    setSelectedWorkflow(null);
-  }
-};
+    if (!subName) {
+      // clear identifier only when no submodule selected
+      setIdentifier("");
+      return;
+    }
 
+    // Hard-coded mappings
+    if (subName === "vendor management" || subName.includes("vendor")) {
+      const opts = ["Approve vendor", "Approve"];
+      setActionNameOptions(opts);
+      setUseSelectForActionName(true);
+      // set default only if none chosen yet
+      setIdentifier((prev) => (prev ? prev : opts[0]));
+    } else if (subName === "indenting" || subName.includes("indent")) {
+      const opts = ["Add Indent", "Status Update", "Update Indent"];
+      setActionNameOptions(opts);
+      setUseSelectForActionName(true);
+      setIdentifier((prev) => (prev ? prev : opts[0]));
+    } else {
+      // fallback to free text
+      setActionNameOptions([]);
+      setUseSelectForActionName(false);
+      // keep existing identifier (don't overwrite if user typed)
+    }
+  }, [selectedSubModule]);
+
+  const fetchWorkflows = async () => {
+    try {
+      const token = sessionStorage.getItem("token");
+
+      const res = await axios.get(
+        `${API.WORKFLOW_API}/workflow/get-modules/module`,
+        {
+          params: {
+            // prefer selectedModule.module_name when available
+            module_name: selectedModule?.module_name || "Purchase Management",
+            sub_module_name: selectedSubModule?.sub_module,
+          },
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setAllWorkflows(res.data?.workflows || []);
+      setSelectedWorkflow(null); // reset selection
+    } catch (error) {
+      console.error("Failed to fetch workflows:", error);
+      setAllWorkflows([]);
+      setSelectedWorkflow(null);
+    }
+  };
 
   useEffect(() => {
     if (!open) return;
 
-   const fetchData = async () => {
-  setLoading(true);
-  try {
-    const token = sessionStorage.getItem("token");
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const token = sessionStorage.getItem("token");
 
-    // ✅ Add token in headers for modules API
-    const moduleRes = await axios.get(MODULES_API, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+        // ✅ Add token in headers for modules API
+        const moduleRes = await axios.get(MODULES_API, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-    // API may return { data: [...] } or an array directly. Prefer data.data when present.
-    const modulesData = moduleRes.data?.data || moduleRes.data || [];
+        // API may return { data: [...] } or an array directly. Prefer data.data when present.
+        const modulesData = moduleRes.data?.data || moduleRes.data || [];
 
-    // Find the "Purchase Management" module using the API field name 'module_name'
-    const purchaseModule = modulesData.find(
-      (m) => m.module_name?.toLowerCase() === "purchase management"
-    );
+        // Find the "Purchase Management" module using the API field name 'module_name'
+        const purchaseModule = modulesData.find(
+          (m) => m.module_name?.toLowerCase() === "purchase management"
+        );
 
-    setModules(modulesData);
-    setSelectedModule(purchaseModule || null);
-    setSelectedSubModule(null);
+        setModules(modulesData);
+        setSelectedModule(purchaseModule || null);
+        setSelectedSubModule(null);
 
-    // ✅ Fetch actions (this function should already include the token)
-    await fetchActions();
-  } catch (error) {
-    console.error("Error fetching modules/actions:", error);
-    setModules([]);
-    setActions([]);
-  } finally {
-    setLoading(false);
-  }
-};
-
+        // ✅ Fetch actions (this function should already include the token)
+        await fetchActions();
+      } catch (error) {
+        console.error("Error fetching modules/actions:", error);
+        setModules([]);
+        setActions([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
     fetchData();
   }, [open]);
@@ -148,44 +181,45 @@ const fetchWorkflows = async () => {
   };
 
   const handleConfirmAdd = async () => {
-  setShowConfirm(false);
-  try {
-    setLoading(true);
-    const token = sessionStorage.getItem("token");
+    setShowConfirm(false);
+    try {
+      setLoading(true);
+      const token = sessionStorage.getItem("token");
 
-    await axios.post(
-      `${API.WORKFLOW_API}/actions_workflow`,
-      {
-        action_name: identifier,
-        // Use module_name/module_id keys from API
-        module_name: selectedModule?.module_name,
-        sub_module_name: selectedSubModule?.sub_module,
-        module_id: Number(selectedModule?.module_id || selectedModule?.module_id),
-        sub_id: Number(selectedSubModule?.sub_id),
-        description: description,
-        workflow_id: Number(selectedWorkflow?.workflow_id),
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
+      await axios.post(
+        `${API.WORKFLOW_API}/actions_workflow`,
+        {
+          action_name: identifier,
+          // Use module_name/module_id keys from API
+          module_name: selectedModule?.module_name,
+          sub_module_name: selectedSubModule?.sub_module,
+          module_id: Number(
+            selectedModule?.module_id || selectedModule?.module_id
+          ),
+          sub_id: Number(selectedSubModule?.sub_id),
+          description: description,
+          workflow_id: Number(selectedWorkflow?.workflow_id),
         },
-      }
-    );
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-    await fetchActions();
-    resetForm();
-    setShowSuccess(true);
+      await fetchActions();
+      resetForm();
+      setShowSuccess(true);
 
-    if (onActionsUpdated) onActionsUpdated();
-  } catch (err) {
-    console.error("Error adding action:", err);
-    setErrorMsg("Could not add the action.");
-    setShowError(true);
-  } finally {
-    setLoading(false);
-  }
-};
-
+      if (onActionsUpdated) onActionsUpdated();
+    } catch (err) {
+      console.error("Error adding action:", err);
+      setErrorMsg("Could not add the action.");
+      setShowError(true);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!open) return null;
   const resetForm = () => {
@@ -257,7 +291,6 @@ const fetchWorkflows = async () => {
               }
             >
               <option value="">Select</option>{" "}
-              {/* 👈 shown when submodule is null */}
               {selectedModule?.sub_modules?.map((sm) => (
                 <option key={sm.sub_id} value={sm.sub_id}>
                   {sm.sub_module}
@@ -292,13 +325,28 @@ const fetchWorkflows = async () => {
         <div className="flex items-center gap-4 mb-8">
           <div className="flex flex-col w-1/3">
             <label className="font-medium mb-1">Action Name</label>
-            <input
-              type="text"
-              placeholder="Enter action name"
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
-              className="border rounded px-4 py-2"
-            />
+            {useSelectForActionName ? (
+              <select
+                className="border rounded px-4 py-2 w-full"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+              >
+                <option value="">Select</option>
+                {actionNameOptions.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type="text"
+                placeholder="Enter action name"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                className="border rounded px-4 py-2"
+              />
+            )}
           </div>
           <div className="flex flex-col w-2/3">
             <label className="font-medium mb-1">Description</label>
@@ -378,7 +426,7 @@ const fetchWorkflows = async () => {
             onClose={() => setShowSuccess(false)}
           />
         )}
-         {showError && (
+        {showError && (
           <PopupModal
             type="error"
             title="Error!"

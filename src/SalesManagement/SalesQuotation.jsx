@@ -199,7 +199,7 @@ export default function QuotationListWithPreview() {
                           const name = q.quotation_for?.customer_name || '-';
                           const isExpanded = expandedRow === `customer_${q.quotation.quotation_id}`;
                           return (
-                            <div className="text-left whitespace-normal break-words max-w-[150px]">
+                            <div className="text-center whitespace-normal break-words max-w-[150px] mx-auto">
                               {isExpanded ? name : (name.length > 20 ? `${name.slice(0, 20)}...` : name)}
                               {name.length > 20 && (
                                 <button
@@ -212,7 +212,7 @@ export default function QuotationListWithPreview() {
                             </div>
                           );
                         },
-                        cellClass: 'text-left whitespace-normal',
+                        cellClass: 'text-center whitespace-normal',
                       },
                       { key: 'amount', label: 'Amount', render: (q) => `₹${q.quotation.total_amount}` },
                       { key: 'status', label: 'Status', render: (q) => {
@@ -362,8 +362,8 @@ export default function QuotationListWithPreview() {
                   <p>GSTIN - {selectedQuotation.quotation_from.gstin}</p>
                   <p>PAN - {selectedQuotation.quotation_from.pan}</p>
                 </div>
-                <div className="bg-blue-100 p-4 rounded">
-                  <h3 className="font-semibold">Quotation For</h3>
+                <div className="bg-blue-100 p-4 rounded text-center">
+                  <h3 className="font-semibold text-center">Quotation For</h3>
                   <p>{selectedQuotation.quotation_for.customer_name}</p>
                   <p>
                     {selectedQuotation.quotation_for.city},{" "}
@@ -510,7 +510,7 @@ export default function QuotationListWithPreview() {
                     <tr className="border-b border-gray-100 sticky top-0 bg-white z-10">
                       <th className="py-4 text-left font-medium text-gray-500">Quotation ID</th>
                       <th className="py-4 text-left font-medium text-gray-500">Quotation Date</th>
-                      <th className="py-4 text-left font-medium text-gray-500">Quotation For</th>
+                      <th className="py-4 text-center font-medium text-gray-500">Quotation For</th>
                       <th className="py-4 text-left font-medium text-gray-500">Amount</th>
                       <th className="py-4 text-center font-medium text-gray-500">Status</th>
                       <th className="py-4 text-center font-medium text-gray-500">Action</th>
@@ -532,7 +532,7 @@ export default function QuotationListWithPreview() {
                               year: 'numeric'
                             })}
                           </td>
-                          <td className="py-4 text-gray-600">{h.quotation_for?.customer_name || '-'}</td> 
+                          <td className="py-4 text-gray-600 text-center">{h.quotation_for?.customer_name || '-'}</td> 
                           <td className="py-4 text-gray-600">₹{h.total_amount}</td>
                           <td className="py-4 text-center">
                             <span

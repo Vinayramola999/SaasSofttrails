@@ -1152,51 +1152,39 @@ const fetchTableData = async () => {
       setMessageType("error");
     }
   };
-const handleReject = async () => {
-  try {
-    const userId = sessionStorage.getItem("userId");
-
-    const catObj = categories.find(
-      (c) => c.categoriesname === selectedCategory
-    );
-
-    if (!editingAssetId || !catObj || !selectedAsset) {
-      setMessage("Missing data for approval");
-      setMessageType("error");
-      return;
-    }
-
-    // ✅ Extract mapping_id from selectedAsset
-    const mappingId = selectedAsset.mapping_id;
-
-    await axios.put(
-      `${ASSET_NODE_BASE}lifecycle/update-asset-status/${editingAssetId}`,
-      {
-        category_id: catObj.categoryId,
-        user_id: parseInt(userId, 10),
-
-        new_stages: "rejected",
-        action: "MappingApprove",
-        submodule: "Movable",
-        mapping_id: mappingId,
-      },
-      {
-        headers: { Authorization: token ? `Bearer ${token}` : undefined },
+ const handleReject = async () => {
+    try {
+      const userId = sessionStorage.getItem("userId");
+      const catObj = categories.find((c) => c.categoriesname === selectedCategory);
+      if (!editingAssetId || !catObj) {
+        setMessage("Missing data for approval");
+        setMessageType("error");
+        return;
       }
-    );
 
-    setMessage("Rejected Successfully!");
-    setMessageType("success");
+      await axios.put(
+        `${ASSET_NODE_BASE}lifecycle/update-asset-status/${editingAssetId}`,
+        {
+          category_id: catObj.categoryId,
+          user_id: parseInt(userId, 10),
+          new_stages: "rejected",
+          // sub_stages: "Approved",
+          action: "MappingApprove",
+          submodule: "Movable",
+        }, 
+        { headers: { Authorization: token ? `Bearer ${token}` : undefined } }
+      );
 
-    setIsAssetModalOpen(false);
-    fetchTableData();
-  } catch (err) {
-    console.error("approve error:", err);
-    setMessage("Approval failed");
-    setMessageType("error");
-  }
-};
-
+      setMessage("Rejected Successfully!");
+      setMessageType("success");
+      setIsAssetModalOpen(false);
+      fetchTableData();
+    } catch (err) {
+      console.error("approve error:", err);
+      setMessage("Approval failed");
+      setMessageType("error");
+    }
+  };
   /* ------------------------- table column defs ------------------------- */
   const tableColumns = [
     { key: "Asset Name", label: "Asset Name" },

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Use useNavigate instead of useHistory
 import login from '../assests/login.jpg'; 
+import { MAIN_API_BASE } from '../config/apiBase';
 
 const EmailVerificationForm = () => {
   const navigate = useNavigate(); // Initialize useNavigate
@@ -25,7 +26,7 @@ const EmailVerificationForm = () => {
     console.log('Verification Code:', code);
 
     try {
-      const response = await fetch('https://devapi.softtrails.net/saas/test/verify-otp', {
+      const response = await fetch(`${MAIN_API_BASE}/otp/verify-otp`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

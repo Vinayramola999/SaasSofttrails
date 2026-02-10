@@ -1,8 +1,8 @@
 import axios from 'axios';
 import Modal from 'react-modal';
 import Swal from 'sweetalert2';
-import React, { useState} from 'react';
-import Select from "react-select"; 
+import React, { useState } from 'react';
+import Select from "react-select";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import useFetchEmails from '../NewComponents/useFetchEmails';
 Modal.setAppElement('#root');
@@ -23,6 +23,8 @@ const UpdateAccess = () => {
     const [isBalanceChecked, setIsBalanceChecked] = useState(false);
     const [isApprovalChecked, setIsApprovalChecked] = useState(false);
     const [isPolicyChecked, setIsPolicyChecked] = useState(false);
+    const [isAddPolicyChecked, setIsAddPolicyChecked] = useState(false);
+    const [isSchedularChecked, setIsSchedularChecked] = useState(false);
     const [isYearSetUpChecked, setIsYearSetUpChecked] = useState(false);
     const [isAllBalanceChecked, setIsAllBalanceChecked] = useState(false);
     const [isHolidayChecked, setIsHolidayChecked] = useState(false);
@@ -36,12 +38,16 @@ const UpdateAccess = () => {
     //HR CORNER Child States
     const [isHRChecked, setIsHRChecked] = useState(false);
     const [isEmployeeChecked, setIsEmployeeChecked] = useState(false);
+    const [isUploadDocumentChecked, setIsUploadDocumentChecked] = useState(false);
+    const [isLetterChecked, setIsLetterChecked] = useState(false);
+    const [isSalarySlipChecked, setIsSalarySlipChecked] = useState(false);
     const [isRecruitmentActivityChecked, setIsRecruitmentActivityChecked] = useState(false);
     const [isPostJobChecked, setIsPostJobChecked] = useState(false);
     const [isTalentDatabaseChecked, setIsTalentDatabaseChecked] = useState(false);
     const [isFlagDataChecked, setIsFlagDataChecked] = useState(false);
     const [isHRPoliciesChecked, setIsHRPoliciesChecked] = useState(false);
-    const [isFinanceChecked, setIsFinanceChecked] = useState(false);
+    const [isDocumentChecked, setIsDocumentChecked] = useState(false);
+    const [isBulkAttendanceChecked, setIsBulkAttendanceChecked] = useState(false);
 
     //Attendance Child States
     const [isAttendanceTabChecked, setIsAttendanceTabChecked] = useState(false);
@@ -63,7 +69,7 @@ const UpdateAccess = () => {
         setSelectedEmail(userId);
         if (userId) {
             try {
-                const response = await axios.get(`https://devapi.softtrails.net/saas/test/access/access/${userId}`, {
+                const response = await axios.get(`https://devdemo.softtrails.net/access/access/${userId}`, {
                     headers: {
                         'Authorization': `Bearer ${sessionStorage.getItem('token')}`,
                     },
@@ -79,6 +85,8 @@ const UpdateAccess = () => {
                 setIsBalanceChecked(apiAccessNames.includes('Balance'));
                 setIsApprovalChecked(apiAccessNames.includes('Approval'));
                 setIsPolicyChecked(apiAccessNames.includes('Policy'));
+                setIsSchedularChecked(apiAccessNames.includes('Schedular'));
+                setIsAddPolicyChecked(apiAccessNames.includes('AddPolicy'));
                 setIsYearSetUpChecked(apiAccessNames.includes('YearSet'));
                 setIsHolidayChecked(apiAccessNames.includes('Holiday'));
                 setIsAddHolidayChecked(apiAccessNames.includes('AddHoliday'));
@@ -88,14 +96,19 @@ const UpdateAccess = () => {
                 setIsAllStatusChecked(apiAccessNames.includes('Status'));
                 setIsAllWorkChecked(apiAccessNames.includes('Work'));
                 setIsApprovalBalanceChecked(apiAccessNames.includes('ApprovalBalance'));
+
                 setIsHRChecked(apiAccessNames.includes('HR'));                   //HRCorner
                 setIsEmployeeChecked(apiAccessNames.includes('EmployeeData'));
+                setIsUploadDocumentChecked(apiAccessNames.includes('UploadDocument'));
+                setIsLetterChecked(apiAccessNames.includes('RevisionLetter'));
+                setIsSalarySlipChecked(apiAccessNames.includes('SalarySlip'));
                 setIsRecruitmentActivityChecked(apiAccessNames.includes('Recruitment'));
                 setIsTalentDatabaseChecked(apiAccessNames.includes('TalentDatabase'));
                 setIsPostJobChecked(apiAccessNames.includes('PostJob'));
                 setIsFlagDataChecked(apiAccessNames.includes('FlagData'));
                 setIsHRPoliciesChecked(apiAccessNames.includes('HRPolicies'));
-                setIsFinanceChecked(apiAccessNames.includes('Finance'));
+                setIsDocumentChecked(apiAccessNames.includes('Document'));
+                setIsBulkAttendanceChecked(apiAccessNames.includes('BulkAttendance'));
 
                 setIsAttendanceTabChecked(apiAccessNames.includes('AttendanceTab'));             //AttendanceManagement
                 setIsAttendanceChecked(apiAccessNames.includes('Attendance'));
@@ -126,6 +139,8 @@ const UpdateAccess = () => {
             setIsBalanceChecked(false);
             setIsApprovalChecked(false);
             setIsPolicyChecked(false);
+            setIsSchedularChecked(false);
+            setIsAddPolicyChecked(false);
             setIsYearSetUpChecked(false);
             setIsHolidayChecked(false);
             setIsAddHolidayChecked(false);
@@ -138,12 +153,15 @@ const UpdateAccess = () => {
 
             setIsHRChecked(false);
             setIsEmployeeChecked(false);
+            setIsLetterChecked(false);
+            setIsSalarySlipChecked(false);
             setIsRecruitmentActivityChecked(false);
             setIsTalentDatabaseChecked(false);
             setIsPostJobChecked(false);
             setIsFlagDataChecked(false);
             setIsHRPoliciesChecked(false);
-            setIsFinanceChecked(false);
+            setIsDocumentChecked(false);
+            setIsBulkAttendanceChecked(false);
 
             setIsAttendanceTabChecked(false);
             setIsAttendanceChecked(false);
@@ -160,20 +178,20 @@ const UpdateAccess = () => {
         }
     };
 
-    const handleApiAccessChange = async (apiName) => {
-        const isAlreadySelected = apiAccess.includes(apiName);
-        setApiAccess((prev) =>
-            isAlreadySelected
-                ? prev.filter((name) => name !== apiName) // Remove API if unchecked
-                : [...prev, apiName] // Add API if checked
-        );
+    // const handleApiAccessChange = async (apiName) => {
+    //     const isAlreadySelected = apiAccess.includes(apiName);
+    //     setApiAccess((prev) =>
+    //         isAlreadySelected
+    //             ? prev.filter((name) => name !== apiName) // Remove API if unchecked
+    //             : [...prev, apiName] // Add API if checked
+    //     );
 
-        if (apiName === 'update_access') {
-            setHasAmsAccess((prev) => !prev);
-        } else if (apiName === 'HRMS') {
-            setIsHRMSChecked((prev) => !prev);
-        }
-    };
+    //     if (apiName === 'update_access') {
+    //         setHasAmsAccess((prev) => !prev);
+    //     } else if (apiName === 'HRMS') {
+    //         setIsHRMSChecked((prev) => !prev);
+    //     }
+    // };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -196,6 +214,8 @@ const UpdateAccess = () => {
         if (isBalanceChecked) selectedApiAccess.push('Balance');
         if (isApprovalChecked) selectedApiAccess.push('Approval');
         if (isPolicyChecked) selectedApiAccess.push('Policy');
+        if (isSchedularChecked) selectedApiAccess.push('Schedular');
+        if (isAddPolicyChecked) selectedApiAccess.push('AddPolicy');
         if (isYearSetUpChecked) selectedApiAccess.push('YearSet');
         if (isAllBalanceChecked) selectedApiAccess.push('AllBalance');
         if (isHolidayChecked) selectedApiAccess.push('Holiday');
@@ -208,12 +228,16 @@ const UpdateAccess = () => {
 
         if (isHRChecked) selectedApiAccess.push('HR');
         if (isEmployeeChecked) selectedApiAccess.push('EmployeeData');
+        if (isUploadDocumentChecked) selectedApiAccess.push('UploadDocument');
+        if (isLetterChecked) selectedApiAccess.push('RevisionLetter');
+        if (isSalarySlipChecked) selectedApiAccess.push('SalarySlip');
         if (isRecruitmentActivityChecked) selectedApiAccess.push('Recruitment');
         if (isPostJobChecked) selectedApiAccess.push('PostJob');
         if (isTalentDatabaseChecked) selectedApiAccess.push('TalentDatabase');
         if (isFlagDataChecked) selectedApiAccess.push('FlagData');
         if (isHRPoliciesChecked) selectedApiAccess.push('HRPolicies');
-        if (isFinanceChecked) selectedApiAccess.push('Finance');
+        if (isDocumentChecked) selectedApiAccess.push('Document');
+        if (isBulkAttendanceChecked) selectedApiAccess.push('BulkAttendance');
 
         if (isAttendanceTabChecked) selectedApiAccess.push('AttendanceTab');
         if (isAttendanceChecked) selectedApiAccess.push('Attendance');
@@ -229,7 +253,7 @@ const UpdateAccess = () => {
         if (isMappingChecked) selectedApiAccess.push('Mapping');
         try {
             const response = await axios.put(
-                'https://devapi.softtrails.net/saas/test/access/update_access',
+                'https://devdemo.softtrails.net/access/update_access',
                 {
                     user_id: selectedEmail,
                     module: selectedModule,
@@ -295,6 +319,17 @@ const UpdateAccess = () => {
         }
     };
 
+    const handleUploadDocumentToggle = () => {
+        if (isUploadDocumentChecked) {
+            // If turning OFF → remove all child permissions
+            setIsLetterChecked(false);
+            setIsSalarySlipChecked(false);
+            setIsDocumentChecked(false);
+        }
+        setIsUploadDocumentChecked(!isUploadDocumentChecked);
+    };
+
+
     const Checkbox = ({ label, checked, onChange }) => (
         <label className="flex items-center space-x-2">
             <input type="checkbox" checked={checked} onChange={onChange} className="form-checkbox text-indigo-600 focus:ring-indigo-500" /> <span>{label}</span>
@@ -305,20 +340,11 @@ const UpdateAccess = () => {
         <div className="w-full max-h-[80vh] overflow-auto">
             <div className="bg-white p-4 rounded-lg shadow-md mt-3">
                 <form onSubmit={handleSubmit}>
-                  
+
                     <div className="flex flex-col sm:flex-row sm:items-center mt-5 ml-5 w-full sm:w-[50%]">
                         <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2 sm:mb-0 sm:mr-4" > Select User: </label>
                         <div className="w-full sm:w-[60%]">
-                            <Select
-                                id="email"
-                                options={emails}
-                                value={emails.find((user) => user.value === selectedEmail) || null}
-                                onChange={(selectedOption) => {handleEmailChange({ target: { value: selectedOption?.value || "" } });}}
-                                placeholder="Search or select user..."
-                                isSearchable
-                                classNamePrefix="react-select"
-                                styles={{ control: (base) => ({...base,borderRadius: "0.5rem",padding: "2px",borderColor: "#d1d5db",boxShadow: "none","&:hover": { borderColor: "#2563eb" },}), }}
-                            />
+                            <Select id="email" options={emails} value={emails.find((user) => user.value === selectedEmail) || null} onChange={(selectedOption) => { handleEmailChange({ target: { value: selectedOption?.value || "" } }); }} placeholder="Search or select user..." isSearchable classNamePrefix="react-select" styles={{ control: (base) => ({ ...base, borderRadius: "0.5rem", padding: "2px", borderColor: "#d1d5db", boxShadow: "none", "&:hover": { borderColor: "#2563eb" }, }), }} />
                         </div>
                     </div>
 
@@ -338,20 +364,33 @@ const UpdateAccess = () => {
                                         <Checkbox label="Leave Management Card" checked={isLMCChecked} onChange={() => setIsLMCChecked(!isLMCChecked)} />
                                         {isLMCChecked && (
                                             <div className="pl-6 mt-2 space-y-2">
-                                                <Checkbox label="Leave Policy" checked={isPolicyChecked} onChange={() => setIsPolicyChecked(!isPolicyChecked)} />
+                                                <Checkbox label="Leave Policy" checked={isPolicyChecked}
+                                                    onChange={() => {
+                                                        if (isPolicyChecked) { 
+                                                            setIsSchedularChecked(false); 
+                                                            setIsAddPolicyChecked(false); 
+                                                        }
+                                                        setIsPolicyChecked(!isPolicyChecked);
+                                                    }}
+                                                />
+                                                {isPolicyChecked && (
+                                                    <div className="pl-6 space-y-2">
+                                                        <Checkbox label="Schedular " checked={isSchedularChecked} onChange={() => setIsSchedularChecked(!isSchedularChecked)} />
+                                                        <Checkbox label="Add Policy" checked={isAddPolicyChecked} onChange={() => setIsAddPolicyChecked(!isAddPolicyChecked)} />
+                                                    </div>
+                                                )}
                                                 <Checkbox label="Create Leave" checked={isCreateChecked} onChange={() => setIsCreateChecked(!isCreateChecked)} />
                                                 <Checkbox label="Apply Leave" checked={isApplyChecked} onChange={() => setIsApplyChecked(!isApplyChecked)} />
                                                 <Checkbox label="Balance Leave" checked={isBalanceChecked} onChange={() => setIsBalanceChecked(!isBalanceChecked)} />
                                                 <Checkbox label="Leave Approval" checked={isApprovalChecked} onChange={() => setIsApprovalChecked(!isApprovalChecked)} />
                                                 <Checkbox label="Year Setup" checked={isYearSetUpChecked} onChange={() => setIsYearSetUpChecked(!isYearSetUpChecked)} />
-                                                {/* Holiday */}
                                                 <Checkbox label="Holidays" checked={isHolidayChecked}
                                                     onChange={() => {
-                                                        if (isHolidayChecked) {
-                                                            setIsAddHolidayChecked(false);
-                                                            setIsViewHolidayChecked(false);
-                                                            setIsDeleteHolidayChecked(false);
-                                                        }
+                                                        if (isHolidayChecked) { 
+                                                            setIsAddHolidayChecked(false); 
+                                                            setIsViewHolidayChecked(false); 
+                                                            setIsDeleteHolidayChecked(false); 
+}
                                                         setIsHolidayChecked(!isHolidayChecked);
                                                     }}
                                                 />
@@ -375,7 +414,53 @@ const UpdateAccess = () => {
                                         <Checkbox label="HR Corner" checked={isHRChecked} onChange={() => setIsHRChecked(!isHRChecked)} />
                                         {isHRChecked && (
                                             <div className="pl-6 mt-2 space-y-2">
-                                                <Checkbox label="Employees" checked={isEmployeeChecked} onChange={() => setIsEmployeeChecked(!isEmployeeChecked)} />
+                                                <Checkbox
+                                                    label="Employees"
+                                                    checked={isEmployeeChecked}
+                                                    onChange={() => {
+                                                        if (isEmployeeChecked) {
+                                                            setIsUploadDocumentChecked(false);
+                                                            setIsLetterChecked(false);
+                                                            setIsSalarySlipChecked(false);
+                                                            setIsDocumentChecked(false);
+                                                        }
+                                                        setIsEmployeeChecked(!isEmployeeChecked);
+                                                    }}
+                                                />
+
+                                                {isEmployeeChecked && (
+                                                    <div className="ml-6 mt-2 space-y-2">
+                                                        {/* Upload Document (Parent) */}
+                                                        <Checkbox
+                                                            label="Upload Documents"
+                                                            checked={isUploadDocumentChecked}
+                                                            onChange={handleUploadDocumentToggle}
+                                                        />
+
+                                                        {/* Child tabs appear ONLY if Upload Documents is selected */}
+                                                        {isUploadDocumentChecked && (
+                                                            <div className="ml-6 mt-2 space-y-2">
+                                                                <Checkbox
+                                                                    label="Revision Letter"
+                                                                    checked={isLetterChecked}
+                                                                    onChange={() => setIsLetterChecked(!isLetterChecked)}
+                                                                />
+                                                                <Checkbox
+                                                                    label="Appointment Letter"
+                                                                    checked={isSalarySlipChecked}
+                                                                    onChange={() => setIsSalarySlipChecked(!isSalarySlipChecked)}
+                                                                />
+                                                                <Checkbox
+                                                                    label="Document Access"
+                                                                    checked={isDocumentChecked}
+                                                                    onChange={() => setIsDocumentChecked(!isDocumentChecked)}
+                                                                />
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                )}
+
+
                                                 <Checkbox label="Recruitment Activity" checked={isRecruitmentActivityChecked} onChange={() => setIsRecruitmentActivityChecked(!isRecruitmentActivityChecked)} />
                                                 {isRecruitmentActivityChecked && (
                                                     <div className="pl-6 space-y-2">
@@ -385,8 +470,7 @@ const UpdateAccess = () => {
                                                     </div>
                                                 )}
                                                 <Checkbox label="HR Policies" checked={isHRPoliciesChecked} onChange={() => setIsHRPoliciesChecked(!isHRPoliciesChecked)} />
-                                                <Checkbox label="Finance" checked={isFinanceChecked} onChange={() => setIsFinanceChecked(!isFinanceChecked)} />
-
+                                                <Checkbox label="Bulk Attendance" checked={isBulkAttendanceChecked} onChange={() => setIsBulkAttendanceChecked(!isBulkAttendanceChecked)} />
                                             </div>
                                         )}
                                     </div>
@@ -431,7 +515,6 @@ const UpdateAccess = () => {
                             )}
                         </div>
                     </div>
-
                     <div className="mt-6 ml-5">
                         <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none" >
                             Update Access

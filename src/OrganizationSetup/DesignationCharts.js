@@ -1,30 +1,24 @@
 import React, { useEffect, useState } from "react";
-import { PieChart, Pie, Cell, Tooltip } from "recharts";
-const COLORS = ["#FFA07A", "#4682B4", "#32CD32", "#FF4500", "#8A2BE2", "#20B2AA"];
+import Chart from "react-apexcharts";
+import { MAIN_API_BASE } from "../config/apiBase";
 
 const DashboardCharts = () => {
-    const [designationData, setDesignationData] = useState([]);
-    const [totalDesignations, setTotalDesignations] = useState(0);
+    const [series, setSeries] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const token = sessionStorage.getItem("token"); // Get token from sessionStorage
+                const token = sessionStorage.getItem("token");
 
                 const [designationRes, usersRes] = await Promise.all([
-                    fetch("https://devapi.softtrails.net/saas/test/designation", {
-                        headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${token}`,
-                        },
+                    fetch(`${MAIN_API_BASE}/designation`, {
+                        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
                     }),
-                    fetch("https://devapi.softtrails.net/saas/test/users", {
-                        headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${token}`,
-                        },
+                    fetch(`${MAIN_API_BASE}/users`, {
+                        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
                     }),
                 ]);
 
@@ -32,28 +26,26 @@ const DashboardCharts = () => {
 
                 const designations = await designationRes.json();
                 const usersData = await usersRes.json();
+                const users = usersData.users || [];
 
-                const users = usersData.users || []; // ✅ use the correct field
-
-                setTotalDesignations(designations.length);
-
-                // Count users per designation
                 const designationCounts = {};
                 users.forEach((user) => {
                     const designation = user.designation || "Unknown";
                     designationCounts[designation] = (designationCounts[designation] || 0) + 1;
                 });
 
-                // Map designations with user count and filter where value > 0
-                const formattedData = designations
-                    .map((desig, index) => ({
-                        name: desig.designation,
-                        value: designationCounts[desig.designation] || 0,
-                        color: COLORS[index % COLORS.length],
-                    }))
-                    .filter((item) => item.value > 0); // Filter designations with 0 users
+                // Top 10 Designations to keep it clean
+                const sortedDesignations = Object.keys(designationCounts)
+                    .filter(d => designationCounts[d] > 0)
+                    .sort((a,b) => designationCounts[b] - designationCounts[a])
+                    .slice(0, 10);
 
-                setDesignationData(formattedData);
+                setCategories(sortedDesignations);
+                setSeries([{
+                    name: 'Users',
+                    data: sortedDesignations.map(d => designationCounts[d])
+                }]);
+
             } catch (error) {
                 setError(error.message);
             } finally {
@@ -64,59 +56,83 @@ const DashboardCharts = () => {
         fetchData();
     }, []);
 
-    const CustomTooltip = ({ active, payload }) => {
-        if (active && payload && payload.length) {
-            return (
-                <div className="bg-white p-2 rounded shadow-md text-sm">
-                    <p className="font-bold">{payload[0].name}</p>
-                    <p>{payload[0].value} User(s)</p>
-                </div>
-            );
+    const chartOptions = {
+        chart: {
+            type: 'bar',
+            fontFamily: 'Inter, sans-serif',
+            toolbar: { show: false },
+        },
+        // Varied palette for bars: Indigo, Violet, Purple, Pink, Rose...
+        colors: ['#6366F1', '#8B5CF6', '#A855F7', '#D946EF', '#EC4899', '#F43F5E', '#F59E0B', '#10B981'],
+        plotOptions: {
+            bar: {
+                horizontal: true,
+                barHeight: '50%',
+                borderRadius: 4,
+                distributed: true // Enable different colors per bar
+            }
+        },
+        dataLabels: {
+            enabled: false,
+        },
+        xaxis: {
+            categories: categories,
+            labels: {
+                style: {
+                    colors: '#64748B',
+                     fontSize: '11px',
+                     fontFamily: 'Inter, sans-serif',
+                }
+            },
+            axisBorder: { show: false },
+            axisTicks: { show: false }
+        },
+        yaxis: {
+             labels: {
+                maxWidth: 150,
+                style: {
+                    colors: '#475569',
+                     fontSize: '11px',
+                     fontWeight: 500,
+                     fontFamily: 'Inter, sans-serif',
+                }
+            }
+        },
+        grid: {
+            borderColor: '#F1F5F9',
+            xaxis: { lines: { show: true } },
+            yaxis: { lines: { show: false } },
+             padding: { top: 0, right: 10, bottom: 0, left: 10 }
+        },
+        tooltip: {
+            theme: 'light',
+            y: {
+                formatter: function (val) {
+                    return val + " User(s)"
+                }
+            }
         }
-        return null;
     };
 
     return (
-        <div className="bg-white p-4 rounded-lg shadow-md border border-blue-300 w-full h-[300px] flex flex-col items-center justify-center overflow-auto scrollbar-hide">
-            <div className="flex justify-center items-center mb-4">
-                <h2 className="text-lg font-semibold">Designation :{totalDesignations}</h2>
+        <div className="w-full h-full min-h-[320px] bg-white rounded-xl border border-gray-200 p-5 flex flex-col">
+            <div className="flex justify-between items-start mb-4">
+                <div>
+                    <h2 className="text-base font-bold text-gray-900">Top Roles</h2>
+                    <p className="text-xs text-gray-500 mt-0.5">Highest count designations</p>
+                </div>
             </div>
 
-            {loading && <p className="text-center">Loading...</p>}
-            {error && <p className="text-red-500 text-center">{error}</p>}
+            {loading && (
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
+                </div>
+            )}
+            {error && <div className="flex-1 flex items-center justify-center text-red-500 text-sm">{error}</div>}
 
             {!loading && !error && (
-                <div className="flex flex-col md:flex-row md:items-center justify-center">
-                    <div className="flex justify-center">
-                        <PieChart width={250} height={250}>
-                            <Pie
-                                data={designationData}
-                                cx="50%"
-                                cy="50%"
-                                outerRadius={80}
-                                fill="#8884d8"
-                                dataKey="value"
-                                label
-                            >
-                                {designationData.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={entry.color} />
-                                ))}
-                            </Pie>
-                            <Tooltip content={<CustomTooltip />} />
-                        </PieChart>
-                    </div>
-
-                    <div className="flex flex-col items-center md:items-start md:ml-8">
-
-                        <div className="grid grid-cols-2 md:grid-cols-1 gap-2">
-                            {designationData.map((desig, index) => (
-                                <div key={index} className="flex items-center space-x-2">
-                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: desig.color }}></div>
-                                    <span className="text-[10px] font-medium">{desig.name} ({desig.value})</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                <div className="flex-1 w-full overflow-hidden">
+                    <Chart options={chartOptions} series={series} type="bar" height={220} width="100%" />
                 </div>
             )}
         </div>

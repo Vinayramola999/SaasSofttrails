@@ -53,7 +53,7 @@ const Devapi = () => {
     const fetchModules = async () => {
       try {
         const token = localStorage.getItem('token'); // Get token from localStorage
-        const response = await fetch('https://saaspro.softtrails.net/saas/ucs/pro/api/modules', {
+        const response = await fetch('https://ucsdemo.softtrails.net/api/modules', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -101,7 +101,7 @@ const Devapi = () => {
       try {
         // Use the selectedMessageType to build the API URL
         const token = localStorage.getItem('token'); // Get token from localStorage
-        const response = await fetch(`https://saaspro.softtrails.net/saas/ucs/pro/api/templates/getByRole/${selectedMessageType.toLowerCase()}`, {
+        const response = await fetch(`https://ucsdemo.softtrails.net/api/templates/getByRole/${selectedMessageType.toLowerCase()}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -383,7 +383,7 @@ export default Devapi;
 //   useEffect(() => {
 //     const fetchModules = async () => {
 //       try {
-//         const response = await fetch('.15.86:8336/api/modules');
+//         const response = await fetch('http://13.204.15.86:8336/api/modules');
 //         if (!response.ok) {
 //           throw new Error(`HTTP error! status: ${response.status}`);
 //         }

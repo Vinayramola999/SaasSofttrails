@@ -143,20 +143,20 @@ export default function QuotationList() {
                     const name = q.vendor_name || '-';
                     const isExpanded = expandedRow === `vendor_${q.quotation_id}`;
                     return (
-                      <div className="text-left whitespace-normal break-words max-w-[150px]">
-                        {isExpanded ? name : (name.length > 20 ? `${name.slice(0, 20)}...` : name)}
-                        {name.length > 20 && (
-                          <button
-                            className="ml-2 text-blue-600 font-medium hover:text-blue-800"
-                            onClick={() => setExpandedRow(isExpanded ? null : `vendor_${q.quotation_id}`)}
-                          >
-                            {isExpanded ? 'Show less' : 'Read more'}
-                          </button>
-                        )}
-                      </div>
+                              <div className="text-center whitespace-normal break-words max-w-[150px] mx-auto">
+                              {isExpanded ? name : (name.length > 20 ? `${name.slice(0, 20)}...` : name)}
+                              {name.length > 20 && (
+                                <button
+                                  className="ml-2 text-blue-600 font-medium hover:text-blue-800"
+                                  onClick={() => setExpandedRow(isExpanded ? null : `vendor_${q.quotation_id}`)}
+                                >
+                                  {isExpanded ? 'Show less' : 'Read more'}
+                                </button>
+                              )}
+                            </div>
                     );
                   },
-                  cellClass: 'text-left whitespace-normal',
+                  cellClass: 'text-center whitespace-normal',
                 },
                 { key: 'grand_total', label: 'Amount', render: (q) => `₹${q.grand_total}` },
                 { key: 'status', label: 'Status', render: (q) => {

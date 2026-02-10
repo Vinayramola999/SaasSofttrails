@@ -1,483 +1,262 @@
-// // import React, { useEffect, useState } from "react";
-// // import axios from "axios";
-// // import { faTrash } from '@fortawesome/free-solid-svg-icons';
-// // import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-// // import pdf from '../../assests/folder.png';
-// // import DeleteConfirmModal from "../../NewComponents/DeleteConfirmModal";
-// // import AddButton from "../../NewComponents/AddButton";
-// // import Pagination from "../../NewComponents/Pagination";   // ✅ import pagination
-
-// // const DocumentPage = ({ setActiveTab }) => {
-// //   const [documents, setDocuments] = useState([]);
-// //   const [loading, setLoading] = useState(true);
-// //   const [error, setError] = useState("");
-// //   const [employeeId, setEmployeeId] = useState(null);
-// //   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-// //   const [selectedDoc, setSelectedDoc] = useState(null);
-// //   const [deleting, setDeleting] = useState(false);
-// //   const [currentPage, setCurrentPage] = useState(1);
-// //   const documentsPerPage = 25;
-// //   const API_URL = "https://devapi.softtrails.net/hrms/test/dmsapi/documents";
-
-// //   useEffect(() => {
-// //     const storedEmployeeId = sessionStorage.getItem("employeeeId");
-// //     if (storedEmployeeId) {
-// //       setEmployeeId(storedEmployeeId);
-// //     }
-// //   }, []);
-
-// //   useEffect(() => {
-// //     const fetchDocuments = async () => {
-// //       if (!employeeId) return;
-// //       setLoading(true);
-// //       try {
-// //         const response = await axios.get(API_URL);
-// //         const filteredDocs = response.data.filter(
-// //           (doc) => String(doc.uploaded_by?.id) === String(employeeId)
-// //         );
-// //         setDocuments(filteredDocs);
-// //       } catch (err) {
-// //         setError("Failed to load documents. Please try again.");
-// //       } finally {
-// //         setLoading(false);
-// //       }
-// //     };
-
-// //     fetchDocuments();
-// //   }, [employeeId]);
-
-// //   const confirmDelete = (doc) => {
-// //     setSelectedDoc(doc);
-// //     setDeleteModalOpen(true);
-// //   };
-
-// //   const handleDelete = async () => {
-// //     if (!selectedDoc) return;
-// //     try {
-// //       setDeleting(true);
-// //       await axios.delete(`${API_URL}/${selectedDoc.document_id}`);
-// //       setDocuments((prev) =>
-// //         prev.filter((doc) => doc.document_id !== selectedDoc.document_id)
-// //       );
-// //       setDeleteModalOpen(false);
-// //       setSelectedDoc(null);
-// //     } catch (err) {
-// //       console.error("Delete failed:", err);
-// //       alert("Failed to delete document. Please try again.");
-// //     } finally {
-// //       setDeleting(false);
-// //     }
-// //   };
-
-// //   // Pagination Logic
-// //   const indexOfLastDocument = currentPage * documentsPerPage;
-// //   const indexOfFirstDocument = indexOfLastDocument - documentsPerPage;
-// //   const currentDocuments = documents.slice(
-// //     indexOfFirstDocument,
-// //     indexOfLastDocument
-// //   );
-// //   const totalPages = Math.ceil(documents.length / documentsPerPage);
-
-// //   const handlePageChange = (page) => {
-// //     if (page >= 1 && page <= totalPages) {
-// //       setCurrentPage(page);
-// //     }
-// //   };
-
-// //   const handleUploadDocumentClick = () => {
-// //     setActiveTab("uploadDocuments");
-// //   };
-
-// //   return (
-// //     <div className="p-4">
-// //       <div className="flex items-center justify-between mb-4">
-// //         <AddButton onClick={handleUploadDocumentClick}>Upload Document</AddButton>
-// //       </div>
-
-// //       {loading ? (
-// //         <p>Loading documents...</p>
-// //       ) : error ? (
-// //         <p className="text-red-600">{error}</p>
-// //       ) : documents.length === 0 ? (
-// //         <p>No documents found for this user.</p>
-// //       ) : (
-// //         <div className="h-[75vh] sm:h-[60vh] md:h-[70vh] rounded-lg flex flex-col">
-// //           {/* Scrollable Table */}
-// //           <div className="flex-1 overflow-auto scrollbar-hide bg-white rounded-lg">
-// //             <table className="min-w-full table-auto border-collapse text-sm">
-// //               <thead className="text-[14px] font-medium bg-white sticky top-0" style={{ boxShadow: "0 2px 0 black" }} >
-// //                 <tr>
-// //                   <th className="p-5 text-left text-black">S.No</th>
-// //                   <th className="p-5 text-left text-black">Name</th>
-// //                   <th className="p-5 text-left text-black">Service</th>
-// //                   <th className="p-5 text-left text-black">Type</th>
-// //                   <th className="p-5 text-left text-black">Actions</th>
-// //                 </tr>
-// //               </thead>
-// //               <tbody>
-// //                 <tr><td colSpan="7" className="h-3 bg-white"></td></tr>
-// //                 {currentDocuments.map((doc, index) => (
-// //                   <tr key={doc.document_id} className={`${(index + 1) % 2 === 0 ? "bg-white" : "bg-tableblue"}`} >
-// //                     <td className="px-5 py-4 text-left text-[14px] text-black">{indexOfFirstDocument + index + 1}</td>
-// //                     <td className="px-5 py-4 text-left text-[14px] text-black">{doc.custom_folder}</td>
-// //                     <td className="px-5 py-4 text-left text-[14px] text-black">{doc.service?.name}</td>
-// //                     <td className="px-5 py-4 text-left text-[14px] text-black">{doc.document_type?.name}</td>
-// //                     <td className="px-2 md:px-4 py-2 text-left">
-// //                       <div className="flex items-center space-x-3">
-// //                         <button className="text-red-500 hover:text-red-700" onClick={() => confirmDelete(doc)} > <FontAwesomeIcon icon={faTrash} /> </button>
-// //                         <a href={doc.document_url} target="_blank" rel="noopener noreferrer" ><img src={pdf} alt="PDF" className="w-6 h-6 object-contain cursor-pointer"/></a>
-// //                       </div>
-// //                     </td>
-// //                   </tr>
-// //                 ))}
-// //               </tbody>
-// //             </table>
-// //           </div>
-
-// //           <Pagination
-// //             currentPage={currentPage}
-// //             totalPages={totalPages}
-// //             onPageChange={handlePageChange}
-// //           />
-// //         </div>
-// //       )}
-
-// //       {/* Delete Modal */}
-// //       <DeleteConfirmModal
-// //         open={deleteModalOpen}
-// //         title="Delete Document?"
-// //         message={`Are you sure you want to delete "${selectedDoc?.document_name}"?`}
-// //         onCancel={() => setDeleteModalOpen(false)}
-// //         onConfirm={handleDelete}
-// //         loading={deleting}
-// //       />
-// //     </div>
-// //   );
-// // };
-
-// // export default DocumentPage;
-
-
-
-// import React, { useEffect, useState } from "react";
-// import axios from "axios";
-// import { faTrash } from '@fortawesome/free-solid-svg-icons';
-// import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-// import pdf from '../../assests/folder.png';
-// import DeleteConfirmModal from "../../NewComponents/DeleteConfirmModal";
-// import AddButton from "../../NewComponents/AddButton";
-// import Pagination from "../../NewComponents/Pagination";   
-
-// const DocumentPage = ({ setActiveTab }) => {
-//   const [documents, setDocuments] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState("");
-//   const [employeeId, setEmployeeId] = useState(null);
-//   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-//   const [selectedDoc, setSelectedDoc] = useState(null);
-//   const [deleting, setDeleting] = useState(false);
-//   const [currentPage, setCurrentPage] = useState(1);
-//   const documentsPerPage = 25;
-//   const API_URL = "https://devapi.softtrails.net/hrms/test/dmsapi/documents";
-
-//   useEffect(() => {
-//     const storedEmployeeId = sessionStorage.getItem("employeeId");
-//     if (storedEmployeeId) {
-//       setEmployeeId(storedEmployeeId);
-//     }
-//   }, []);
-
-//   useEffect(() => {
-//     const fetchDocuments = async () => {
-//       if (!employeeId) return;
-//       setLoading(true);
-//       try {
-//         const response = await axios.get(API_URL);
-//         const filteredDocs = response.data.filter(
-//           (doc) => String(doc.uploaded_by?.id) === String(employeeId)
-//         );
-//         setDocuments(filteredDocs);
-//       } catch (err) {
-//         setError("Failed to load documents. Please try again.");
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-
-//     fetchDocuments();
-//   }, [employeeId]);
-
-//   const confirmDelete = (doc) => {
-//     setSelectedDoc(doc);
-//     setDeleteModalOpen(true);
-//   };
-
-//   const handleDelete = async () => {
-//     if (!selectedDoc) return;
-//     try {
-//       setDeleting(true);
-//       await axios.delete(`${API_URL}/${selectedDoc.document_id}`);
-//       setDocuments((prev) =>
-//         prev.filter((doc) => doc.document_id !== selectedDoc.document_id)
-//       );
-//       setDeleteModalOpen(false);
-//       setSelectedDoc(null);
-//     } catch (err) {
-//       console.error("Delete failed:", err);
-//       alert("Failed to delete document. Please try again.");
-//     } finally {
-//       setDeleting(false);
-//     }
-//   };
-
-//   // Pagination Logic
-//   const indexOfLastDocument = currentPage * documentsPerPage;
-//   const indexOfFirstDocument = indexOfLastDocument - documentsPerPage;
-//   const currentDocuments = documents.slice(
-//     indexOfFirstDocument,
-//     indexOfLastDocument
-//   );
-//   const totalPages = Math.ceil(documents.length / documentsPerPage);
-
-//   const handlePageChange = (page) => {
-//     if (page >= 1 && page <= totalPages) {
-//       setCurrentPage(page);
-//     }
-//   };
-
-//   const handleUploadDocumentClick = () => {
-//     setActiveTab("uploadDocuments");
-//   };
-
-//   return (
-//     <div className="p-4">
-//       <div className="flex items-center justify-between mb-4">
-//         <AddButton onClick={handleUploadDocumentClick}>Upload Document</AddButton>
-//       </div>
-
-//       {loading ? (
-//         <p>Loading documents...</p>
-//       ) : error ? (
-//         <p className="text-red-600">{error}</p>
-//       ) : documents.length === 0 ? (
-//         <p>No documents found for this user.</p>
-//       ) : (
-//         <div className="h-[75vh] sm:h-[60vh] md:h-[70vh] rounded-lg flex flex-col">
-//           {/* Scrollable Table */}
-//           <div className="flex-1 overflow-auto scrollbar-hide bg-white rounded-lg">
-//             <table className="min-w-full table-auto border-collapse text-sm">
-//               <thead className="text-[14px] font-medium bg-white sticky top-0" style={{ boxShadow: "0 2px 0 black" }} >
-//                 <tr>
-//                   <th className="p-5 text-left text-black">S.No</th>
-//                   <th className="p-5 text-left text-black">Name</th>
-//                   <th className="p-5 text-left text-black">Service</th>
-//                   <th className="p-5 text-left text-black">Type</th>
-//                   <th className="p-5 text-left text-black">Actions</th>
-//                 </tr>
-//               </thead>
-//               <tbody>
-//                 <tr><td colSpan="7" className="h-3 bg-white"></td></tr>
-//                 {currentDocuments.map((doc, index) => (
-//                   <tr key={doc.document_id} className={`${(index + 1) % 2 === 0 ? "bg-white" : "bg-tableblue"}`} >
-//                     <td className="px-5 py-4 text-left text-[14px] text-black">{indexOfFirstDocument + index + 1}</td>
-//                     <td className="px-5 py-4 text-left text-[14px] text-black">{doc.custom_folder}</td>
-//                     <td className="px-5 py-4 text-left text-[14px] text-black">{doc.service?.name}</td>
-//                     <td className="px-5 py-4 text-left text-[14px] text-black">{doc.document_type?.name}</td>
-//                     <td className="px-2 md:px-4 py-2 text-left">
-//                       <div className="flex items-center space-x-3">
-//                         <button className="text-red-500 hover:text-red-700" onClick={() => confirmDelete(doc)} > <FontAwesomeIcon icon={faTrash} /> </button>
-//                         <a href={doc.document_url} target="_blank" rel="noopener noreferrer" ><img src={pdf} alt="PDF" className="w-6 h-6 object-contain cursor-pointer"/></a>
-//                       </div>
-//                     </td>
-//                   </tr>
-//                 ))}
-//               </tbody>
-//             </table>
-//           </div>
-
-//           <Pagination
-//             currentPage={currentPage}
-//             totalPages={totalPages}
-//             onPageChange={handlePageChange}
-//           />
-//         </div>
-//       )}
-
-//       {/* Delete Modal */}
-//       <DeleteConfirmModal
-//         open={deleteModalOpen}
-//         title="Delete Document?"
-//         message={`Are you sure you want to delete "${selectedDoc?.document_name}"?`}
-//         onCancel={() => setDeleteModalOpen(false)}
-//         onConfirm={handleDelete}
-//         loading={deleting}
-//       />
-//     </div>
-//   );
-// };
-
-// export default DocumentPage;
-
-
-/////////////////////////////////////
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import pdf from '../../assests/folder.png';
-import DeleteConfirmModal from "../../NewComponents/DeleteConfirmModal";
-import AddButton from "../../NewComponents/AddButton";
-import Pagination from "../../NewComponents/Pagination";   
+import pdf from "../../assests/folder.png";
+import { FaUpload } from "react-icons/fa";
+import { DMS_API_BASE } from "../../config/apiBase";
 
-const DocumentPage = ({ setActiveTab }) => {
-  const [documents, setDocuments] = useState([]);
+const EmployeeDocuments = () => {
+  const [categories, setCategories] = useState([]);
+  const [userDocs, setUserDocs] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [userId, setUserId] = useState(null);   // ✅ employeeId → userId
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [selectedDoc, setSelectedDoc] = useState(null);
-  const [deleting, setDeleting] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const documentsPerPage = 25;
-  const API_URL = "https://devapi.softtrails.net/hrms/test/dmsapi/documents";
+
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadFile, setUploadFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+
+  const token = sessionStorage.getItem("token");
+  const userId = sessionStorage.getItem("userId");
+
+  const API_GET_DOCS = `https://devdemo.softtrails.net/documents/employee-documents/user/${userId}?source=my_doc`;
+  const API_GET_CATEGORIES = `https://devdemo.softtrails.net/documents/categories?source=emp_doc`;
+  const API_POST_DOC = `https://devdemo.softtrails.net/documents/employee-documents`;
+
+  const fetchCategories = async () => {
+    try {
+      const res = await axios.get(API_GET_CATEGORIES, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setCategories(res.data || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchUserDocs = async () => {
+    try {
+      const res = await axios.get(API_GET_DOCS, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUserDocs(res.data || []);
+    } catch (err) {
+      setError("Unable to load documents");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // ✅ sessionStorage se userId le rahe hain
-    const storedUserId = sessionStorage.getItem("userId");
-    if (storedUserId) {
-      setUserId(storedUserId);
-    } else {
-      setLoading(false); // agar userId hi nahi hai to loading atka na rahe
-    }
+    fetchCategories();
+    fetchUserDocs();
   }, []);
 
-  useEffect(() => {
-    const fetchDocuments = async () => {
-      if (!userId) return;
-      setLoading(true);
-      try {
-        const response = await axios.get(API_URL);
-        const filteredDocs = response.data.filter(
-          (doc) => String(doc.uploaded_by?.id) === String(userId)   // ✅ yaha userId use
-        );
-        setDocuments(filteredDocs);
-      } catch (err) {
-        setError("Failed to load documents. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDocuments();
-  }, [userId]);
-
-  const confirmDelete = (doc) => {
-    setSelectedDoc(doc);
-    setDeleteModalOpen(true);
-  };
-
-  const handleDelete = async () => {
-    if (!selectedDoc) return;
+  const getDmsPublishId = async () => {
     try {
-      setDeleting(true);
-      await axios.delete(`${API_URL}/${selectedDoc.document_id}`);
-      setDocuments((prev) =>
-        prev.filter((doc) => doc.document_id !== selectedDoc.document_id)
+      const response = await axios.get(`${DMS_API_BASE}/mapping/check`,
+        {
+          params: {
+            service_name: "HRMS",
+            doctype: "Salary Slip",
+            doc_name: "Salary Slip",
+          },
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
-      setDeleteModalOpen(false);
-      setSelectedDoc(null);
+      return response.data.dms_publish_id || null;
+    } catch {
+      return null;
+    }
+  };
+
+  const handleDmsUpload = async (file) => {
+    const publishId = await getDmsPublishId();
+
+    const formData = new FormData();
+    formData.append("documents", file);
+    formData.append("ref", "DMS");
+
+    formData.append(
+      "metadata",
+      JSON.stringify([
+        {
+          service: "HRMS",
+          publish_id: parseInt(publishId),
+          user_id: userId,
+          document_name: file.name,
+        },
+      ])
+    );
+    const response = await fetch(`${DMS_API_BASE}/dmsapi/upload-documents`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      }
+    );
+    const data = await response.json();
+    return data.uploaded_files?.[0]?.file_url || null;
+  };
+
+  const handleUpload = async () => {
+    if (!uploadFile) {
+      alert("Please select a file");
+      return;
+    }
+
+    try {
+      setUploading(true);
+
+      // 1️⃣ Upload to DMS
+      const documentUrl = await handleDmsUpload(uploadFile);
+      if (!documentUrl) {
+        alert("File upload failed!");
+        return;
+      }
+
+      // 2️⃣ Create final payload
+      const payload = {
+        user_id: userId,
+        category_id: selectedCategory.id,
+        doc_date: new Date().toISOString().split("T")[0],
+        source: "my_doc",
+        doc_url: documentUrl,
+      };
+
+      // 3️⃣ Save to employee-documents
+      await axios.post(API_POST_DOC, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      alert("Document Uploaded Successfully!");
+
+      // 4️⃣ Refresh table
+      fetchUserDocs();
+
+      // Close modal
+      setShowUploadModal(false);
+      setUploadFile(null);
+      setSelectedCategory(null);
     } catch (err) {
-      console.error("Delete failed:", err);
-      alert("Failed to delete document. Please try again.");
+      console.error(err);
+      alert("Upload failed!");
     } finally {
-      setDeleting(false);
+      setUploading(false);
     }
   };
 
-  // Pagination Logic
-  const indexOfLastDocument = currentPage * documentsPerPage;
-  const indexOfFirstDocument = indexOfLastDocument - documentsPerPage;
-  const currentDocuments = documents.slice(
-    indexOfFirstDocument,
-    indexOfLastDocument
-  );
-  const totalPages = Math.ceil(documents.length / documentsPerPage);
-
-  const handlePageChange = (page) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
-
-  const handleUploadDocumentClick = () => {
-    setActiveTab("uploadDocuments");
+  const openUploadModal = (category) => {
+    setSelectedCategory(category);
+    setShowUploadModal(true);
   };
 
   return (
-    <div className="p-4">
-      <div className="flex items-center justify-between mb-4">
-        <AddButton onClick={handleUploadDocumentClick}>Upload Document</AddButton>
-      </div>
+    <div>
+      <h2 className="text-xl font-semibold mb-4">My Documents</h2>
 
       {loading ? (
-        <p>Loading documents...</p>
+        <p>Loading...</p>
       ) : error ? (
         <p className="text-red-600">{error}</p>
-      ) : documents.length === 0 ? (
-        <p>No documents found for this user.</p>
       ) : (
-        <div className="h-[75vh] sm:h-[60vh] md:h-[70vh] rounded-lg flex flex-col">
-          {/* Scrollable Table */}
-          <div className="flex-1 overflow-auto scrollbar-hide bg-white rounded-lg">
-            <table className="min-w-full table-auto border-collapse text-sm">
-              <thead className="text-[14px] font-medium bg-white sticky top-0" style={{ boxShadow: "0 2px 0 black" }} >
+        <div className="h-[75vh] rounded-lg flex flex-col">
+          <div className="flex-1 overflow-auto bg-white rounded-lg">
+            <table className="min-w-full text-sm">
+              <thead
+                className="bg-white sticky top-0"
+                style={{ boxShadow: "0 2px 0 black" }}
+              >
                 <tr>
-                  <th className="p-5 text-left text-black">S.No</th>
-                  <th className="p-5 text-left text-black">Name</th>
-                  <th className="p-5 text-left text-black">Service</th>
-                  <th className="p-5 text-left text-black">Type</th>
-                  <th className="p-5 text-left text-black">Actions</th>
+                  <th className="p-5 text-left">S.No</th>
+                  <th className="p-5 text-left">Category</th>
+                  <th className="p-5 text-left">Date</th>
+                  <th className="p-5 text-left">Upload</th>
+                  <th className="p-5 text-left">View</th>
                 </tr>
               </thead>
+
               <tbody>
-                <tr><td colSpan="7" className="h-3 bg-white"></td></tr>
-                {currentDocuments.map((doc, index) => (
-                  <tr key={doc.document_id} className={`${(index + 1) % 2 === 0 ? "bg-white" : "bg-tableblue"}`} >
-                    <td className="px-5 py-4 text-left text-[14px] text-black">{indexOfFirstDocument + index + 1}</td>
-                    <td className="px-5 py-4 text-left text-[14px] text-black">{doc.document_name}</td>
-                    <td className="px-5 py-4 text-left text-[14px] text-black">{doc.service?.name}</td>
-                    <td className="px-5 py-4 text-left text-[14px] text-black">{doc.document_type?.name}</td>
-                    <td className="px-2 md:px-4 py-2 text-left">
-                      <div className="flex items-center space-x-3">
-                        <button className="text-red-500 hover:text-red-700" onClick={() => confirmDelete(doc)} > <FontAwesomeIcon icon={faTrash} /> </button>
-                        <a href={doc.document_url} target="_blank" rel="noopener noreferrer" ><img src={pdf} alt="PDF" className="w-6 h-6 object-contain cursor-pointer"/></a>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {categories.map((cat, index) => {
+                  const uploaded = userDocs.find(
+                    (d) => d.category_id === cat.id
+                  );
+
+                  return (
+                    <tr
+                      key={cat.id}
+                      className={(index + 1) % 2 === 0 ? "bg-white" : "bg-tableblue"}
+                    >
+                      <td className="px-5 py-4">{index + 1}</td>
+                      <td className="px-5 py-4">{cat.category_name}</td>
+
+                      <td className="px-5 py-4">
+                        {uploaded?.doc_date || "NA"}
+                      </td>
+
+                      {/* Upload Icon */}
+                      <td className="px-5 py-4">
+                        <FaUpload
+                          onClick={() => openUploadModal(cat)}
+                          className="text-blue-600 cursor-pointer text-lg"
+                        />
+                      </td>
+
+                      {/* View */}
+                      <td className="px-5 py-4">
+                        {uploaded?.doc_url ? (
+                          <a href={uploaded.doc_url} target="_blank" rel="noreferrer">
+                            <img src={pdf} alt="pdf" className="w-6 h-6" />
+                          </a>
+                        ) : (
+                          "No File"
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
-
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-          />
         </div>
       )}
 
-      {/* Delete Modal */}
-      <DeleteConfirmModal
-        open={deleteModalOpen}
-        title="Delete Document?"
-        message={`Are you sure you want to delete "${selectedDoc?.document_name}"?`}
-        onCancel={() => setDeleteModalOpen(false)}
-        onConfirm={handleDelete}
-        loading={deleting}
-      />
+      {/* Upload Modal */}
+      {showUploadModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-lg w-[400px]">
+            <h2 className="text-lg font-semibold mb-4">
+              Upload Document for: {selectedCategory?.category_name}
+            </h2>
+
+            <input
+              type="file"
+              onChange={(e) => setUploadFile(e.target.files[0])}
+              className="w-full border p-2 rounded mb-4"
+            />
+
+            <div className="flex justify-end gap-3">
+              <button
+                className="px-4 py-2 bg-gray-300 rounded"
+                onClick={() => setShowUploadModal(false)}
+              >
+                Cancel
+              </button>
+
+              <button
+                disabled={uploading}
+                className="px-4 py-2 bg-blue-600 text-white rounded"
+                onClick={handleUpload}
+              >
+                {uploading ? "Uploading..." : "Upload"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default DocumentPage;
+export default EmployeeDocuments;

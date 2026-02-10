@@ -13,8 +13,9 @@ const Organization = () => {
   const [loading, setLoading] = useState(null);
   const [activeTab, setActiveTab] = useState("project");
 const [tabs] = useState([
-  { id: "MaterialCompositionRequest", label: "Material Composition Request" },
   { id: "project", label: "Project Material Request" },
+  { id: "MaterialCompositionRequest", label: "Material Composition Request" },
+  
   // { id: "MaterialRequest", label: "Material Requisition Request" },
   
   { id: "ProductionExecutionRequest", label: "Production Execution Request" },
@@ -116,8 +117,9 @@ const [tabs] = useState([
 
           {/* Tab Content */}
           <div className="flex-grow border-gray-300 h-screen">
+                {activeTab === "project" && <ProjectApproval />}
             {activeTab === "MaterialCompositionRequest" && <MaterialCompositionRequest/>}
-            {activeTab === "project" && <ProjectApproval />}
+        
              {/* {activeTab === "MaterialRequest" && <MaterialRequest/>} */}
         
             {activeTab === "ProductionExecutionRequest" && <ProductionExecutionRequest/>}

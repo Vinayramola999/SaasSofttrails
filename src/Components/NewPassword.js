@@ -1,14 +1,14 @@
 import axios from 'axios';
 import Swal from "sweetalert2";
 import React, { useState } from "react";
+import { MAIN_API_BASE } from '../config/apiBase';
 
+const PasswordResetPopup = ({ email, onClose, onOtpSent }) => {
+  const [loading, setLoading] = useState(false);
 
-const PasswordResetPopup = ({ email, onClose, onOtpSent }) => { 
-    const [loading, setLoading] = useState(false);
-  
   // const handleSendOtp = async () => {
   //   try {
-  //     await axios.post('https://devapi.softtrails.net/saas/test/request-otp', { email });
+  //     await axios.post(`${MAIN_API_BASE}/otp/request-otp`, { email });
   //     onOtpSent(); // Call the callback function after sending OTP
   //   } catch (err) {
   //     console.error('Error sending OTP:', err);
@@ -16,41 +16,32 @@ const PasswordResetPopup = ({ email, onClose, onOtpSent }) => {
   //   }
   // };
 
-   const handleSendOtp = async () => {
-      setLoading(true);
-      try {
-        const token = sessionStorage.getItem("token");
-  
-        await axios.post(
-          "https://devapi.softtrails.net/saas/test/otp/request-otp",
-          { email },
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-  
-        Swal.fire({
-          icon: "success",
-          title: "OTP Sent!",
-          text: "OTP has been sent to your email.",
-          confirmButtonColor: "#3085d6",
-        });
-  
-        onOtpSent();
-      } catch (err) {
-        console.error("Error sending OTP:", err);
-        Swal.fire({
-          icon: "error",
-          title: "Error",
-          text: "Failed to send OTP. Please try again.",
-          confirmButtonColor: "#d33",
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+  const handleSendOtp = async () => {
+    setLoading(true);
+    try {
+      const token = sessionStorage.getItem("token");
+      await axios.post(`${MAIN_API_BASE}/otp/request-otp`, { email },
+        { headers: { Authorization: `Bearer ${token}`, }, }
+      );
+      Swal.fire({
+        icon: "success",
+        title: "OTP Sent!",
+        text: "OTP has been sent to your email.",
+        confirmButtonColor: "#3085d6",
+      });
+      onOtpSent();
+    } catch (err) {
+      console.error("Error sending OTP:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Failed to send OTP. Please try again.",
+        confirmButtonColor: "#d33",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50">

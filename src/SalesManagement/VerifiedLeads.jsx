@@ -174,11 +174,12 @@ export default function QueryAndLeads() {
             { 
               key: 'customer_name', 
               label: 'Customer Name', 
+              headClass: 'text-center',
               render: (r) => {
                 const name = r.customer_name || '-';
                 const isExpanded = expandedRow === `customer_${r.lead_id}`;
                 return (
-                  <div className="text-left whitespace-normal break-words max-w-[150px]">
+                  <div className="text-center whitespace-normal break-words max-w-[150px] mx-auto">
                     {isExpanded ? name : (name.length > 20 ? `${name.slice(0, 20)}...` : name)}
                     {name.length > 20 && (
                       <button
@@ -191,16 +192,17 @@ export default function QueryAndLeads() {
                   </div>
                 );
               },
-              cellClass: 'text-left whitespace-normal',
+              cellClass: 'text-center whitespace-normal',
             },
             { 
               key: 'service', 
               label: 'Lead', 
+              headClass: 'text-center',
               render: (r) => {
                 const service = r.service || '-';
                 const isExpanded = expandedRow === `service_${r.lead_id}`;
                 return (
-                  <div className="text-left whitespace-normal break-words text-wrap max-w-[200px]">
+                  <div className="text-center whitespace-normal break-words text-wrap max-w-[200px] mx-auto">
                     {isExpanded ? service : (service.length > 50 ? `${service.slice(0, 50)}...` : service)}
                     {service.length > 50 && (
                       <button
@@ -213,7 +215,7 @@ export default function QueryAndLeads() {
                   </div>
                 );
               },
-              cellClass: 'text-left whitespace-normal',
+              cellClass: 'text-center whitespace-normal',
             },
             { key: 'lead_uid', label: 'Lead ID', render: (r) => r.lead_uid || '-' },
             { key: 'created_at', label: 'Lead Date', render: (r) => r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB') : '-' },
@@ -250,7 +252,7 @@ export default function QueryAndLeads() {
           actionsRenderer={({ row }) => (
             <div className="flex justify-center">
               {row.status === 'Verified' ? (
-                <Link to="/Salesprocess" state={{ leadId: row.lead_id || null }}>
+                <Link to="/SalesProcess" state={{ leadId: row.lead_id || null }}>
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 text-black">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m2-2.5V9a2 2 0 01-2-2V5.5M7 21h10a2 2 0 002-2V9l-6-6H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                   </svg>

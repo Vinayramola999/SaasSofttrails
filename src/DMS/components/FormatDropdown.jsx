@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 
-export default function FormatDropdown({ formats, onChange }) {
+export default function FormatDropdown({ formats, onChange, initialSelected = [] }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedFormats, setSelectedFormats] = useState([]);
+  const [selectedFormats, setSelectedFormats] = useState(Array.isArray(initialSelected) ? initialSelected : []);
   const [searchTerm, setSearchTerm] = useState("");
 
   const dropdownRef = useRef();
@@ -35,9 +35,15 @@ export default function FormatDropdown({ formats, onChange }) {
       f.extension.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const onChangeRef = useRef(onChange);
+
   useEffect(() => {
-    onChange(selectedFormats);
-  }, [selectedFormats, onChange]);
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  useEffect(() => {
+    onChangeRef.current(selectedFormats);
+  }, [selectedFormats]);
 
   useEffect(() => {
     function handleClickOutside(e) {
@@ -58,7 +64,7 @@ export default function FormatDropdown({ formats, onChange }) {
         className="w-full flex justify-between items-center px-4 py-2 text-left bg-white border border-gray-300 rounded focus:outline-none"
       >
         <span className="truncate">
-          {selectedFormats.length > 0
+          {selectedFormats?.length > 0
             ? `Selected: ${selectedFormats.join(", ")}`
             : "Select file formats"}
         </span>

@@ -13,7 +13,10 @@ const VerifyToken = (redirectOnSuccess, redirectOnFail = "/") => {
       return;
     }
 
-    axios.post("https://devapi.softtrails.net/saas/test/users/verify-token", { token })
+    axios
+      .post("https://devdemo.softtrails.net/users/verify-token", {
+        token,
+      })
       .then(() => {
         if (redirectOnSuccess) navigate(redirectOnSuccess);
       })

@@ -894,7 +894,7 @@ const fetchTableData = async (categoryName, page = 1, limit = 15, search = "") =
         limit,
         search,
 
-        // 🔥 REQUIRED: SEND FILTERS TO BACKEND (NO FRONTEND FILTER)
+      
         status: "Inventory",
         stages: "Mapped",
       },
@@ -903,7 +903,7 @@ const fetchTableData = async (categoryName, page = 1, limit = 15, search = "") =
     const data = resp.data || {};
     const items = data.data || [];
 
-    // ❌ REMOVE FRONTEND FILTERING (API WILL FILTER)
+  
     setTableData(items);
     setFilteredData(items);
 

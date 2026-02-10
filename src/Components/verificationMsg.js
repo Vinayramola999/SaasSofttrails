@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { MAIN_API_BASE } from "../config/apiBase";
 import { useNavigate } from "react-router-dom";
 
 const VerMsg = ({ open, onClose }) => {
@@ -14,10 +15,11 @@ const VerMsg = ({ open, onClose }) => {
   const handleSmsOtpChange = (e) => {
     setSmsVerificationCode(e.target.value);
   };
+  
 
   const handleOtpSubmit = async () => {
     try {
-      const res = await axios.post("https://devapi.softtrails.net/saas/test/verify", {
+      const res = await axios.post(`${MAIN_API_BASE}/verify`, {
         emailVerificationCode: emailVerificationCode,
         smsVerificationCode: smsVerificationCode,
       });

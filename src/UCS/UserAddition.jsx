@@ -7,8 +7,8 @@ import { FaTimes } from 'react-icons/fa';
 import Select from "react-select";
 // API URLs
 const API_URLS = {
-  modules: "https://saaspro.softtrails.net/saas/ucs/pro/api/modules",
-  tableNames: "https://saaspro.softtrails.net/saas/ucs/pro/api/modules/table-names"
+  modules: "https://ucsdemo.softtrails.net/api/modules",
+  tableNames: "https://ucsdemo.softtrails.net/api/modules/table-names"
 };
 
 // Reusable Component for Select-or-Input functionality.
@@ -204,7 +204,7 @@ const UserAddition = () => {
   // ✅ Update API Call
   const handleSaveUpdate = async (updatedData) => {
     const { id } = updatedData;
-    const url = `https://saaspro.softtrails.net/saas/ucs/pro/api/modules/${id}`;
+    const url = `https://ucsdemo.softtrails.net/api/modules/${id}`;
 
     try {
       const token = sessionStorage.getItem("token");
@@ -365,7 +365,7 @@ const UserAddition = () => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         };
-        const url = `https://saaspro.softtrails.net/saas/ucs/pro/api/modules/${id}`;
+        const url = `https://ucsdemo.softtrails.net/api/modules/${id}`;
         await axios.delete(url, { headers });
 
         Swal.fire('Deleted!', 'The module has been deleted.', 'success');
@@ -380,7 +380,7 @@ const UserAddition = () => {
   // ... rest of the component
 
   return (
-    <div className="w-full flex flex-col items-center px-4 min-h-screen overflow-auto"> 
+    <div className="w-full flex flex-col items-center px-4 min-h-screen overflow-auto">
       <div className="flex justify-center items-center w-full mt-10 ">
         <div className="bg-white shadow-lg rounded-xl p-8 w-full max-w-4xl">
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -443,13 +443,13 @@ const UserAddition = () => {
       <div className="w-full max-w-4xl mt-6 overflow-auto">
 
         <div className='mt-4'>
-        <UserDataTable
-          data={tableData}
-          onUpdateClick={handleUpdateClick}
-          onDeleteClick={handleDeleteClick}
-          filterTerm={tableFilter}
-          onFilterChange={(val) => setTableFilter(val)}
-        />
+          <UserDataTable
+            data={tableData}
+            onUpdateClick={handleUpdateClick}
+            onDeleteClick={handleDeleteClick}
+            filterTerm={tableFilter}
+            onFilterChange={(val) => setTableFilter(val)}
+          />
         </div>
       </div>
 

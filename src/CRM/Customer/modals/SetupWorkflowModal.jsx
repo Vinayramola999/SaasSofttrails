@@ -7,10 +7,9 @@ import Swal from "sweetalert2";
 import ManageActionModal from "./ManageActionModal";
 import ConfirmationModal from "../../../NewComponents/ConfirmationModal";
 import MessageModal from "../../../NewComponents/MessageModal";
+import API_BASE_URL from "../../config/api";
 
 const SetupWorkflow = () => {
-  const API_BASE_URL = process.env.REACT_APP_URL_workflow || "http://13.204.15.86:3002";
-
   const [isActionModalOpen, setIsActionModalOpen] = useState(false);
 
   // Workflows
@@ -53,7 +52,7 @@ const SetupWorkflow = () => {
       try {
         const token = sessionStorage.getItem("token");
         if (!token) return;
-        const { data } = await axios.get(`https://devapi.softtrails.net/saas/test/role`, {
+        const { data } = await axios.get(`${API_BASE_URL}/role`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setRoles(data || []);
@@ -78,7 +77,7 @@ const SetupWorkflow = () => {
       try {
         const token = sessionStorage.getItem("token");
         const { data } = await axios.get(
-          `${API_BASE_URL}/uniworkflow/workflow/get-modules/module`,
+          `${API_BASE_URL}uniworkflow/workflow/get-modules/module`,
           {
             headers: { Authorization: `Bearer ${token}` },
             params: { module_name: "Customer Relation Management" },
@@ -191,16 +190,7 @@ const SetupWorkflow = () => {
         ];
 
         try {
-          await axios.put(
-            `${API_BASE_URL}/uniworkflow/group`,
-            payload, // ✅ 2nd argument = data
-            {
-              headers: {
-                Authorization: `Bearer ${sessionStorage.getItem("token")}`,
-              },
-            }
-          );
-
+          await axios.put(`${API_BASE_URL}/uniworkflow/group`, payload);
           setMessageModal({
             message: "Group mapping saved successfully!",
             type: "success",

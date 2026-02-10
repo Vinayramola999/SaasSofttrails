@@ -640,7 +640,7 @@ export default function QueryAndLeads() {
                 const name = row.customer_name || "-";
                 const isExpanded = expandedRow === `customer_${row.lead_id}`;
                 return (
-                  <div className="text-left whitespace-normal break-words max-w-[300px]">
+                  <div className="text-center whitespace-normal break-words max-w-[300px] mx-auto">
                     {isExpanded ? name : (name.length > 50 ? `${name.slice(0, 50)}...` : name)}
                     {name.length > 50 && (
                       <button
@@ -653,7 +653,7 @@ export default function QueryAndLeads() {
                   </div>
                 );
               },
-              cellClass: "text-left",
+              cellClass: "text-center",
             },
             {
               key: "service",

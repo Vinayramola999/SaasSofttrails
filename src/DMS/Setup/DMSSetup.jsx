@@ -6,6 +6,7 @@ import AddDoctype from "./AddDoctype";
 import AllowedDocs from "./AddAllowedDocs";
 import ServiceDocsRelation from "./AddMapping";
 import { motion } from "framer-motion";
+import {MAIN_API_BASE} from "../../config/apiBase";
 
 const DmsSetup = () => {
   const [userData, setUserData] = useState(null);
@@ -28,7 +29,7 @@ const DmsSetup = () => {
     }
     try {
       const response = await axios.post(
-        "https://devapi.softtrails.net/saas/test/users/verify-token",
+        `${MAIN_API_BASE}/users/verify-token`,
         {
           token: token,
         }
@@ -51,7 +52,7 @@ const DmsSetup = () => {
         try {
           console.log("Fetching data for userId:", userId);
           const response = await axios.get(
-            `https://devapi.softtrails.net/saas/test/users/id_user/${userId}`,
+            `${MAIN_API_BASE}/users/id_user/${userId}`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,

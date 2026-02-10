@@ -12,6 +12,7 @@ import Select from "react-select";
 import FolderTree from "../assests/foldertree.png";
 import AddButton from "../NewComponents/AddButton";
 import SearchButton from "../NewComponents/SearchButton";
+import { MAIN_API_BASE } from '../config/apiBase';
 import { FaPlus } from "react-icons/fa";
 
 const LocationsTable = () => {
@@ -103,7 +104,7 @@ const LocationsTable = () => {
         try {
             setLoading(true);
             const token = sessionStorage.getItem("token");
-            const response = await axios.post("https://devapi.softtrails.net/saas/test/loc",
+            const response = await axios.post(`${MAIN_API_BASE}/loc`,
                 updatedLocationData,
                 {
                     headers: {
@@ -165,7 +166,7 @@ const LocationsTable = () => {
                 try {
                     console.log("Fetching data for userId:", userId); // Log before API call
                     const response = await axios.get(
-                        `https://devapi.softtrails.net/saas/test/users/id_user/${userId}`,
+                        `${MAIN_API_BASE}/users/id_user/${userId}`,
                         {
                             headers: {
                                 Authorization: `Bearer ${token}`,
@@ -195,7 +196,7 @@ const LocationsTable = () => {
             try {
                 const token = sessionStorage.getItem('token'); // Get token from sessionStorage
 
-                const response = await axios.get('https://devapi.softtrails.net/saas/test/loc', {
+                const response = await axios.get(`${MAIN_API_BASE}/loc`, {
                     headers: {
                         Authorization: `Bearer ${token}`, // Add token to request header
                     },
@@ -222,7 +223,7 @@ const LocationsTable = () => {
         try {
             const token = sessionStorage.getItem("token");
 
-            await axios.delete(`https://devapi.softtrails.net/saas/test/loc/${id}`, {
+            await axios.delete(`${MAIN_API_BASE}/loc/${id}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -270,7 +271,7 @@ const LocationsTable = () => {
         try {
             const token = sessionStorage.getItem("token");
             const response = await axios.get(
-                `https://devapi.softtrails.net/saas/test/sloc/${location.location_id}`,
+                `${MAIN_API_BASE}/sloc/${location.location_id}`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -292,7 +293,7 @@ const LocationsTable = () => {
             try {
                 const token = sessionStorage.getItem("token"); // Get the token
 
-                const response = await fetch("https://devapi.softtrails.net/saas/test/loc", {
+                const response = await fetch(`${MAIN_API_BASE}/loc`, {
                     method: "GET",
                     headers: {
                         "Content-Type": "application/json",
@@ -325,7 +326,7 @@ const LocationsTable = () => {
                 section: formData.section,
                 description: formData.otherDescription,
             };
-            const response = await fetch("https://devapi.softtrails.net/saas/test/sloc", {
+            const response = await fetch(`${MAIN_API_BASE}/sloc`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -394,7 +395,7 @@ const LocationsTable = () => {
                 const token = sessionStorage.getItem("token");
 
                 await axios.delete(
-                    `https://devapi.softtrails.net/saas/test/sloc/${subLocationToDelete}`,
+                    `${MAIN_API_BASE}/sloc/${subLocationToDelete}`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -449,7 +450,7 @@ const LocationsTable = () => {
         const fetchBuildings = async () => {
             try {
                 const token = sessionStorage.getItem("token");
-                const response = await axios.get("https://devapi.softtrails.net/saas/test/sloc", {
+                const response = await axios.get(`${MAIN_API_BASE}/sloc`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
@@ -479,7 +480,7 @@ const LocationsTable = () => {
             try {
                 const token = sessionStorage.getItem("token"); // Get token from sessionStorage
 
-                const response = await axios.get("https://devapi.softtrails.net/saas/test/sloc", {
+                const response = await axios.get(`${MAIN_API_BASE}/sloc`, {
                     headers: {
                         Authorization: `Bearer ${token}`, // Add token to header
                     },
@@ -625,7 +626,7 @@ const LocationsTable = () => {
             }
 
             const token = sessionStorage.getItem("token");
-            const response = await fetch(`https://devapi.softtrails.net/saas/test/sloc/${originalSubLoc.sub_location_id}`, {
+            const response = await fetch(`${MAIN_API_BASE}/sloc/${originalSubLoc.sub_location_id}`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
@@ -663,7 +664,7 @@ const LocationsTable = () => {
     const fetchUpdatedSubLocations = async () => {
         try {
             const token = sessionStorage.getItem("token");
-            const response = await fetch(`https://devapi.softtrails.net/saas/test/sloc/${originalSubLoc.location_id}`, {
+            const response = await fetch(`${MAIN_API_BASE}/sloc/${originalSubLoc.location_id}`, {
                 method: "GET",
                 headers: {
                     "Authorization": `Bearer ${token}`,
@@ -719,7 +720,7 @@ const LocationsTable = () => {
                 status: editLocationStatus,
             };
             const token = sessionStorage.getItem("token");
-            const response = await fetch(`https://devapi.softtrails.net/saas/test/loc/${location.location_id}`, {
+            const response = await fetch(`${MAIN_API_BASE}/loc/${location.location_id}`, {
                 method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
@@ -743,7 +744,7 @@ const LocationsTable = () => {
             setIsEditModalOpen1(false);
 
             // Fetch updated locations
-            const locationsResponse = await fetch("https://devapi.softtrails.net/saas/test/loc", {
+            const locationsResponse = await fetch(`${MAIN_API_BASE}/loc`, {
                 method: "GET",
                 headers: {
                     "Authorization": `Bearer ${token}`,
@@ -826,7 +827,7 @@ const LocationsTable = () => {
 
             {/* Add Location Modal */}
             {isAddModalOpen && (
-                <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-20">
+                <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
                     <div className="bg-white p-4 sm:p-6 rounded-lg w-11/12 sm:w-1/3">
                         {formError && <p className="text-red-500 mb-4 text-sm sm:text-base">{formError}</p>}
 
@@ -1034,29 +1035,11 @@ const LocationsTable = () => {
                                         <td className="px-5 py-4 text-left text-[14px] text-black">{location.city}</td>
                                         <td className="px-5 py-4 text-left text-[14px] text-black">{location.code}</td>
                                         <td className="px-5 py-4 text-left text-[14px] text-black">{location.remarks}</td>
-                                        <td className={`py-4 px-5 border-b text-[14px] font-semibold ${location.status === "Active" ? "text-green-600" : "text-red-600"}`}>{location.status}</td>
-                                        <td className="py-4 px-4 border-b space-x-2">
-                                            <button
-                                                onClick={() => handleEditClick1(location)}
-                                                className="text-blue-500 hover:text-blue-700 "
-                                            >
-                                                <FontAwesomeIcon icon={faEdit} />
-                                            </button>
-                                            <button
-                                                onClick={() => confirmDelete(location)}
-                                                className="text-red-500 hover:text-red-700 ml-2"
-                                            >
-                                                <FontAwesomeIcon icon={faTrash} />
-                                            </button>
-                                            <button
-                                                onClick={() => {
-                                                    setNewLocationData({ location_id: location.location_id });
-                                                    setIsAddModalOpen1(true); // Open the modal
-                                                }}
-                                                className="text-blue-500 hover:text-blue-700 ml-2"
-                                            >
-                                                <img src={FolderTree} alt="Sub Icon" className="w-5 h-5 inline" />
-                                            </button>
+                                        <td className={`py-4 px-5 text-[14px] font-semibold ${location.status === "Active" ? "text-green-600" : "text-red-600"}`}>{location.status}</td>
+                                        <td className="py-4 px-4 space-x-2">
+                                            <button onClick={() => handleEditClick1(location)} className="text-blue-500 hover:text-blue-700 "><FontAwesomeIcon icon={faEdit} /></button>
+                                            <button onClick={() => confirmDelete(location)} className="text-red-500 hover:text-red-700 ml-2" > <FontAwesomeIcon icon={faTrash} /> </button>
+                                            <button onClick={() => { setNewLocationData({ location_id: location.location_id }); setIsAddModalOpen1(true);  }} className="text-blue-500 hover:text-blue-700 ml-2" > <img src={FolderTree} alt="Sub Icon" className="w-5 h-5 inline" /> </button>
                                         </td>
                                     </tr>
                                 ))}
@@ -1240,7 +1223,7 @@ const LocationsTable = () => {
             {/************************SUB--LOCATIONS*******************/}
             {/* Add Sub-Location Modal */}
             {isAddModalOpen1 && (
-                <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-10">
+                <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
                     <div className="bg-white p-4 sm:p-6 rounded-lg w-[90%] max-w-md">
                         <div className="flex justify-between items-center">
                             <h2 className="text-lg sm:text-xl font-bold mb-4">Add Sub Location</h2>
@@ -1514,34 +1497,6 @@ const LocationsTable = () => {
                                     rows={3}
                                 ></textarea>
                             </div>
-                            {/* Status */}
-                            {/* <div className="mb-4">
-                                <label className="block font-medium mb-1">Status</label>
-                                <div className="flex space-x-4">
-                                    <label className="flex items-center">
-                                        <input
-                                            type="radio"
-                                            name="status"
-                                            value="Active"
-                                            checked={editStatus === "Active"}
-                                            onChange={() => setEditStatus("Active")}
-                                            className="mr-2"
-                                        />
-                                        Active
-                                    </label>
-                                    <label className="flex items-center">
-                                        <input
-                                            type="radio"
-                                            name="status"
-                                            value="Inactive"
-                                            checked={editStatus === "Inactive"}
-                                            onChange={() => setEditStatus("Inactive")}
-                                            className="mr-2"
-                                        />
-                                        Inactive
-                                    </label>
-                                </div>
-                            </div> */}
                             {/* Buttons */}
                             <div className="flex justify-end">
                                 <button

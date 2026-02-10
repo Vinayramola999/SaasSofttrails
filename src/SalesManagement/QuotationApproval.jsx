@@ -337,23 +337,23 @@ const QuotationApproval = () => {
                       key: 'quotation_for', 
                       label: 'Quotation For', 
                       render: (r) => {
-                        const name = r.quotation_for?.customer_name || '-';
-                        const isExpanded = expandedRow === `customer_${r.quotation.quotation_id}`;
-                        return (
-                          <div className="text-left whitespace-normal break-words max-w-[150px]">
-                            {isExpanded ? name : (name.length > 20 ? `${name.slice(0, 20)}...` : name)}
-                            {name.length > 20 && (
-                              <button
-                                className="ml-2 text-blue-600 font-medium hover:text-blue-800"
-                                onClick={() => setExpandedRow(isExpanded ? null : `customer_${r.quotation.quotation_id}`)}
-                              >
-                                {isExpanded ? 'Show less' : 'Read more'}
-                              </button>
-                            )}
-                          </div>
-                        );
-                      },
-                      cellClass: 'text-left whitespace-normal',
+                          const name = r.quotation_for?.customer_name || '-';
+                          const isExpanded = expandedRow === `customer_${r.quotation.quotation_id}`;
+                          return (
+                            <div className="text-center whitespace-normal break-words max-w-[150px] mx-auto">
+                              {isExpanded ? name : (name.length > 20 ? `${name.slice(0, 20)}...` : name)}
+                              {name.length > 20 && (
+                                <button
+                                  className="ml-2 text-blue-600 font-medium hover:text-blue-800"
+                                  onClick={() => setExpandedRow(isExpanded ? null : `customer_${r.quotation.quotation_id}`)}
+                                >
+                                  {isExpanded ? 'Show less' : 'Read more'}
+                                </button>
+                              )}
+                            </div>
+                          );
+                        },
+                        cellClass: 'text-center whitespace-normal',
                     },
                     { key: 'amount', label: 'Amount', render: (r) => `₹${r.quotation.total_amount}` },
                     { key: 'status', label: 'Status', render: (r) => {

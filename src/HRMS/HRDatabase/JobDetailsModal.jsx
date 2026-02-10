@@ -1,42 +1,4 @@
-// import React from "react";
-
-// const JobDetailsModal = ({ job, deptName, onClose }) => {
-//   return (
-//     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-//       <div className="bg-white rounded-lg p-6 w-[90%] max-w-2xl max-h-[90vh] overflow-y-auto relative">
-//         <button
-//           onClick={onClose}
-//           className="absolute top-3 right-4 text-red-600 font-bold text-lg"
-//         >
-//           ❌
-//         </button>
-
-//         <h2 className="text-xl font-semibold mb-4">Job Details</h2>
-
-//         <div className="space-y-3 text-sm">
-//           <p><strong>Title:</strong> {job.title}</p>
-//           <p><strong>Department:</strong> {deptName}</p>
-//           <p><strong>Description:</strong> {job.description}</p>
-//           <p><strong>Eligibility:</strong> {job.eligibility}</p>
-//           <p><strong>Responsibilities:</strong> {job.responsibilities}</p>
-//           <p><strong>Skills:</strong> {job.skills}</p>
-//           <p><strong>Work Mode:</strong> {job.work_mode}</p>
-//           <p><strong>Experience:</strong> {job.experience}</p>
-//           <p><strong>Destination:</strong> {job.destination}</p>
-//           <p><strong>Close Date:</strong> {job.close_date?.split("T")[0]}</p>
-//           <p ><strong >Status:</strong> {job.status.charAt(0).toUpperCase() + job.status.slice(1).toLowerCase()}</p>
-//           <p><strong>Posted On:</strong> {job.created_at?.split("T")[0]}</p>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-// export default JobDetailsModal;
-
-import React from "react";
-
 const JobDetailsModal = ({ job, deptName, onClose }) => {
-  // Utility function for bullet points
   const renderBulletPoints = (text) => {
     if (!text) return <span className="text-gray-500">NA</span>;
     return (
@@ -140,5 +102,4 @@ const JobDetailsModal = ({ job, deptName, onClose }) => {
     </div>
   );
 };
-
 export default JobDetailsModal;

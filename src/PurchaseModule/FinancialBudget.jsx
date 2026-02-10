@@ -12,16 +12,13 @@ import {
   FaSearch,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-// import Header from "../employee data/Header";
 import Swal from "sweetalert2";
-import DatePicker from "react-datepicker";
-import { parseISO, isAfter, isBefore } from "date-fns";
+import { parseISO, isAfter, isBefore, startOfDay, endOfDay } from "date-fns";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { FaFilePdf, FaFileExcel } from "react-icons/fa";
-// import Excel from "../assests/excel.png";
 import excel from "../assests/excel.png";
 
 const FinancialBudget = () => {
@@ -35,11 +32,13 @@ const FinancialBudget = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedBudget, setSelectedBudget] = useState(null);
   const [selectedDepartment, setSelectedDepartment] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const [fromDate, setFromDate] = useState(null);
   const [toDate, setToDate] = useState(null);
   const [filteredBudgets, setFilteredBudgets] = useState([]);
+  const [workflowOptions, setWorkflowOptions] = useState([]); // Stores fetched workflows
 
   const getToken = () => sessionStorage.getItem("token");
   const token = getToken();
@@ -102,7 +101,7 @@ const FinancialBudget = () => {
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
-        const response = await axios.get(`${API.API_BASE}/test/departments`, {
+        const response = await axios.get(`${API.API_BASE}/departments`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         setDepartments(response.data);
@@ -131,21 +130,44 @@ const FinancialBudget = () => {
   }, [token]);
 
   useEffect(() => {
-    if (fromDate && toDate) {
-      const filtered = budgets.filter((item) => {
-        const createdDate = parseISO(item.created_at);
+    let filtered = budgets;
+
+    // Filter by search term
+    if (searchTerm.trim()) {
+      filtered = filtered.filter((budget) => {
+        const deptName = departments.find((dept) => dept.dept_id === budget.dept_id)?.dept_name || "";
+        const searchLower = searchTerm.toLowerCase();
         return (
-          (isAfter(createdDate, fromDate) ||
-            createdDate.getTime() === fromDate.getTime()) &&
-          (isBefore(createdDate, toDate) ||
-            createdDate.getTime() === toDate.getTime())
+          budget.budget_name.toLowerCase().includes(searchLower) ||
+          deptName.toLowerCase().includes(searchLower) ||
+          budget.budget.toString().includes(searchLower)
         );
       });
-      setFilteredBudgets(filtered);
-    } else {
-      setFilteredBudgets(budgets); // reset to full if no date
     }
-  }, [fromDate, toDate, budgets]);
+
+    // Filter by department
+    if (selectedDepartment) {
+      filtered = filtered.filter((budget) => {
+        const deptName = departments.find((dept) => dept.dept_id === budget.dept_id)?.dept_name;
+        return deptName === selectedDepartment;
+      });
+    }
+
+    // Filter by date range (based on budget start_date and end_date)
+    if (fromDate && toDate) {
+      const startOfFromDate = startOfDay(new Date(fromDate));
+      const endOfToDate = endOfDay(new Date(toDate));
+      
+      filtered = filtered.filter((item) => {
+        const budgetStart = new Date(item.start_date);
+        const budgetEnd = new Date(item.end_date);
+        // Check if budget date range overlaps with selected range
+        return budgetStart <= endOfToDate && budgetEnd >= startOfFromDate;
+      });
+    }
+
+    setFilteredBudgets(filtered);
+  }, [fromDate, toDate, budgets, selectedDepartment, departments, searchTerm]);
   const handleEdit = (budget) => {
     setBudgetData({
       id: budget?.id,
@@ -160,7 +182,6 @@ const FinancialBudget = () => {
   };
 
   const handleDelete = (budgetId) => {
-    console.log(`Delete budget with ID: ${budgetId}`);
   };
   const verifyToken = async () => {
     if (!token) {
@@ -208,6 +229,15 @@ const FinancialBudget = () => {
       [name]: name === "department" ? Number(value) : value,
     }));
   };
+ useEffect(() => {
+    axios.get(`${API.WORKFLOW_API}/workflow/get-modules/module?module_name=Purchase Management&sub_module_name=Indenting`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((res) => {
+        setWorkflowOptions(
+          Array.isArray(res.data.workflows) ? res.data.workflows : []
+        );
+      })
+      .catch((err) => console.error("Error fetching workflows:", err));
+  }, []);
 
   const handleSave = async () => {
     const confirmResult = await Swal.fire({
@@ -239,9 +269,10 @@ const FinancialBudget = () => {
 
     const payload = {
       budget_name: budgetData.budgetName,
-      dept_id: budgetData.department,
+      department: budgetData.department,
       budget: parseFloat(budgetData.amount),
       user_id: userId,
+      workflow_id: budgetData.workflow,
       start_date: budgetData.startDate,
       end_date: budgetData.endDate,
     };
@@ -416,6 +447,8 @@ Update?          </div>
             <input
               type="text"
               placeholder="Search"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               className="border border-gray-300 w-full p-2 pl-10 rounded-xl"
             />
             <FaSearch className="absolute left-3 top-3 text-gray-400" />
@@ -440,20 +473,18 @@ Update?          </div>
 
           {/* Date Range Picker */}
           <div className="flex items-center gap-2 border border-gray-300 p-3 rounded-xl bg-white">
-            <DatePicker
-              selected={fromDate}
-              onChange={(date) => setFromDate(date)}
-              placeholderText="From Date"
-              dateFormat="dd/MM/yyyy"
+            <input
+              type="date"
+              value={fromDate ? fromDate.toISOString().split('T')[0] : ''}
+              onChange={(e) => setFromDate(e.target.value ? new Date(e.target.value) : null)}
+              className="border border-gray-300 p-2 rounded"
             />
-            <span>
-              <strong>TO</strong>
-            </span>
-            <DatePicker
-              selected={toDate}
-              onChange={(date) => setToDate(date)}
-              placeholderText="To Date"
-              dateFormat="dd/MM/yyyy"
+            <span className="font-bold">TO</span>
+            <input
+              type="date"
+              value={toDate ? toDate.toISOString().split('T')[0] : ''}
+              onChange={(e) => setToDate(e.target.value ? new Date(e.target.value) : null)}
+              className="border border-gray-300 p-2 rounded"
             />
           </div>
 
@@ -518,7 +549,25 @@ Update?          </div>
                     ))}
                   </select>
                 </div>
-
+<div>
+                 <label>Workflow</label>
+                  <select
+                    name="workflow"
+                    value={budgetData.workflow}
+                    onChange={handleChange}
+                    className="border p-2 w-full rounded-lg"
+                  >
+                    <option value="">Select Workflow</option>
+                    {workflowOptions.map((wf, idx) => (
+                      <option
+                        key={wf.workflow_id ?? wf.id ?? idx}
+                        value={wf.workflow_id ?? wf.id ?? ""}
+                      >
+                        {wf.workflow_name ?? wf.name ?? `Workflow ${idx + 1}`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <div>
                   <label>Amount</label>
                   <input
@@ -531,32 +580,27 @@ Update?          </div>
                   />
                 </div>
 
+
                 <div>
                   <label>Start Date</label>
-                  <div className="relative">
-                    <input
-                      type="date"
-                      name="startDate"
-                      value={budgetData.startDate}
-                      onChange={handleChange}
-                      className="border p-2 w-full rounded-lg"
-                    />
-                    <FaCalendarAlt className="absolute right-3 top-3 text-gray-500" />
-                  </div>
+                  <input
+                    type="date"
+                    name="startDate"
+                    value={budgetData.startDate}
+                    onChange={handleChange}
+                    className="border p-2 w-full rounded-lg"
+                  />
                 </div>
 
                 <div>
                   <label>End Date</label>
-                  <div className="relative">
-                    <input
-                      type="date"
-                      name="endDate"
-                      value={budgetData.endDate}
-                      onChange={handleChange}
-                      className="border p-2 w-full rounded-lg"
-                    />
-                    <FaCalendarAlt className="absolute right-3 top-3 text-gray-500" />
-                  </div>
+                  <input
+                    type="date"
+                    name="endDate"
+                    value={budgetData.endDate}
+                    onChange={handleChange}
+                    className="border p-2 w-full rounded-lg"
+                  />
                 </div>
               </div>
 

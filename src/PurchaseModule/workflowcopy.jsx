@@ -3,7 +3,7 @@ import axios from "axios";
 import { FaSearch, FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 import Sidebar from "../Sidebar/HRMSidebar";
 import Header from "../employee data/Header";
-import ProfileDropdown from "../ProfileDropdown";
+//import ProfileDropdown from "../../ProfileDropdown";
 import Swal from "sweetalert2";
 
 const AddPurchaseWorkflow = () => {
@@ -31,7 +31,7 @@ const AddPurchaseWorkflow = () => {
   const fetchWorkflows = async () => {
     try {
       const response = await axios.get(
-        "http://13.204.15.86:3002/budget-workflow/workflows"
+        "https://devdemo.softtrails.net/budget-workflow/workflows"
       );
       setWorkflows(response.data);
     } catch (error) {
@@ -55,7 +55,7 @@ const AddPurchaseWorkflow = () => {
   const fetchBudgets = async () => {
     try {
       const response = await axios.get(
-        "http://13.204.15.86:3002/budget/get-budget"
+        "https://devdemo.softtrails.net/budget/get-budget"
       );
       setBudgets(response.data);
     } catch (error) {
@@ -79,7 +79,7 @@ const AddPurchaseWorkflow = () => {
 
     try {
       const response = await axios.post(
-        "http://13.204.15.86:3002/budget-workflow/workflows ",
+        "https://devdemo.softtrails.net/budget-workflow/workflows ",
         payload
       );
       console.log("Workflow saved:", response.data);
@@ -115,7 +115,7 @@ const AddPurchaseWorkflow = () => {
     ];
 
     axios
-      .put("http://13.204.15.86:3002/budget-workflow/group", payload)
+      .put("https://devdemo.softtrails.net/budget-workflow/group", payload)
       .then((response) => {
         Swal.fire("Success", "Data submitted successfully!", "success");
         setIndentRequest([]);
@@ -164,7 +164,7 @@ const AddPurchaseWorkflow = () => {
 
     try {
       await axios.post(
-        "http://13.204.15.86:3002/budget-workflow/user",
+        "https://devdemo.softtrails.net/budget-workflow/user",
         payload
       );
 
@@ -205,7 +205,7 @@ const AddPurchaseWorkflow = () => {
     // Fetch assigned users with their internal ID
     axios
       .get(
-        `http://13.204.15.86:3002/budget-workflow/user/${workflow.workflowid}`
+        `https://devdemo.softtrails.net/budget-workflow/user/${workflow.workflowid}`
       )
       .then((res) => {
         const userEntries = res.data; // contains id, userid, etc.
@@ -235,7 +235,7 @@ const AddPurchaseWorkflow = () => {
     // Fetch associated groups and setup approver/request
     axios
       .get(
-        `http://13.204.15.86:3002/budget-workflow/group/${workflow.workflowid}`
+        `https://devdemo.softtrails.net/budget-workflow/group/${workflow.workflowid}`
       )
       .then((res) => {
         const groups = res.data;
@@ -296,7 +296,7 @@ const AddPurchaseWorkflow = () => {
 
     try {
       await axios.delete(
-        `http://13.204.15.86:3002/budget-workflow/user/${removedUser.id}`
+        `https://devdemo.softtrails.net/budget-workflow/user/${removedUser.id}`
       );
 
       const updatedUsers = [...editData.users];
@@ -353,7 +353,7 @@ const AddPurchaseWorkflow = () => {
 
   useEffect(() => {
     axios
-      .get("https://devapi.softtrails.net/saas/test/users")
+      .get("https://devdemo.softtrails.net/users")
       .then((response) => {
         setUsers(response.data);
         setAvailableUsers(response.data);
@@ -371,7 +371,7 @@ const AddPurchaseWorkflow = () => {
 
   useEffect(() => {
     axios
-      .get("https://devapi.softtrails.net/saas/test/role")
+      .get("https://devdemo.softtrails.net/role")
       .then((response) => setRoles(response.data))
       .catch((error) => console.error("Error fetching roles:", error));
   }, []);
@@ -383,7 +383,7 @@ const AddPurchaseWorkflow = () => {
     if (availableUsers.length > 0 && !hasFetchedUsersRef.current) {
       const workflowid = 1;
       axios
-        .get(`http://13.204.15.86:3002/budget-workflow/user/${workflowid}`)
+        .get(`https://devdemo.softtrails.net/budget-workflow/user/${workflowid}`)
         .then((response) => {
           const enrichedUsers = response.data.map((entry) => {
             const matchedUser = availableUsers.find(

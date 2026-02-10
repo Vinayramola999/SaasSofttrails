@@ -14,7 +14,7 @@ const Organization = () => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [activeTab, setActiveTab] = useState("UCS3");
     const navigate = useNavigate();
-    const userId = sessionStorage.getItem('userId');
+    const userId = localStorage.getItem('userId');
 
     const tabs = [
         { id: "UCS3", label: "setup" },    
@@ -27,17 +27,17 @@ const Organization = () => {
     };
 
     const getToken = () => {
-        const token = sessionStorage.getItem('token');
+        const token = localStorage.getItem('token');
         return token;
     };
     const token = getToken();
 
     useEffect(() => {
-        const userId = sessionStorage.getItem('userId');
+        const userId = localStorage.getItem('userId');
         if (userId) {
             const fetchUserData = async () => {
                 try {
-                    const response = await axios.get(`https://saaspro.softtrails.net/saas/ucs/pro/users/id_user/${userId}`, {
+                    const response = await axios.get(`http://13.204.15.86:8336/users/id_user/${userId}`, {
                         headers: {
                             Authorization: `Bearer ${token}`,
                         },
@@ -60,11 +60,11 @@ const Organization = () => {
             return;
         }
         try {
-            await axios.post('https://saaspro.softtrails.net/saas/ucs/pro/verify-token', { token });
+            await axios.post('http://35.154.158.192:3006/verify-token', { token });
             navigate('/AllTabs');
         } catch (error) {
-            sessionStorage.removeItem('token');
-            sessionStorage.removeItem('tokenExpiry');
+            localStorage.removeItem('token');
+            localStorage.removeItem('tokenExpiry');
             // navigate('/');
         }
     };
@@ -90,7 +90,7 @@ const Organization = () => {
 
     const handleLogout = () => {
         // Example logic
-        sessionStorage.clear();
+        localStorage.clear();
         window.location.href = '/login'; // or use useNavigate() from react-router
     };
 

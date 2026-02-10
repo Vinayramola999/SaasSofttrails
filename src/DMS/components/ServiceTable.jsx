@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const ServiceTable = ({ services, handleDelete }) => {
   const [deleteTargetId, setDeleteTargetId] = useState(null);
@@ -6,6 +6,11 @@ const ServiceTable = ({ services, handleDelete }) => {
   const rowsPerPage = 7;
   const [currentPage, setCurrentPage] = useState(1);
   const totalPages = Math.ceil(services.length / rowsPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [services.length]);
+
   const paginatedServices = services.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage

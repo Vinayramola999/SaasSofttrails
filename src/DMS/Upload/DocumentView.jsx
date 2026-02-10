@@ -53,7 +53,7 @@ const FolderView = () => {
   );
 
   return (
-    <div className="bg-white p-6 rounded-md border border-gray-300 h-[760px] overflow-y-auto">
+    <div className="bg-white p-6 rounded-md border border-gray-300 h-[820px] overflow-y-auto">
       <div className="flex">
         <h2 className="text-lg font-bold mb-4 text-blue-800">View Documents</h2>
       </div>

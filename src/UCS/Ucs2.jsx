@@ -15,7 +15,7 @@ const LeaveManagement1 = () => {
   // Function to fetch all module data from the API
   const getAllModules = async () => {
     try {
-      const url = "https://saaspro.softtrails.net/saas/ucs/pro/api/modules";
+      const url = "https://ucsdemo.softtrails.net/api/modules";
       const token = sessionStorage.getItem("token");
       const config = {
         headers: { Authorization: `Bearer ${token}` },
@@ -75,8 +75,8 @@ const LeaveManagement1 = () => {
           <button
             key={appName}
             className={`px-3 sm:px-4 py-2 rounded-full text-center text-sm sm:text-base font-medium whitespace-nowrap transition-all duration-300 flex-shrink-0 ${activeTab === appName
-                ? "text-white bg-gradient-to-r from-blue-500 to-blue-800 shadow-md scale-105" // Active tab styling
-                : "text-gray-700 hover:text-black hover:bg-gray-100" // Inactive hover effect
+              ? "text-white bg-gradient-to-r from-blue-500 to-blue-800 shadow-md scale-105" // Active tab styling
+              : "text-gray-700 hover:text-black hover:bg-gray-100" // Inactive hover effect
               }`}
             onClick={() => setActiveTab(appName)} // ✅ Switch active tab on click
           >
@@ -88,7 +88,7 @@ const LeaveManagement1 = () => {
       {/* ---------- Content Area for Active Tab ---------- */}
       {/* ✅ Scrollable container with fixed height to fit all screens */}
       <div className="mt-4 w-full max-w-[75rem] p-4 border border-gray-300 rounded-lg shadow-sm bg-white
-                      max-h-[60vh] sm:max-h-[65vh] md:max-h-[72vh] lg:max-h-[78vh] mx-auto">
+                      max-h-[60vh] sm:max-h-[65vh] md:max-h-[72vh] lg:max-h-[78vh] overflow-auto">
         {/* ✅ Conditionally render SubTabs for the currently active application */}
         {activeTab && modulesByApp[activeTab] && (
           <SubTabs

@@ -1,38 +1,25 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import {
-  Box,
-  Card,
-  Typography,
-  TextField,
-  InputAdornment,
-} from "@mui/material";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip as RechartsTooltip,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  LabelList,
-  ResponsiveContainer,
-} from "recharts";
+import { Box, Card, Typography, TextField, InputAdornment, } from "@mui/material";
+import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, BarChart, Bar, XAxis, YAxis, LabelList, ResponsiveContainer, } from "recharts";
 import SearchIcon from "@mui/icons-material/Search";
+import { Link } from "react-router-dom";
 import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
 import EmployeeList from "./EmployeeList";
-
+import {MAIN_API_BASE } from "../../config/apiBase";
 const COLORS = ["#4CAF50", "#2196F3", "#FF9800", "#E91E63"];
 
 export default function DMS() {
   const [employeeData, setEmployeeData] = useState([]);
+  const [filteredEmployees, setFilteredEmployees] = useState([]);
   const [departmentCounts, setDepartmentCounts] = useState([]);
   const [locationCounts, setLocationCounts] = useState([]);
-  const [filteredEmployees, setFilteredEmployees] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("");
-  const [departments, setDepartments] = useState([]);
+  const [activeDeptIndex, setActiveDeptIndex] = useState(null);
+  const [activeLocationIndex, setActiveLocationIndex] = useState(null);
+  const [hasUploadDocumentAccess, setHasUploadDocumentAccess] = useState(false);
   const [totalCounts, setTotalCounts] = useState({
     totalEmployees: 0,
     inactiveEmployees: 0,
@@ -41,181 +28,107 @@ export default function DMS() {
     maleEmployees: 0,
     femaleEmployees: 0,
   });
-  const [activeDeptIndex, setActiveDeptIndex] = useState(null);
-  const [activeLocationIndex, setActiveLocationIndex] = useState(null);
 
-  const CustomDeptLabel = ({ x, y, width, index, activeIndex, details }) => {
-    if (index !== activeIndex || !details) return null;
-    const keys = Object.keys(details);
-    const lineHeight = 14;
-    const totalHeight = keys.length * lineHeight;
-    const labelYStart = y - totalHeight - 5;
-    const adjustedY = labelYStart < 0 ? y + 15 : y - 10;
-
-    return (
-      <>
-        {keys.map((key, i) => (
-          <text
-            key={i}
-            x={x + width / 2}
-            y={adjustedY + i * lineHeight}
-            fill="#333"
-            textAnchor="middle"
-            fontSize={12}
-          >
-            {`${key} (${details[key]})`}
-          </text>
-        ))}
-      </>
-    );
-  };
-
-  const CustomLocationLabel = ({
-    x,
-    y,
-    width,
-    index,
-    activeIndex,
-    details,
-  }) => {
-    if (index !== activeIndex || !details) return null;
-    const keys = Object.keys(details);
-    const lineHeight = 14;
-    const totalHeight = keys.length * lineHeight;
-    const renderAbove = y - totalHeight > 20;
-    const startY = renderAbove ? y - 10 - (keys.length - 1) * lineHeight : y + 15;
-
-    return (
-      <>
-        {keys.map((key, i) => (
-          <text
-            key={i}
-            x={x + width / 2}
-            y={startY + i * lineHeight}
-            fill="#333"
-            textAnchor="middle"
-            fontSize={12}
-          >
-            {`${key} (${details[key]})`}
-          </text>
-        ))}
-      </>
-    );
-  };
-
+  /* ---------------- FETCH DATA ---------------- */
   useEffect(() => {
     const fetchData = async () => {
       try {
         const token = sessionStorage.getItem("token");
-        const userRes = await axios.get(
-          "https://devapi.softtrails.net/saas/test/users/flagged-catgeory-users",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+
+        const usersRes = await axios.get(`${MAIN_API_BASE}/users/flagged-catgeory-users`,
+          { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        const deptRes = await axios.get("https://devapi.softtrails.net/saas/test/departments", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const deptRes = await axios.get(`${MAIN_API_BASE}/departments`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
 
-        const users = userRes.data.users || [];
+        const users = usersRes.data.users || [];
         const depts = deptRes.data || [];
 
         setEmployeeData(users);
         setFilteredEmployees(users);
         setDepartments(depts);
 
-        const totalEmployees = users.length;
-        const inactiveEmployees = users.filter(
-          (u) => u.user_status === "inactive"
-        ).length;
-        const maleEmployees = users.filter((u) => u.gender === "Male").length;
-        const femaleEmployees = totalEmployees - maleEmployees;
+        const maleEmployees = users.filter(u => u.gender === "Male").length;
+        const inactiveEmployees = users.filter(u => u.user_status === "inactive").length;
 
-        const deptCounts = depts.map((d) => {
-          const usersInDept = users.filter((u) => u.dept_name === d.dept_name);
-          const subDeptMap = usersInDept.reduce((acc, u) => {
+        const deptCounts = depts.map(d => {
+          const usersInDept = users.filter(u => u.dept_name === d.dept_name);
+          const subMap = usersInDept.reduce((acc, u) => {
             const sub = u.sub_dept_name || "N/A";
             acc[sub] = (acc[sub] || 0) + 1;
             return acc;
           }, {});
-          return {
-            name: d.dept_name,
-            value: usersInDept.length,
-            details: subDeptMap,
-          };
+          return { name: d.dept_name, value: usersInDept.length, details: subMap };
         });
 
-        const uniqueLocalities = [
-          ...new Set(users.map((u) => u.locality || "Unknown")),
-        ];
         const locCounts = users.reduce((acc, u) => {
           const loc = u.locality || "Unknown";
-          const subLoc = u.sub_dept_name || "N/A";
-          const existing = acc.find((item) => item.name === loc);
-          if (existing) {
-            existing.value += 1;
-            existing.details[subLoc] = (existing.details[subLoc] || 0) + 1;
+          const sub = u.sub_dept_name || "N/A";
+          const found = acc.find(i => i.name === loc);
+          if (found) {
+            found.value += 1;
+            found.details[sub] = (found.details[sub] || 0) + 1;
           } else {
-            acc.push({
-              name: loc,
-              value: 1,
-              details: { [subLoc]: 1 },
-            });
+            acc.push({ name: loc, value: 1, details: { [sub]: 1 } });
           }
           return acc;
         }, []);
 
-        setTotalCounts({
-          totalEmployees,
-          inactiveEmployees,
-          totalDepartments: depts.length,
-          totalLocations: uniqueLocalities.length,
-          maleEmployees,
-          femaleEmployees,
-        });
         setDepartmentCounts(deptCounts);
         setLocationCounts(locCounts);
+
+        setTotalCounts({
+          totalEmployees: users.length,
+          inactiveEmployees,
+          totalDepartments: depts.length,
+          totalLocations: [...new Set(users.map(u => u.locality))].length,
+          maleEmployees,
+          femaleEmployees: users.length - maleEmployees,
+        });
       } catch (err) {
-        console.error("Error fetching data:", err);
+        console.error(err);
       }
     };
+
     fetchData();
   }, []);
 
-  const filterEmployees = (search, department) => {
+  /* ---------------- ACCESS CHECK ---------------- */
+  useEffect(() => {
+    const checkAccess = async () => {
+      try {
+        const userId = sessionStorage.getItem("userId");
+        const token = sessionStorage.getItem("token");
+        if (!userId || !token) return;
+
+        const res = await axios.get(
+          `${MAIN_API_BASE}/access/access/${userId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        setHasUploadDocumentAccess(
+          res.data.some(a => a.api_name === "UploadDocument")
+        );
+      } catch {
+        setHasUploadDocumentAccess(false);
+      }
+    };
+    checkAccess();
+  }, []);
+
+  /* ---------------- FILTER ---------------- */
+  const filterEmployees = (search, dept) => {
     let filtered = [...employeeData];
     if (search) {
-      const terms = search.toLowerCase().split(" ");
-      filtered = filtered.filter((emp) =>
-        terms.every(
-          (t) =>
-            emp.first_name?.toLowerCase().includes(t) ||
-            emp.last_name?.toLowerCase().includes(t) ||
-            emp.user_id?.toString().includes(t) ||
-            emp.dept_name?.toLowerCase().includes(t) ||
-            emp.email?.toLowerCase().includes(t) ||
-            emp.user_status?.toLowerCase().includes(t) ||
-            emp.phone_no?.toLowerCase().includes(t)
-        )
+      const t = search.toLowerCase();
+      filtered = filtered.filter(e =>
+        `${e.first_name} ${e.last_name} ${e.email}`.toLowerCase().includes(t)
       );
     }
-    if (department) {
-      filtered = filtered.filter((emp) => emp.dept_name === department);
-    }
+    if (dept) filtered = filtered.filter(e => e.dept_name === dept);
     setFilteredEmployees(filtered);
-  };
-
-  const handleSearchChange = (e) => {
-    const val = e.target.value;
-    setSearchText(val);
-    filterEmployees(val, selectedDepartment);
-  };
-
-  const handleDepartmentChange = (e) => {
-    const val = e.target.value;
-    setSelectedDepartment(val);
-    filterEmployees(searchText, val);
   };
 
   const pieData = [
@@ -223,182 +136,105 @@ export default function DMS() {
     { name: "Female", value: totalCounts.femaleEmployees },
   ];
 
-  const cardStyle =
-    "p-4 bg-white rounded-xl border border-gray-300 shadow-lg w-full min-h-[250px] flex flex-col";
+  const cardStyle = "p-4 bg-white rounded-xl border border-gray-300 shadow-lg w-full min-h-[180px] flex flex-col";
 
+  /* ---------------- UI ---------------- */
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", width: "100%" }}>
-      <Box sx={{ p: { xs: 1, sm: 2, md: 3 } }}>
-        {/* Cards Section */}
-        <Box className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
-          {/* Employees */}
+    <Box sx={{ width: "100%" }}>
+      <Box sx={{}}>
+
+        {/* ---------- CHARTS ---------- */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+          {/* Gender */}
           <Card className={cardStyle}>
-            <Typography variant="h6" className="mb-2 text-center sm:text-left">
-              Employees: {totalCounts.totalEmployees}
-            </Typography>
-            <div className="flex flex-col sm:flex-row items-center justify-center flex-1">
-              <div className="w-[180px] h-[180px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      dataKey="value"
-                      outerRadius="70%"
-                      label
-                    >
-                      {pieData.map((entry, i) => (
-                        <Cell
-                          key={`cell-${i}`}
-                          fill={COLORS[i % COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <RechartsTooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="mt-4 sm:mt-0 sm:ml-4">
-                {pieData.map((entry, i) => (
-                  <div key={entry.name} className="flex items-center mb-2">
-                    <div
-                      className="w-4 h-4 rounded-full"
-                      style={{ backgroundColor: COLORS[i % COLORS.length] }}
-                    />
-                    <span className="ml-2 text-sm">{entry.name}</span>
-                  </div>
-                ))}
-              </div>
+            <Typography variant="h6">Employees: {totalCounts.totalEmployees}</Typography>
+            <div className="flex justify-center flex-1">
+              <ResponsiveContainer width="100%" height={160}>
+                <PieChart>
+                  <Pie data={pieData} dataKey="value" outerRadius={65}>
+                    {pieData.map((_, i) => (
+                      <Cell key={i} fill={COLORS[i]} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
           </Card>
 
           {/* Departments */}
           <Card className={cardStyle}>
-            <Typography variant="h6" className="mb-2 text-center sm:text-left">
-              Departments: {totalCounts.totalDepartments}
-            </Typography>
-            <div className="flex-1">
-              <ResponsiveContainer width="100%" height={180}>
-                <BarChart data={departmentCounts}>
-                  <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} />
-                  <YAxis />
-                  <Bar
-                    dataKey="value"
-                    fill="#4CAF50"
-                    onMouseEnter={(_, i) => setActiveDeptIndex(i)}
-                    onMouseLeave={() => setActiveDeptIndex(null)}
-                  >
-                    <LabelList
-                      content={(props) => (
-                        <CustomDeptLabel
-                          {...props}
-                          activeIndex={activeDeptIndex}
-                          details={departmentCounts[props.index]?.details}
-                        />
-                      )}
-                    />
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            <Typography variant="h6">Departments</Typography>
+            <ResponsiveContainer width="100%" height={160}>
+              <BarChart data={departmentCounts} layout="vertical">
+                <XAxis type="number" />
+                <YAxis dataKey="name" type="category" width={90} />
+                <Bar dataKey="value" fill="#4CAF50" />
+              </BarChart>
+            </ResponsiveContainer>
           </Card>
 
           {/* Locations */}
           <Card className={cardStyle}>
-            <Typography variant="h6" className="mb-2 text-center sm:text-left">
-              Locations: {totalCounts.totalLocations}
-            </Typography>
-            <div className="flex-1">
-              {locationCounts.length > 0 ? (
-                <ResponsiveContainer width="100%" height={180}>
-                  <BarChart
-                    data={locationCounts}
-                    onMouseLeave={() => setActiveLocationIndex(null)}
-                  >
-                    <XAxis dataKey="name" tick={{ fontSize: 10 }} interval={0} />
-                    <YAxis />
-                    <Bar
-                      dataKey="value"
-                      fill="#FF9800"
-                      onMouseEnter={(_, i) => setActiveLocationIndex(i)}
-                    >
-                      <LabelList
-                        content={(props) => (
-                          <CustomLocationLabel
-                            {...props}
-                            activeIndex={activeLocationIndex}
-                            details={locationCounts[props.index]?.details}
-                          />
-                        )}
-                      />
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <Typography align="center">No Location Data</Typography>
-              )}
-            </div>
+            <Typography variant="h6">Locations</Typography>
+            <ResponsiveContainer width="100%" height={160}>
+              <BarChart data={locationCounts} layout="vertical">
+                <XAxis type="number" />
+                <YAxis dataKey="name" type="category" width={90} />
+                <Bar dataKey="value" fill="#FF9800" />
+              </BarChart>
+            </ResponsiveContainer>
           </Card>
-        </Box>
+        </div>
 
-        {/* Search and Upload Section */}
-        <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center mt-6">
+        {/* ---------- SEARCH ---------- */}
+        <div className="flex flex-wrap gap-3 items-center mt-3">
           <TextField
-            placeholder="Search"
-            value={searchText}
-            onChange={handleSearchChange}
-            variant="outlined"
             size="small"
+            placeholder="Search employee"
+            value={searchText}
+            onChange={(e) => {
+              setSearchText(e.target.value);
+              filterEmployees(e.target.value, selectedDepartment);
+            }}
             InputProps={{
               startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon className="text-gray-500" fontSize="small" />
-                </InputAdornment>
+                <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment>
               ),
-              sx: {
-                height: "32px",
-                borderRadius: "9999px", 
-                backgroundColor: "#fff",
-                fontSize: "0.8rem",
-                paddingRight: "6px",
-                "& .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "#d1d5db", 
-                },
-                "&:hover .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "#9ca3af", 
-                },
-                "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-                  borderColor: "#3b82f6", 
-                },
-              },
             }}
-            className="w-40 sm:w-48 md:w-56 transition-all duration-200"
           />
 
           <select
-            className="border border-gray-300 rounded-xl bg-white px-2 py-2 sm:w-1/4"
+            className="border rounded-full px-3 py-2 text-sm"
             value={selectedDepartment}
-            onChange={handleDepartmentChange}
+            onChange={(e) => {
+              setSelectedDepartment(e.target.value);
+              filterEmployees(searchText, e.target.value);
+            }}
           >
-            <option value="">Select Department</option>
-            {departments.map((d) => (
-              <option key={d.dept_id} value={d.dept_name}>
-                {d.dept_name}
-              </option>
+            <option value="">All Departments</option>
+            {departments.map(d => (
+              <option key={d.dept_id}>{d.dept_name}</option>
             ))}
           </select>
 
-          {/* <Link
-            to="/documentUpload"
-            className="sm:ml-auto flex items-center justify-center bg-blue-700 text-white rounded-md p-2"
-          >
-            <CloudUploadOutlinedIcon />
-            <span className="ml-2">Upload Documents</span>
-          </Link> */}
+          {hasUploadDocumentAccess && (
+            <Link
+              to="/UploadEmpDocsTab"
+              className="ml-auto flex items-center bg-blue-700 text-white px-3 py-2 rounded-md"
+            >
+              <CloudUploadOutlinedIcon fontSize="small" />
+              <span className="ml-2">Upload Documents</span>
+            </Link>
+          )}
         </div>
 
-        {/* Employee List */}
-        <div className="mt-6">
-          <EmployeeList employee={filteredEmployees} />
+        {/* ---------- TABLE ---------- */}
+        <div className="mt-2 bg-white rounded-xl border shadow-lg">
+          <div className="max-h-[420px] overflow-y-auto">
+            <EmployeeList employee={filteredEmployees} />
+          </div>
         </div>
       </Box>
     </Box>

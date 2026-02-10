@@ -28,14 +28,16 @@ const PurchaseOrder = () => {
     { header: "Payment", accessor: "payment" },
   ];
   // Fetch API data
-const fetchData = async () => {
+  const fetchData = async () => {
     try {
       const token = sessionStorage.getItem("token");
       if (!token) {
         console.error("No token found");
         return;
       }
-      const res = await axios.get(`${API.PURCHASE_API}/purchase_order/AllPO`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await axios.get(`${API.PURCHASE_API}/purchase_order/AllPO`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setData(Array.isArray(res.data.data) ? res.data.data : []);
     } catch (err) {
       console.error("API Error:", err.response?.data || err.message);
@@ -68,26 +70,52 @@ const fetchData = async () => {
     return matches;
   });
 
-const handlePreviewPO = async (po_id) => {
-  try {
-    const token = sessionStorage.getItem("token");
-    const res = await axios.get(`${API.PURCHASE_API}/purchase_order/poFile/${po_id}`, { headers: { Authorization: `Bearer ${token}` } });
-    // ✅ Corrected: file_url is inside res.data.data
-    if (res.data?.data?.file_url) {
-      window.open(res.data.data.file_url, "_blank");
-    } else if (res.data?.data?.file) {
-      const blob = new Blob([Uint8Array.from(atob(res.data.data.file), c => c.charCodeAt(0))], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-      window.open(url, "_blank");
-      setTimeout(() => URL.revokeObjectURL(url), 5000);
-    } else {
-      alert("No PO file found for this record.");
+  const handlePreviewPO = async (row) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      const { po_id, vendor_id } = row;
+
+
+      // Fetch Vendor Data
+      const vendorRes = await axios.get(
+        `${API.PURCHASE_API}/purchase_order/vendors_data/${vendor_id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      const timestamp = new Date().getTime();
+      const res = await axios.get(
+        `${API.PURCHASE_API}/purchase_order/poFile/${po_id}?t=${timestamp}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { _: timestamp },
+        }
+      );
+
+      if (res.data?.data?.file_url) {
+        const fileUrl = res.data.data.file_url;
+        const separator = fileUrl.includes("?") ? "&" : "?";
+        const cacheBustedUrl = `${fileUrl}${separator}t=${timestamp}`;
+
+        window.open(cacheBustedUrl, "_blank");
+      } else if (res.data?.data?.file) {
+        const blob = new Blob(
+          [Uint8Array.from(atob(res.data.data.file), (c) => c.charCodeAt(0))],
+          { type: "application/pdf" }
+        );
+        const url = URL.createObjectURL(blob);
+        window.open(url, "_blank");
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+      } else {
+        console.error("No file URL or file data found in response:", res.data);
+        alert("No PO file found for this record.");
+      }
+    } catch (err) {
+      console.error("Failed to fetch PO preview data:", err);
+      alert(
+        "Failed to fetch PO preview data. Please check the console for details."
+      );
     }
-  } catch (err) {
-    alert("Failed to fetch PO file.");
-    console.error(err);
-  }
-};
+  };
   // Pagination logic
   const totalPages = Math.max(1, Math.ceil(filteredData.length / rowsPerPage));
   const paginatedData = filteredData.slice(
@@ -111,9 +139,9 @@ const handlePreviewPO = async (po_id) => {
   }));
 
   return (
-    <div className="min-h-screen p-0">
+    <div className="p-6  min-h-[70vh] rounded-xl">
       {/* Generate PO Button */}
-      <div className="pl-4 pt-2">
+      <div className="pl-3 pt-2">
         <button
           className="bg-[#0057FF] text-white font-semibold px-5 py-2 rounded-lg shadow mb-4"
           onClick={() => setShowPOPopup(true)}
@@ -128,7 +156,7 @@ const handlePreviewPO = async (po_id) => {
       />
 
       {/* Filters */}
-      <div className="flex gap-4 items-center pl-4 pb-4">
+      <div className="flex gap-4 mb-4 items-center">
         {/* Search */}
         <div className="relative w-1/4">
           <input
@@ -194,8 +222,7 @@ const handlePreviewPO = async (po_id) => {
               </tr>
             ) : (
               paginatedData.map((row, idx) => (
-                                  <tr key={row.poNo || idx} className="odd:bg-blue-50">
-
+                <tr key={row.poNo || idx} className="odd:bg-blue-50">
                   <td className="py-3 px-4">
                     {idx + 1 + (currentPage - 1) * rowsPerPage}
                   </td>
@@ -215,18 +242,26 @@ const handlePreviewPO = async (po_id) => {
                       year: "numeric",
                     })}
                   </td>
-
                   <td className="py-3 px-4">{row.status}</td>
                   {/* <td className="py-3 px-4">{row.payment}</td> */}
-<td className="py-3 px-4">
-  <button
-    className="text-blue-600 underline"
-    onClick={() => handlePreviewPO(row.po_id)}
-    title="Preview PO PDF"
-  >
-    Preview
-  </button>
-</td>                </tr>
+                  <td className="py-3 px-4">
+                    <button
+                      className="text-blue-600 underline hover:text-blue-800 font-medium"
+                      onClick={() => {
+                        console.log(
+                          "Preview clicked for PO:",
+                          row.po_id,
+                          "Row data:",
+                          row
+                        );
+                        handlePreviewPO(row);
+                      }}
+                      title={`Preview PO PDF - ${row.po_id}`}
+                    >
+                      Preview
+                    </button>
+                  </td>{" "}
+                </tr>
               ))
             )}
           </tbody>

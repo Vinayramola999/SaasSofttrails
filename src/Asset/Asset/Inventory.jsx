@@ -669,15 +669,11 @@ const handleViewHistory = (asset) => {
         return;
       }
 
-      const selectedCategoryObj = categories.find((category) => {
-        if (typeof selectedCategory === "string") {
-          return (
-            category.categoriesname.trim().toLowerCase() ===
-            selectedCategory.trim().toLowerCase()
-          );
-        }
-        return category.categoryId === selectedCategory;
-      });
+      const selectedCategoryObj = categories.find(
+        (category) =>
+          category.categoriesname.trim().toLowerCase() ===
+          selectedCategory.trim().toLowerCase()
+      );
       if (!selectedCategoryObj) {
         setMessage("Invalid or missing category.");
         setMessageType("error");
@@ -1218,12 +1214,9 @@ const handleViewHistory = (asset) => {
       return;
     }
 
-    const selectedCategoryObj = categories.find((category) => {
-      if (typeof selectedCategory === "string") {
-        return category.categoriesname === selectedCategory;
-      }
-      return category.categoryId === selectedCategory;
-    });
+    const selectedCategoryObj = categories.find(
+      (category) => category.categoriesname === selectedCategory
+    );
 
     if (!selectedCategoryObj) {
       setMessage("Invalid or missing category.");
@@ -1368,12 +1361,9 @@ const handleViewHistory = (asset) => {
       return;
     }
 
-    const selectedCategoryObj = categories.find((category) => {
-      if (typeof selectedCategory === "string") {
-        return category.categoriesname === selectedCategory;
-      }
-      return category.categoryId === selectedCategory;
-    });
+    const selectedCategoryObj = categories.find(
+      (category) => category.categoriesname === selectedCategory
+    );
 
     if (!selectedCategoryObj) {
       setMessage("Invalid or missing category.");
@@ -1514,12 +1504,9 @@ const handleViewHistory = (asset) => {
       return;
     }
 
-    const selectedCategoryObj = categories.find((category) => {
-      if (typeof selectedCategory === "string") {
-        return category.categoriesname === selectedCategory;
-      }
-      return category.categoryId === selectedCategory;
-    });
+    const selectedCategoryObj = categories.find(
+      (category) => category.categoriesname === selectedCategory
+    );
 
     if (!selectedCategoryObj) {
       setMessage("Invalid or missing category.");

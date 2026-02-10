@@ -118,7 +118,7 @@ const CustomerContactTable = () => {
       row.email_id,
       row.status,
       row.customer_uid,
-      row.customer_name,
+      row.customer_name   ,
     ]);
     doc.autoTable({
       head: [tableColumn],
@@ -246,8 +246,6 @@ const CustomerContactTable = () => {
                   <td className="px-5 py-4 text-left text-[14px] text-black">
                     {item.customer_uid || "N/A"}
                   </td>
-
-
                   <td className="px-5 py-4 text-left text-[14px] text-black max-w-[180px] whitespace-normal break-words">
                     {(() => {
                       const text = item.customer_name || "N/A";
@@ -284,9 +282,7 @@ const CustomerContactTable = () => {
               ))}
             </tbody>
           </table>
-
         </div>
-
         {/* ✅ FIXED PAGINATION BELOW TABLE (OUTSIDE SCROLL) */}
         <div className="flex justify-center items-center gap-2 py-4">
 

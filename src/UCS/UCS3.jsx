@@ -754,3 +754,552 @@ const LeaveManagement1 = () => {
 };
 
 export default LeaveManagement1;
+
+// import { Dialog } from "@headlessui/react";
+// import { PencilSquareIcon } from "@heroicons/react/24/solid";
+// import { useEffect, useState } from "react";
+// import { Box } from "@mui/material";
+// import React from "react";
+// import Swal from "sweetalert2";
+// import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+// import { faTrash, faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
+// import "../App.css";
+// import Pagination from "./Pagination";
+
+// const LeaveManagement1 = () => {
+//   const [emailData, setEmailData] = useState([]); // Email Data
+//   const [smsData, setSmsData] = useState([]); // SMS Data
+//   const [filteredData, setFilteredData] = useState([]); // Data to be shown in the table
+//   const [editData, setEditData] = useState({});
+//   const [isOpen, setIsOpen] = useState(false);
+//   const [isOpen1, setIsOpen1] = useState(false);
+//   const [selectedService, setSelectedService] = useState("email"); // 'email' or 'sms'. This is the main state for toggling.
+
+//   const [isDeleteModalOpen, setDeleteModalOpen] = useState(false);
+//   const [itemToDelete, setItemToDelete] = useState(null);
+
+//   const [searchTerm, setSearchTerm] = useState("");
+//   const [selectedRowData, setSelectedRowData] = useState(null);
+//   const [isModalOpen, setIsModalOpen] = useState(false);
+
+//   // Fetch data on initial component load
+//   useEffect(() => {
+//     const fetchData = async () => {
+//       setIsLoading(true);
+//       try {
+//         // Fetch both email and SMS data
+//         const emailResponse = await fetch("http://13.204.15.86:8336/api/email/all");
+//         if (!emailResponse.ok) throw new Error("Email API fetch failed");
+//         const emailResult = await emailResponse.json();
+//         setEmailData(emailResult);
+      
+// const token = sessionStorage.getItem("token");
+// console.log("Token from session:", token);
+
+//         const smsResponse = await fetch("http://13.204.15.86:8336/api/sms/all");
+//         if (!smsResponse.ok) throw new Error("SMS API fetch failed");
+//         const smsResult = await smsResponse.json();
+//         setSmsData(smsResult);
+
+//       } catch (error) {
+//         console.error("Error fetching data:", error);
+//         Swal.fire("Error", "Failed to load data from the server.", "error");
+//       } finally {
+//         setIsLoading(false);
+//       }
+//     };
+
+//     fetchData();
+//   }, []);
+
+//   // *** THIS IS THE CORE LOGIC FOR TOGGLING AND SEARCHING ***
+//   // This single useEffect handles filtering data based on the selected service and search term.
+//   useEffect(() => {
+//     // 1. Determine the source data based on the selected service
+//     const sourceData = selectedService === "email" ? emailData : smsData;
+
+//     // 2. Filter the data based on the search term
+//     const lowerCaseSearchTerm = searchTerm.toLowerCase().trim();
+
+//     if (!lowerCaseSearchTerm) {
+//       // If search is empty, show all data for the selected service
+//       setFilteredData(sourceData);
+//     } else {
+//       const filtered = sourceData.filter((item) => {
+//         if (selectedService === "email") {
+//           // Filter Email data by Service Name or Username
+//           return (
+//             item.serviceName?.toLowerCase().includes(lowerCaseSearchTerm) ||
+//             item.username?.toLowerCase().includes(lowerCaseSearchTerm)
+//           );
+//         } else { // For SMS
+//           // Filter SMS data by Service Name OR Sender ID
+//           return (
+//             item.serviceName?.toLowerCase().includes(lowerCaseSearchTerm) ||
+//             item.senderId?.toString().toLowerCase().includes(lowerCaseSearchTerm)
+//           );
+//         }
+//       });
+//       setFilteredData(filtered);
+//     }
+//     setCurrentPage(1); // Reset to first page on filter change
+//   }, [selectedService, searchTerm, emailData, smsData]); // Reruns whenever these values change
+
+
+//   const handleEdit = (data) => {
+//     if (!data || Object.keys(data).length === 0) {
+//       console.error("Error: No data provided for editing!");
+//       return;
+//     }
+//     setEditData(data);
+//     setSelectedService(data.type); // Ensure the modal knows which service type it's editing
+//     setIsOpen(true);
+//   };
+
+//   const openDialog = (rowData) => {
+//     if (!rowData) {
+//       console.error("Error: rowData is null or undefined!");
+//       return;
+//     }
+//     setEditData(rowData || {});
+//     setIsOpen(true);
+//   };
+
+//   const closeDialog = () => {
+//     setEditData(null);
+//     setIsOpen(false);
+//   };
+
+//   const handleChange = (e) => {
+//     const { name, value } = e.target;
+//     setEditData((prevData) => ({
+//       ...prevData,
+//       [name]: value,
+//     }));
+//   };
+
+//   const handleSubmit = async () => {
+//     if (!editData || !editData.id) {
+//       alert("Error: Missing edit data!");
+//       return;
+//     }
+//     const url =
+//       selectedService === "email"
+//         ? `http://13.204.15.86:8336/api/email/update/${editData.id}`
+//         : `http://13.204.15.86:8336/api/sms/update/${editData.id}`;
+
+//     const payload =
+//       selectedService === "email"
+//         ? {
+//           id: editData.id,
+//           host: editData.host,
+//           port: editData.port,
+//           username: editData.username,
+//           password: editData.password,
+//           serviceName: editData.serviceName,
+//         }
+//         : {
+//           id: editData.id,
+//           apiKey: editData.apiKey,
+//           apiUrl: editData.apiUrl,
+//           senderId: editData.senderId,
+//           route: editData.route,
+//           language: editData.language,
+//           serviceName: editData.serviceName,
+//         };
+
+//     try {
+//       const response = await fetch(url, {
+//         method: "PUT",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify(payload),
+//       });
+
+//       const textResponse = await response.text();
+//       if (!response.ok) {
+//         throw new Error(`Update failed! Server response: ${textResponse}`);
+//       }
+
+//       Swal.fire("Success", "Service updated successfully!", "success");
+
+//       // Manually update the state to reflect changes instantly
+//       const updateDataSource = selectedService === 'email' ? setEmailData : setSmsData;
+//       updateDataSource(prevData => prevData.map(item => item.id === editData.id ? { ...item, ...payload } : item));
+
+//       closeDialog();
+//     } catch (error) {
+//       console.error("Update error:", error);
+//       alert(`Failed to update: ${error.message}`);
+//     }
+//   };
+
+//   const confirmDelete = async () => {
+//     if (!itemToDelete) return;
+//     const { id, service } = itemToDelete;
+//     const url =
+//       service === "email"
+//         ? `http://13.204.15.86:8336/api/email/delete/${id}`
+//         : `http://13.204.15.86:8336/api/sms/delete/${id}`;
+
+//     try {
+//       const response = await fetch(url, { method: "DELETE" });
+//       if (!response.ok) throw new Error("Delete failed!");
+
+//       await Swal.fire({
+//         icon: "success",
+//         title: "Deleted!",
+//         text: "Item deleted successfully.",
+//         timer: 2000,
+//         showConfirmButton: false,
+//       });
+
+//       // Remove from state instantly
+//       if (service === 'email') {
+//         setEmailData(prev => prev.filter(item => item.id !== id));
+//       } else {
+//         setSmsData(prev => prev.filter(item => item.id !== id));
+//       }
+
+//       setDeleteModalOpen(false);
+//       setItemToDelete(null);
+//     } catch (error) {
+//       console.error("Delete Error:", error);
+//       Swal.fire("Failed!", "Something went wrong while deleting.", "error");
+//     }
+//   };
+
+//   const openDeleteModal = (id, serviceType) => {
+//     setItemToDelete({ id, service: serviceType });
+//     setDeleteModalOpen(true);
+//   };
+
+//   const [formData, setFormData] = useState({
+//     serviceName: "", host: "", port: "", username: "", password: "",
+//     apiKey: "", apiUrl: "", senderId: "", route: "", language: "",
+//   });
+
+//   const handleChange1 = (e) => {
+//     const { name, value } = e.target;
+//     setFormData({ ...formData, [name]: value });
+//   };
+
+//   const resetForm = () => {
+//     setFormData({
+//       serviceName: "", host: "", port: "", username: "", password: "",
+//       apiKey: "", apiUrl: "", senderId: "", route: "", language: "",
+//     });
+//     setShowPassword(false);
+//   };
+
+//   const handleSubmit1 = async () => {
+//     let url =
+//       selectedService === "email"
+//         ? "http://13.204.15.86:8336/api/email/save"
+//         : "http://13.204.15.86:8336/api/sms/save";
+
+//     let data =
+//       selectedService === "email"
+//         ? {
+//           serviceName: formData.serviceName, host: formData.host, port: formData.port,
+//           username: formData.username, password: formData.password,
+//         }
+//         : {
+//           serviceName: formData.serviceName, apiKey: formData.apiKey, apiUrl: formData.apiUrl,
+//           senderId: formData.senderId, route: formData.route, language: formData.language,
+//         };
+
+//     try {
+//       const response = await fetch(url, {
+//         method: "POST",
+//         headers: { "Content-Type": "application/json" },
+//         body: JSON.stringify(data),
+//       });
+
+//       if (!response.ok) {
+//         throw new Error("Request failed with status " + response.status);
+//       }
+
+//       const newRecord = await response.json(); // Assuming the API returns the saved object with an ID
+
+//       Swal.fire({ icon: "success", title: "Success", text: "Service setup successfully!" });
+
+//       // Add new record to the state to update UI instantly
+//       if (selectedService === 'email') {
+//         setEmailData(prev => [...prev, newRecord]);
+//       } else {
+//         setSmsData(prev => [...prev, newRecord]);
+//       }
+
+//       setIsOpen1(false);
+//       resetForm();
+//     } catch (error) {
+//       console.error("Error submitting data:", error);
+//       Swal.fire({ icon: "error", title: "Error", text: "Failed to save the service: " + error.message });
+//     }
+//   };
+
+//   const handleSearchChange = (event) => {
+//     setSearchTerm(event.target.value);
+//   };
+
+//   const [showPassword, setShowPassword] = useState(false);
+//   const togglePasswordVisibility = () => setShowPassword((prev) => !prev);
+
+//   const itemsPerPage = 5;
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+//   const indexOfLastItem = currentPage * itemsPerPage;
+//   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+//   const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+
+//   const handlePageChange = (newPage) => {
+//     if (newPage >= 1 && newPage <= totalPages) setCurrentPage(newPage);
+//   };
+
+//   const [passwordVisible, setPasswordVisible] = useState(false);
+//   const [isLoading, setIsLoading] = useState(true);
+
+//   const fieldNameMap = {
+//     id: "ID", username: "User Name", host: "Host", serviceName: "Service Name",
+//     createdAt: "Created On", senderId: "Sender ID", route: "Route",
+//     apiKey: "API Key", apiUrl: "API URL", port: "Port", language: "Language",
+//     password: "Password"
+//   };
+
+//   return (
+//     <div className="flex">
+//       <div className="p-6 w-full">
+//         <div className="bg-white shadow-lg rounded-t-lg pt-1 pb-1 px-6">
+//           <div className="flex items-center justify-between gap-4 pt-1 pb-1 px-4 w-full bg-[#ffffff]">
+//             <div className="flex items-center gap-4">
+//               <input
+//                 type="text"
+//                 placeholder="Search ..."
+//                 className="w-50 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+//                 value={searchTerm}
+//                 onChange={handleSearchChange}
+//               />
+
+//               {/* Service Toggle Buttons */}
+//               {/* <div className="relative inline-block">
+//                 <div className="flex border border-gray-300 rounded-md overflow-hidden">
+//                   <button
+//                     onClick={() => setSelectedService("email")}
+//                     className={`px-4 py-2 text-sm focus:outline-none ${selectedService === "email"
+//                         ? "bg-blue-500 text-white"
+//                         : "bg-white text-gray-700"
+//                       }`}
+//                   >
+//                     Email
+//                   </button>
+//                   <button
+//                     onClick={() => setSelectedService("sms")}
+//                     className={`px-4 py-2 text-sm focus:outline-none ${selectedService === "sms"
+//                         ? "bg-blue-500 text-white"
+//                         : "bg-white text-gray-700"
+//                       }`}
+//                   >
+//                     SMS
+//                   </button>
+//                 </div>
+//               </div> */}
+//               <div className="relative inline-block">
+//                 <select
+//                   className="border border-gray-300 rounded-md px-4 py-2 text-sm focus:outline-none"
+//                   value={selectedService}
+//                   onChange={(e) => setSelectedService(e.target.value)}
+//                 >
+//                   <option value="email">Email</option>
+//                   <option value="sms">SMS</option>
+//                 </select>
+//               </div>
+//             </div>
+
+//             <button
+//               className="bg-custome-blue w-[12%] text-white px-4 py-2 rounded-2xl"
+//               onClick={() => setIsOpen1(true)}
+//             >
+//               + Setup
+//             </button>
+//           </div>
+
+//           {isOpen1 && (
+//             <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+//               <div className="bg-white p-8 rounded-xl shadow-lg w-full max-w-4xl relative">
+//                 <button
+//                   className="absolute top-4 right-4 text-gray-600 hover:text-black"
+//                   onClick={() => { setIsOpen1(false); resetForm(); }}
+//                 >✕</button>
+//                 <h2 className="text-2xl font-semibold mb-6 text-center text-gray-800">
+//                   Setup Communication Service
+//                 </h2>
+
+//                 <div className="mb-6">
+//                   <label className="block text-gray-700 font-medium mb-2">Select Communication Type:</label>
+//                   <div className="flex gap-4">
+//                     <label className="flex items-center gap-2">
+//                       <input type="radio" value="email" checked={selectedService === "email"} onChange={(e) => setSelectedService(e.target.value)} /> Email
+//                     </label>
+//                     <label className="flex items-center gap-2">
+//                       <input type="radio" value="sms" checked={selectedService === "sms"} onChange={(e) => setSelectedService(e.target.value)} /> SMS
+//                     </label>
+//                   </div>
+//                 </div>
+
+//                 <div className="mb-6">
+//                   <label className="block text-gray-700 font-medium mb-2">Service Name:</label>
+//                   <input type="text" name="serviceName" value={formData.serviceName} onChange={handleChange1} placeholder="Enter Service Name" maxLength={20} className="border p-3 rounded-lg w-full outline-none focus:ring-2 focus:ring-blue-400" />
+//                 </div>
+
+//                 <div className="bg-gray-50 p-6 rounded-lg shadow-inner">
+//                   {selectedService === "email" ? (
+//                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+//                       <input type="text" name="host" value={formData.host} onChange={handleChange1} placeholder="Host" className="border p-3 rounded-lg w-full outline-none focus:ring-2 focus:ring-blue-400" />
+//                       <input type="number" name="port" value={formData.port} onChange={handleChange1} placeholder="Port" className="border p-3 rounded-lg w-full outline-none focus:ring-2 focus:ring-blue-400" />
+//                       <input type="text" name="username" value={formData.username} onChange={handleChange1} placeholder="Username" className="border p-3 rounded-lg w-full outline-none focus:ring-2 focus:ring-blue-400" />
+//                       <div className="relative w-full">
+//                         <input type={showPassword ? "text" : "password"} name="password" value={formData.password} onChange={handleChange1} placeholder="Password" className="border p-3 pr-10 rounded-lg w-full outline-none focus:ring-2 focus:ring-blue-400" />
+//                         <button type="button" onClick={togglePasswordVisibility} className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 focus:outline-none">
+//                           <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+//                         </button>
+//                       </div>
+//                     </div>
+//                   ) : (
+//                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+//                       <input type="text" name="apiKey" value={formData.apiKey} onChange={handleChange1} placeholder="API Key" className="border p-3 rounded-lg w-full outline-none focus:ring-2 focus:ring-blue-400" />
+//                       <input type="text" name="apiUrl" value={formData.apiUrl} onChange={handleChange1} placeholder="API URL" className="border p-3 rounded-lg w-full outline-none focus:ring-2 focus:ring-blue-400" />
+//                       <input type="text" name="senderId" value={formData.senderId} onChange={handleChange1} placeholder="Sender ID" className="border p-3 rounded-lg w-full outline-none focus:ring-2 focus:ring-blue-400" />
+//                       <input type="text" name="route" value={formData.route} onChange={handleChange1} placeholder="Route" className="border p-3 rounded-lg w-full outline-none focus:ring-2 focus:ring-blue-400" />
+//                       <input type="text" name="language" value={formData.language} onChange={handleChange1} placeholder="Language" className="border p-3 rounded-lg w-full outline-none focus:ring-2 focus:ring-blue-400" />
+//                     </div>
+//                   )}
+//                 </div>
+
+//                 <div className="flex justify-end gap-4 mt-6">
+//                   <button onClick={() => { setIsOpen1(false); resetForm(); }} className="border px-5 py-2 rounded-lg text-gray-700 hover:bg-gray-100 transition">Cancel</button>
+//                   <button onClick={handleSubmit1} className="bg-blue-500 text-white px-5 py-2 rounded-lg hover:bg-blue-600 transition">Submit</button>
+//                 </div>
+//               </div>
+//             </div>
+//           )}
+
+//           {isOpen && (
+//             <Dialog open={isOpen} onClose={closeDialog} className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-30">
+//               <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+//                 <Dialog.Title className="text-lg font-semibold">Edit {editData?.type?.toUpperCase()} Service</Dialog.Title>
+//                 <div className="mt-4 space-y-3">
+//                   {editData?.type === "email" ? (
+//                     <>
+//                       <input type="text" name="host" value={editData?.host || ""} onChange={handleChange} className="w-full border p-2 rounded" placeholder="Host" />
+//                       <input type="text" name="port" value={editData?.port || ""} onChange={handleChange} className="w-full border p-2 rounded" placeholder="Port" />
+//                       <input type="text" name="username" value={editData?.username || ""} onChange={handleChange} className="w-full border p-2 rounded" placeholder="Username" />
+//                       <div className="relative">
+//                         <input type={passwordVisible ? "text" : "password"} name="password" value={editData?.password || ""} onChange={handleChange} className="w-full border p-2 rounded pr-10" placeholder="Password" />
+//                         <button type="button" onClick={() => setPasswordVisible(!passwordVisible)} className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-500"><FontAwesomeIcon icon={passwordVisible ? faEyeSlash : faEye} /></button>
+//                       </div>
+//                     </>
+//                   ) : (
+//                     <>
+//                       <input type="text" name="apiKey" value={editData?.apiKey || ""} onChange={handleChange} className="w-full border p-2 rounded" placeholder="API Key" />
+//                       <input type="text" name="apiUrl" value={editData?.apiUrl || ""} onChange={handleChange} className="w-full border p-2 rounded" placeholder="API URL" />
+//                       <input type="text" name="senderId" value={editData?.senderId || ""} onChange={handleChange} className="w-full border p-2 rounded" placeholder="Sender ID" />
+//                       <input type="text" name="route" value={editData?.route || ""} onChange={handleChange} className="w-full border p-2 rounded" placeholder="Route" />
+//                       <input type="text" name="language" value={editData?.language || ""} onChange={handleChange} className="w-full border p-2 rounded" placeholder="Language" />
+//                     </>
+//                   )}
+//                   <input type="text" name="serviceName" value={editData?.serviceName || ""} onChange={handleChange} className="w-full border p-2 rounded" placeholder="Service Name" />
+//                 </div>
+//                 <div className="mt-4 flex justify-end gap-3">
+//                   <button onClick={closeDialog} className="px-4 py-2 bg-gray-400 text-white rounded">Cancel</button>
+//                   <button onClick={handleSubmit} className="px-4 py-2 bg-blue-600 text-white rounded">Submit</button>
+//                 </div>
+//               </div>
+//             </Dialog>
+//           )}
+//         </div>
+
+//         <div className="w-full flex justify-center bg-white p-0 shadow-lg">
+//           <div className="w-full max-w-6xl">
+//             <div className="max-h-[400px] overflow-y-auto">
+//               <table className="w-full text-left border-collapse table-auto">
+//                 <thead className="sticky border-b-2 border-black bg-white top-0 z-10">
+//                   <tr className="text-gray-600">
+//                     <th className="px-4 py-4">S.No</th>
+//                     <th className="px-6 py-4">Service Name</th>
+//                     <th className="px-6 py-4">{selectedService === "email" ? "User Name" : "Sender ID"}</th>
+//                     {selectedService === "sms" && <th className="px-6 py-4">Route</th>}
+//                     {selectedService === "email" && <th className="px-6 py-4">Host</th>}
+//                     <th className="px-6 py-4">Created On</th>
+//                     <th className="px-6 py-4">Action</th>
+//                   </tr>
+//                 </thead>
+//                 <tbody>
+//                   {isLoading ? (
+//                     <tr><td colSpan={6} className="py-10 text-center"><div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div></td></tr>
+//                   ) : currentItems.length > 0 ? (
+//                     currentItems.map((rowData, index) => (
+//                       <tr key={rowData.id}>
+//                         <td className="px-6 py-4">{indexOfFirstItem + index + 1}</td>
+//                         <td className="px-6 py-4 text-blue-600 cursor-pointer no-underline" onClick={() => { setSelectedRowData(rowData); setIsModalOpen(true); }}>{rowData.serviceName}</td>
+//                         <td className="px-6 py-4">{selectedService === "email" ? rowData.username : rowData.senderId}</td>
+//                         {selectedService === "sms" && <td className="px-6 py-4">{rowData.route}</td>}
+//                         {selectedService === "email" && <td className="px-6 py-4">{rowData.host}</td>}
+//                         <td className="px-6 py-4">{new Date(rowData.createdAt).toLocaleDateString()}</td>
+//                         <td className="px-6 py-4 flex gap-4">
+//                           <button onClick={() => handleEdit({ ...rowData, type: selectedService })} className="text-blue-500 hover:text-blue-700"><PencilSquareIcon className="h-4 w-4" /></button>
+//                           <button onClick={() => openDeleteModal(rowData.id, selectedService)} className="text-red-500 hover:text-red-700"><FontAwesomeIcon icon={faTrash} /></button>
+//                         </td>
+//                       </tr>
+//                     ))
+//                   ) : (
+//                     <tr><td colSpan={6} className="text-center py-4 text-gray-500">{searchTerm ? "No matching data found" : "No data available"}</td></tr>
+//                   )}
+//                 </tbody>
+//               </table>
+//               {isDeleteModalOpen && (
+//                 <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+//                   <div className="bg-white p-6 rounded-lg shadow-lg w-96 border border-gray-300">
+//                     <h2 className="text-lg font-semibold">Confirm Deletion</h2>
+//                     <p className="mt-2">Are you sure you want to delete this item?</p>
+//                     <div className="mt-4 flex justify-end gap-3">
+//                       <button onClick={() => setDeleteModalOpen(false)} className="px-4 py-2 bg-gray-400 text-white rounded">No</button>
+//                       <button onClick={confirmDelete} className="px-4 py-2 bg-red-600 text-white rounded">Yes</button>
+//                     </div>
+//                   </div>
+//                 </div>
+//               )}
+//             </div>
+
+//             {isModalOpen && selectedRowData && (
+//               <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+//                 <div className="bg-white p-6 rounded-lg shadow-lg w-[500px] max-h-[80vh] overflow-y-auto border border-gray-300">
+//                   <h2 className="text-xl font-semibold mb-4">{selectedRowData.serviceName} Details</h2>
+//                   <ul className="space-y-2">
+//                     {Object.entries(selectedRowData).map(([key, value]) => {
+//                       const label = fieldNameMap[key] || key;
+//                       if (key === 'password' || value === null || value === "") return null; // Don't show password or empty fields
+//                       let displayValue = (key === 'createdAt' || key === 'updatedAt') ? new Date(value).toLocaleString() : String(value);
+//                       return (<li key={key}><strong>{label}:</strong> {displayValue}</li>);
+//                     })}
+//                   </ul>
+//                   <div className="mt-6 text-right"><button onClick={() => setIsModalOpen(false)} className="px-4 py-2 bg-blue-600 text-white rounded">Close</button></div>
+//                 </div>
+//               </div>
+//             )}
+//           </div>
+//         </div>
+
+//         {filteredData.length > itemsPerPage && (
+//   <Pagination
+//     currentPage={currentPage}
+//     totalPages={totalPages}
+//     onPageChange={handlePageChange}
+//     show={filteredData.length > itemsPerPage}
+//   />
+// )}
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default LeaveManagement1;

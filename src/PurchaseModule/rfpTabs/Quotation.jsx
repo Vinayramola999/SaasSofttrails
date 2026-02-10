@@ -4,11 +4,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Icon } from "@iconify/react";
 import DownloadTableButtons from "../components/Downloadpdfexcel";
 import { toast } from "react-toastify";
-import { ToastContainer } from "react-toastify";
-
+import Select from "react-select";
+import PopupModal from "../PopupModal";
+import ManualQuotationModal from "./ManualQuotationModal";
 const Quotation = () => {
   const createdBy = sessionStorage.getItem("userId");
-   const getToken = () => sessionStorage.getItem("token");
+  const getToken = () => sessionStorage.getItem("token");
   const token = getToken();
   const { userId } = useParams();
   const [rfpOptions, setRfpOptions] = useState([]);
@@ -22,7 +23,14 @@ const Quotation = () => {
   const [selectedQuotation, setSelectedQuotation] = useState(null);
   const [docStatus, setDocStatus] = useState({}); // { docName: "Qualified" | "Disqualified" }
   const [showCommercialModal, setShowCommercialModal] = useState(false);
+  const [showPopupModal, setShowPopupModal] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
 
+  const [popupModalProps, setPopupModalProps] = useState({
+    type: "warning",
+    title: "",
+    message: "",
+  });
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [history, setHistory] = useState([]);
   const navigate = useNavigate();
@@ -42,20 +50,34 @@ const Quotation = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
+      if (response.data && response.data.success === false) {
+        setHistory([]);
+        setShowHistoryModal(false);
+        setPopupModalProps({
+          type: "warning",
+          title: "No History",
+          message:
+            response.data?.message || "No history found for this quotation ID.",
+        });
+        setShowPopupModal(true);
+        return;
+      }
       const historyData = response.data?.data || [];
-      console.log("History Data:", historyData);
-
-      setHistory(historyData); // store only the array
-      setShowHistoryModal(true); // open modal
-    }catch (error) {
-  console.error("Error fetching quotation history:", error);
-  const errMsg =
-    error.response?.data?.message ||
-    error.response?.data?.error ||
-    "Failed to fetch quotation history.";
-  toast.error(errMsg);
-}
+      setHistory(historyData);
+      setShowHistoryModal(true);
+    } catch (error) {
+      console.error("Error fetching quotation history:", error);
+      const errMsg =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        "Failed to fetch quotation history.";
+      setPopupModalProps({
+        type: "error",
+        title: "Error",
+        message: errMsg,
+      });
+      setShowPopupModal(true);
+    }
   };
 
   // Fetch RFP options on mount
@@ -63,18 +85,24 @@ const Quotation = () => {
     const fetchRfps = async () => {
       try {
         const res = await axios.get(
-          `${process.env.REACT_APP_PURCHASE_API}/indenting/rfp`,
+          `${process.env.REACT_APP_PURCHASE_API}/supplier_quotation/rfp_ids`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
-        setRfpOptions(res.data || []);
+        setRfpOptions(res.data?.data || []);
       } catch (err) {
         setRfpOptions([]);
       }
     };
     fetchRfps();
   }, [token]);
+
+  // Convert RFP options to react-select format
+  const rfpSelectOptions = rfpOptions.map((rfp) => ({
+    value: rfp.rfp_id,
+    label: rfp.rfp_id,
+  }));
 
   // Fetch quotations when RFP is selected
   useEffect(() => {
@@ -85,14 +113,21 @@ const Quotation = () => {
     setLoading(true);
     // In your useEffect for fetching quotations:
     axios
-      .get(`${process.env.REACT_APP_PURCHASE_API}/supplier_quotation/quotations/rfp/${selectedRfp}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      .get(
+        `${process.env.REACT_APP_PURCHASE_API}/supplier_quotation/quotations/rfp/${selectedRfp}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
       .then((res) => {
         const data = Array.isArray(res.data.data) ? res.data.data : [];
-        // Map documents for popup
+        // Map documents for popup and normalize id field
         const mapped = data.map((row) => ({
+          // ensure component uses `quotation_id`
+          quotation_id: row.quotation_id || row.quotation_group_id || "",
+          // keep original fields
           ...row,
+          // documents normalized from required_doc
           documents: row.required_doc
             ? Object.entries(row.required_doc).map(([name, url]) => ({
                 name,
@@ -124,7 +159,7 @@ const Quotation = () => {
     return searchMatch && dateMatch;
   });
   const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 10; // or any number you want
+  const rowsPerPage = 10;
   const totalPages = Math.ceil(filteredQuotations.length / rowsPerPage);
 
   const paginatedData = filteredQuotations.slice(
@@ -190,7 +225,8 @@ const Quotation = () => {
     }
 
     try {
-      await axios.put(`${process.env.REACT_APP_PURCHASE_API}/supplier_quotation/quotation/update-status/${selectedQuotation.quotation_id}`,
+      await axios.put(
+        `${process.env.REACT_APP_PURCHASE_API}/supplier_quotation/quotations/update-status/${selectedQuotation.quotation_id}`,
         {
           status: newStatus,
           user_id: createdBy,
@@ -227,10 +263,21 @@ const Quotation = () => {
     status: row.status || "--",
   }));
   return (
-    
     <div className="p-6  min-h-[70vh] rounded-xl">
-            {/* <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} /> */}
-
+      {/* <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} /> */}
+      <div className="pl-4 pt-2">
+        <button
+          className="bg-[#0057FF] text-white font-semibold px-5 py-2 rounded-lg shadow mb-4"
+          onClick={() => setShowPopup(true)}
+        >
+          + Manual Quotation
+        </button>
+      </div>
+      <ManualQuotationModal
+        isOpen={showPopup}
+        onClose={() => setShowPopup(false)}
+        quotationOptions={rfpSelectOptions}
+      />
       <div className="flex gap-4 mb-4 items-center">
         {/* Filters */}
         <div className="relative flex items-center">
@@ -248,18 +295,24 @@ const Quotation = () => {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <select
-          className="border rounded px-3 py-2 w-48"
-          value={selectedRfp}
-          onChange={(e) => setSelectedRfp(e.target.value)}
-        >
-          <option value="">Select RFP ID</option>
-          {rfpOptions.map((rfp) => (
-            <option key={rfp.rfp_id} value={rfp.rfp_id}>
-              {rfp.rfp_id}
-            </option>
-          ))}
-        </select>
+        <Select
+          options={rfpSelectOptions}
+          value={
+            selectedRfp ? { value: selectedRfp, label: selectedRfp } : null
+          }
+          onChange={(option) => setSelectedRfp(option ? option.value : "")}
+          placeholder="Select RFP ID"
+          isClearable
+          isSearchable
+          className="w-48"
+          styles={{
+            control: (base) => ({
+              ...base,
+              borderColor: "#ccc",
+              borderRadius: "0.375rem",
+            }),
+          }}
+        />
         <div className="flex items-center border rounded px-2 py-1">
           <input
             type="date"
@@ -293,7 +346,7 @@ const Quotation = () => {
       </div>
 
       {/* Table */}
-       <div
+      <div
         className="overflow-x-auto rounded-lg shadow bg-white p-4"
         style={{ maxHeight: 400, overflowY: "auto", minWidth: 900 }}
       >
@@ -313,7 +366,7 @@ const Quotation = () => {
           </thead>
           <tbody>
             {loading ? (
-                <tr>
+              <tr>
                 <td colSpan={8} className="text-center py-8 text-gray-400">
                   Please wait... Selected RFP is loading quotations.
                 </td>
@@ -321,15 +374,13 @@ const Quotation = () => {
             ) : filteredQuotations.length === 0 ? (
               <tr>
                 <td colSpan={8} className="text-center py-6 text-gray-400">
-                  Select an RFP first to see quotations, or no quotations are available.
+                  Select an RFP first to see quotations, or no quotations are
+                  available.
                 </td>
               </tr>
             ) : (
               paginatedData.map((row, idx) => (
-                <tr
-                  key={row.quotation_id || idx}
-                  className="odd:bg-blue-50"
-                >
+                <tr key={row.quotation_id || idx} className="odd:bg-blue-50">
                   <td className="p-2">{idx + 1}.</td>
                   <td className="p-2">
                     {row.quotation_date
@@ -343,7 +394,9 @@ const Quotation = () => {
                     {row.quotation_id ? (
                       <button
                         className="text-blue-600 underline"
-                        onClick={() => navigate(`/quotation/${row.quotation_id}`)}
+                        onClick={() =>
+                          navigate(`/quotation/${row.quotation_id}`)
+                        }
                       >
                         {row.quotation_id}
                       </button>
@@ -375,7 +428,10 @@ const Quotation = () => {
                             const initialStatus = {};
                             // documents may be objects {name, url} or plain urls; normalize to use url as key
                             row.documents.forEach((doc) => {
-                              const key = (typeof doc === "string" ? doc : doc?.url) || doc?.name || "";
+                              const key =
+                                (typeof doc === "string" ? doc : doc?.url) ||
+                                doc?.name ||
+                                "";
                               if (key) initialStatus[key] = "Qualified";
                             });
                             setDocStatus(initialStatus);
@@ -451,7 +507,6 @@ const Quotation = () => {
             </div>
           </div>
         )}
-
         {showDocModal && selectedQuotation && (
           <div
             style={{
@@ -499,11 +554,18 @@ const Quotation = () => {
                 selectedQuotation.documents.map((doc, idx) => {
                   // doc may be a string (url) or an object { name, url }
                   const docUrl = typeof doc === "string" ? doc : doc?.url;
-                  const docName = (typeof doc === "string" ? docUrl?.split("/").pop() : doc?.name) || docUrl?.split("/").pop() || `Document-${idx + 1}`;
+                  const docName =
+                    (typeof doc === "string"
+                      ? docUrl?.split("/").pop()
+                      : doc?.name) ||
+                    docUrl?.split("/").pop() ||
+                    `Document-${idx + 1}`;
                   const statusKey = docUrl || docName;
                   return (
                     <div key={idx} style={{ marginBottom: 18 }}>
-                      <div style={{ fontWeight: 500, marginBottom: 6 }}>Document name</div>
+                      <div style={{ fontWeight: 500, marginBottom: 6 }}>
+                        Document name
+                      </div>
                       <div
                         style={{
                           border: "1px solid #eee",
@@ -515,8 +577,20 @@ const Quotation = () => {
                           marginBottom: 8,
                         }}
                       >
-                        <img src="pdf-icon.png" alt="PDF" style={{ width: 24, height: 24 }} />
-                        <a href={docUrl} target="_blank" rel="noopener noreferrer" style={{ color: "#0052CC", textDecoration: "underline" }}>
+                        <img
+                          src="pdf-icon.png"
+                          alt="PDF"
+                          style={{ width: 24, height: 24 }}
+                        />
+                        <a
+                          href={docUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            color: "#0052CC",
+                            textDecoration: "underline",
+                          }}
+                        >
                           {docName}
                         </a>
                       </div>
@@ -526,7 +600,12 @@ const Quotation = () => {
                             type="radio"
                             name={`status-${idx}`}
                             checked={docStatus[statusKey] === "Qualified"}
-                            onChange={() => setDocStatus((prev) => ({ ...prev, [statusKey]: "Qualified" }))}
+                            onChange={() =>
+                              setDocStatus((prev) => ({
+                                ...prev,
+                                [statusKey]: "Qualified",
+                              }))
+                            }
                           />{" "}
                           Qualified
                         </label>
@@ -535,7 +614,12 @@ const Quotation = () => {
                             type="radio"
                             name={`status-${idx}`}
                             checked={docStatus[statusKey] === "Disqualified"}
-                            onChange={() => setDocStatus((prev) => ({ ...prev, [statusKey]: "Disqualified" }))}
+                            onChange={() =>
+                              setDocStatus((prev) => ({
+                                ...prev,
+                                [statusKey]: "Disqualified",
+                              }))
+                            }
                           />{" "}
                           Disqualified
                         </label>
@@ -648,11 +732,13 @@ const Quotation = () => {
                   }}
                   onClick={async () => {
                     // Update status to Negotiation
-                    await axios.put(`${process.env.REACT_APP_PURCHASE_API}/supplier_quotation/quotations/update-status/${selectedQuotation.quotation_id}`,
+                    await axios.put(
+                      `${process.env.REACT_APP_PURCHASE_API}/supplier_quotation/quotations/update-status/${selectedQuotation.quotation_id}`,
                       {
                         status: "Negotiation",
                         user_id: createdBy,
-                      }
+                      },
+                      { headers: { Authorization: `Bearer ${token}` } }
                     );
                     setQuotations((prev) =>
                       prev.map((q) =>
@@ -679,7 +765,8 @@ const Quotation = () => {
                   }}
                   onClick={async () => {
                     // Update status to Rejected
-                    await axios.put(`${process.env.REACT_APP_PURCHASE_API}/supplier_quotation/quotation/update-status/${selectedQuotation.quotation_id}`,
+                    await axios.put(
+                      `${process.env.REACT_APP_PURCHASE_API}/supplier_quotation/quotations/update-status/${selectedQuotation.quotation_id}`,
                       {
                         status: "Rejected",
                         user_id: createdBy,
@@ -725,6 +812,14 @@ const Quotation = () => {
             &gt;
           </button>
         </div>
+        {showPopupModal && (
+          <PopupModal
+            type={popupModalProps.type}
+            // title={popupModalProps.title}
+            message={popupModalProps.message}
+            onClose={() => setShowPopupModal(false)}
+          />
+        )}
       </div>
     </div>
   );

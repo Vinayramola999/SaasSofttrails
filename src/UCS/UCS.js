@@ -15,7 +15,7 @@ const UnifiedService = () => {
     auth: {
       // verify-token endpoint uses slightly different base
       // verifyToken: apiUrl.replace(/ucs\/test\/?$/, "test/") + "users/verify-token",
-      verifyToken: "https://saaspro.softtrails.net/saas/main/pro/users/verify-token",
+      verifyToken: "https://devdemo.softtrails.net/users/verify-token",
     },
     templates: {
       viewAll: `${apiUrl}ucs/viewAllTemplates`,
@@ -65,9 +65,6 @@ const UnifiedService = () => {
   const [selectedRowData, setSelectedRowData] = useState(null);
 
   const [currentPage, setCurrentPage] = useState(1);
-  // SMS character limit (adjustable). Using 160 by default.
-  const smsCharLimit = 160;
-  const [isDeleteButtonDisabled, setIsDeleteButtonDisabled] = useState(false);
   const itemsPerPage = 8;
 
   // --- Helper Functions ---
@@ -97,7 +94,7 @@ const UnifiedService = () => {
     const token = checkTokenOrLogout();
     if (!token) return;
     try {
-      
+      // Note: verify-token endpoint previously used a slightly different base.
       // If your .env has correct base for auth endpoints, change below accordingly.
       const response = await axios.post(API_URLS.auth.verifyToken, { token }, { headers: { Authorization: `Bearer ${token}` } });
       console.log("Token is valid:", response.data);
@@ -223,16 +220,6 @@ const UnifiedService = () => {
 
   const handleAddItem = () => {
     if (selectedOption === "message" && message.trim()) {
-      
-      if (templateType === "SMS" && message.trim().length > smsCharLimit) {
-        Swal.fire({
-          icon: "warning",
-          title: "Message too long",
-          text: `SMS messages are limited to ${smsCharLimit} characters. Please shorten your message.`,
-        });
-        return;
-      }
-
       setAddedItems((prev) => [
         ...prev,
         { message: message.trim(), variables: "", role: selectedOption },
@@ -275,24 +262,11 @@ const UnifiedService = () => {
 
     const payload = addedItems.map((item) => ({
       // message: item.message,
-      message: item.message.replace(/\\n/g, "\n"),
+       message: item.message.replace(/\\n/g, "\n"),
       variables: item.variables,
       templateName: templateName.trim(),
       role: templateType,
     }));
-
-    // Validation: if SMS template, ensure message parts do not exceed smsCharLimit
-    if (templateType === "SMS") {
-      const tooLong = payload.find((p) => p.message && p.message.length > smsCharLimit);
-      if (tooLong) {
-        Swal.fire({
-          icon: "warning",
-          title: "Message too long",
-          text: `One or more SMS message parts exceed the ${smsCharLimit} character limit. Please shorten them before publishing.`,
-        });
-        return;
-      }
-    }
 
     console.log("Payload:", payload);
     const token = checkTokenOrLogout();
@@ -411,6 +385,7 @@ const UnifiedService = () => {
         text: "SMS status updated successfully.",
       });
 
+      // Agar backend response me status mil raha hai to wahi update karo
       setTemplates((prevTemplates) =>
         prevTemplates.map((temp) =>
           temp.templateId === selectedTemplateId
@@ -743,19 +718,15 @@ const UnifiedService = () => {
               </div>
 
               {selectedOption === "message" ? (
-                <>
-                  <textarea
-                    placeholder="Enter your message content"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    maxLength={templateType === "SMS" ? smsCharLimit : undefined}
-                    className="border border-gray-300 rounded-lg px-3 py-2 w-full mb-2 h-24 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    rows="3"
-                  />
-                  {templateType === "SMS" && (
-                    <p className="text-sm text-gray-500 mb-4">{message.length}/{smsCharLimit} characters</p>
-                  )}
-                </>
+                <textarea
+                  placeholder="Enter your message content"
+                  value={message}
+                  onChange={(e) => {
+                    console.warn(message);
+                    setMessage(e.target.value)}}
+                  className="border border-gray-300 rounded-lg px-3 py-2 w-full mb-4 h-24 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows="3"
+                />
               ) : (
                 <input
                   type="text"

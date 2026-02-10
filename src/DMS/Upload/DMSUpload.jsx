@@ -4,6 +4,7 @@ import axios from "axios";
 import { motion } from "framer-motion";
 import DocumentUpload from "./DocumentUpload";
 import DocsView from "./DocumentView";
+import {MAIN_API_BASE} from "../../config/apiBase";
 
 const DMS = () => {
   const [userData, setUserData] = useState(null);
@@ -24,7 +25,7 @@ const DMS = () => {
     }
     try {
       const response = await axios.post(
-        "https://devapi.softtrails.net/saas/test/users/verify-token",
+        `${MAIN_API_BASE}/users/verify-token`,
         {
           token: token,
         }
@@ -47,7 +48,7 @@ const DMS = () => {
         try {
           console.log("Fetching data for userId:", userId);
           const response = await axios.get(
-            `https://devapi.softtrails.net/saas/test/users/id_user/${userId}`,
+            `${MAIN_API_BASE}/users/id_user/${userId}`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,

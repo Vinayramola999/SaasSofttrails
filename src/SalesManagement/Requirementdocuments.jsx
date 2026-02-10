@@ -121,7 +121,7 @@ export default function RequirementDocumentForm() {
       }
     };
 
-      
+
     fetchLeads();
     fetchBudgets();
   }, []);
@@ -133,7 +133,7 @@ export default function RequirementDocumentForm() {
     setWorkflowLoading(true);
     try {
       const res = await fetch(
-        `${baseUrlw}/uniworkflow/workflow/get-modules/module?module_name=Purchase Management&sub_module_name=Indenting`,
+        `${baseUrlw}uniworkflow/workflow/get-modules/module?module_name=Purchase Management&sub_module_name=Indenting`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -150,7 +150,7 @@ export default function RequirementDocumentForm() {
     }
   }, []);
 
-  
+
 
   // Also fetch workflows on component mount so selector works even without an uploaded document
   useEffect(() => {
@@ -191,23 +191,23 @@ export default function RequirementDocumentForm() {
       const parsedItems = rawJson
         .map((row) => {
           const normalized = {};
-              Object.keys(mapKeys).forEach((field) => {
-                const candidates = mapKeys[field];
-                let value = "";
-                for (const rawKey of Object.keys(row)) {
-                  const k = String(rawKey).toLowerCase().trim();
-                  // match exact or substring for flexible header names
-                  if (
-                    candidates.some((c) =>
-                      k === c || k.includes(c) || c.includes(k)
-                    )
-                  ) {
-                    value = row[rawKey];
-                    break;
-                  }
-                }
-                normalized[field] = value;
-              });
+          Object.keys(mapKeys).forEach((field) => {
+            const candidates = mapKeys[field];
+            let value = "";
+            for (const rawKey of Object.keys(row)) {
+              const k = String(rawKey).toLowerCase().trim();
+              // match exact or substring for flexible header names
+              if (
+                candidates.some((c) =>
+                  k === c || k.includes(c) || c.includes(k)
+                )
+              ) {
+                value = row[rawKey];
+                break;
+              }
+            }
+            normalized[field] = value;
+          });
 
           const qty = normalized.quantity;
           const quantity = qty === "" ? "" : Number(qty);
@@ -320,11 +320,11 @@ export default function RequirementDocumentForm() {
       const custUid = selectedLead.customer_uid ?? "";
       const custNumericId = selectedLead.customer_id ?? "";
       const custName = selectedLead.customer_name ?? selectedLead.name ?? "";
-      
+
       setSelectedCustomerId(String(custNumericId));
       setSelectedCustomerUid(String(custUid));
       setSelectedCustomerName(custName);
-      
+
       setFormData((prev) => ({
         ...prev,
         customerId: String(custNumericId),
@@ -450,7 +450,7 @@ export default function RequirementDocumentForm() {
 
     try {
       const response = await fetch(
-        "https://devapi.higherindia.net/node/intranet/service/upload-documents",
+        `${baseUrld}/service/upload-documents`,
         {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
@@ -464,15 +464,15 @@ export default function RequirementDocumentForm() {
       if (response.ok) {
         // Extract file_url from uploaded_files array
         let uploadedLink = "";
-        
+
         if (data?.uploaded_files && Array.isArray(data.uploaded_files) && data.uploaded_files.length > 0) {
           uploadedLink = data.uploaded_files[0]?.file_url || "";
         } else if (data?.file_url) {
           uploadedLink = data.file_url;
         }
-        
+
         console.log("Extracted file link:", uploadedLink); // Debug log
-        
+
         if (uploadedLink) {
           setFormData((prev) => ({
             ...prev,
@@ -657,13 +657,11 @@ export default function RequirementDocumentForm() {
               className="bg-gray-100 px-3 py-2 rounded text-sm cursor-not-allowed"
               value={
                 selectedLeadObject
-                  ? `${
-                      selectedLeadObject.lead_uid || selectedLeadObject.lead_id
-                    } (${
-                      selectedLeadObject.name ||
-                      selectedLeadObject.customer_name ||
-                      ""
-                    })`
+                  ? `${selectedLeadObject.lead_uid || selectedLeadObject.lead_id
+                  } (${selectedLeadObject.name ||
+                  selectedLeadObject.customer_name ||
+                  ""
+                  })`
                   : selectedLeadId
               }
               readOnly
@@ -745,7 +743,7 @@ export default function RequirementDocumentForm() {
             <p className="text-xs text-red-600 mt-1">No workflows found</p>
           )}
         </div> */}
-                <div className="flex flex-col">
+        <div className="flex flex-col">
           <label className="mb-1 font-medium">Budget</label>
           <select
             name="budget"
@@ -895,7 +893,7 @@ export default function RequirementDocumentForm() {
             placeholder="Description"
           />
         </div>
-{/* 
+        {/* 
         <div className="bg-[#F2F6FF] p-3 rounded flex items-center gap-2 mb-6">
           <span className="text-red-600 font-medium text-sm">
             NOTE: Would you like to search an existing item?*
@@ -1001,6 +999,6 @@ export default function RequirementDocumentForm() {
       </div>
     </div>
 
-      
+
   );
 }

@@ -1,9 +1,9 @@
 import React from "react";
 
 const MessageModal = ({ message, type, setMessage }) => {
-  if (!message) return null; // Don't show modal if there's no message
+  if (!message) return null; 
 
-  const isSuccess = type === "success"; // Determine if it's a success message
+  const isSuccess = type === "success"; 
 
   return (
     <div
@@ -12,7 +12,7 @@ const MessageModal = ({ message, type, setMessage }) => {
     >
       <div
         className="relative bg-white w-[390px] max-w-md mx-4 sm:mx-auto p-10 rounded-2xl shadow-xl transform transition-all ease-in-out duration-300"
-        onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inside
+        onClick={(e) => e.stopPropagation()} 
       >
         {/* Icon */}
         <div className="modal-icon mt-4">

@@ -17,6 +17,8 @@ const IndentApprovals = () => {
 const [budgetOptions, setBudgetOptions] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [workflows, setWorkflows] = useState([]);
+const [selectedStatus, setSelectedStatus] = useState("");
+  const [selectedDepartment, setSelectedDepartment] = useState(""); // Changed from selectedBudget
 
   const columns = [
     { header: "S. No.", accessor: "sno" },
@@ -71,7 +73,7 @@ useEffect(() => {
     const fetchDepartments = async () => {
       try {
         const response = await axios.get(
-          `${API.API_BASE}/test/departments`,
+          `${API.API_BASE}/departments`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setDepartments(response.data);
@@ -119,15 +121,14 @@ useEffect(() => {
     }
   }, [token]);
 
-  const [selectedStatus, setSelectedStatus] = useState("");
   const [selectedBudget, setSelectedBudget] = useState(""); // or null based on budget dropdown
 
-  const filteredData = data.filter((item) => {
+ const filteredData = data.filter((item) => {
     const matchesStatus = selectedStatus
       ? item.status === selectedStatus
       : true;
-    const matchesBudget = selectedBudget
-      ? String(item.budget_id) === String(selectedBudget)
+    const matchesDepartment = selectedDepartment
+      ? String(item.dept_id) === String(selectedDepartment)
       : true;
 
     // Search by User Id, Department Name, Request, Request for, etc.
@@ -151,8 +152,9 @@ useEffect(() => {
           .includes(searchTerm.toLowerCase())
       : true;
 
-    return matchesStatus && matchesBudget && matchesSearch;
+    return matchesStatus && matchesDepartment && matchesSearch;
   });
+
   const handleStatusClick = (item) => {
     setSelectedItem(item);
     setIsPopupOpen(true);
@@ -243,6 +245,13 @@ useEffect(() => {
       budgetOptions.find((b) => b.id === item.budget_id)?.budget_name || "N/A",
     status: item.status,
   }));
+ const departmentSelectOptions = [
+    { value: "", label: "All Departments" },
+    ...(Array.isArray(departments) ? departments : []).map((d) => ({
+      value: d.dept_id,
+      label: d.dept_name,
+    })),
+  ];
 
   return (
     <div className=" w-full">
@@ -261,17 +270,17 @@ useEffect(() => {
                 <FaSearch className="absolute left-3 top-3 text-gray-400" />
               </div>
 
-              <Select
+               <Select
                 className="mr-4 w-1/6 mb-4"
-                options={budgetSelectOptions}
+                options={departmentSelectOptions}
                 value={
-                  budgetSelectOptions.find(
-                    (opt) => opt.value === selectedBudget
-                  ) || budgetSelectOptions[0]
+                  departmentSelectOptions.find(
+                    (opt) => opt.value === selectedDepartment
+                  ) || departmentSelectOptions[0]
                 }
-                onChange={(opt) => setSelectedBudget(opt.value)}
+                onChange={(opt) => setSelectedDepartment(opt.value)}
                 isSearchable
-                placeholder="All Budgets"
+                placeholder="All Departments"
               />
               <div className="flex-1 flex justify-end">
                 <DownloadTableButtons
@@ -283,7 +292,7 @@ useEffect(() => {
             </div>
             <div
               className="overflow-x-auto rounded-lg shadow bg-white p-4"
-              style={{ maxHeight: 400, overflowY: "auto", minWidth: 900 }}
+              style={{ maxHeight: 600, overflowY: "auto", minWidth: 900 }}
             >
               {/* <table className="w-full bg-white rounded-lg border-collapse"> */}
               <table className="w-full bg-white border-collapse">
@@ -292,11 +301,8 @@ useEffect(() => {
                     <th>S. No.</th>
                     <th className="p-2">User Id</th>
                     <th className="p-2">Department</th>
-                    <th className="p-2">Request</th>
-                    <th className="p-2">Request for</th>
-                    <th className="p-2">Quantity</th>
-                    <th className="p-2">UOM</th>
-                    <th className="p-2">Budget</th>
+                   <th className="p-2">Indent Id</th>
+                   <th className="p-2 text-center">Stage</th>
                     <th className="p-2">Status</th>
                   </tr>
                 </thead>
@@ -311,21 +317,10 @@ useEffect(() => {
                         {departments.find((b) => b.dept_id === item.dept_id)
                           ?.dept_name || "N/A"}
                       </td>
-                      <td className="p-2">{item.asset_name}</td>
-                      <td className="p-2">{item.request_for}</td>
-                      <td className="p-2">{item.quantity}</td>
-                      <td className="p-2">{item.uom}</td>
-                      {/* <td className="p-2">
-                        {budgetOptions.find((b) => b.id === item.budget_id)
-                          ?.budget_name || "N/A"}
-                      </td> */}
-                      <td className="p-2">
-                              {budgetOptions.find(
-                                (b) => b.id === item.budget_id
-                              )?.budget_name?.name || "N/A"}
-                            </td>
+                    <td className="p-2">{item.indent_id}</td>
+                    <td className="p-2">{item.stage || "N/A"}</td>
                       <td
-                        className={`cursor-pointer ${
+                        className={` ${
                           item.status === "Pending"
                             ? "text-yellow-500 underline"
                             : item.status === "Approved"

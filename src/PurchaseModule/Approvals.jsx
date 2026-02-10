@@ -94,7 +94,10 @@ const Approvals = () => {
 
   const fetchWorkflows = async () => {
     try {
-      const response = await axios.get(`${API.PURCHASE_API}/budget-workflow/workflows`, { headers: { Authorization: `Bearer ${token}` } });
+      const response = await axios.get(
+        `${API.PURCHASE_API}/budget-workflow/workflows`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
       setWorkflows(response.data); // assuming response.data is an array
     } catch (error) {
       console.error("Error fetching workflows:", error);
@@ -107,18 +110,26 @@ const Approvals = () => {
 
   useEffect(() => {
     const userId = sessionStorage.getItem("userId");
+    console.log("User ID:", userId);
     if (!userId) return;
 
-    axios.get(`${API.PURCHASE_API}/budget/department/${userId}`, { headers: { Authorization: `Bearer ${token}` } })
+    axios
+      .get(`${API.PURCHASE_API}/budget/department/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       .then((res) => {
-        // Convert budget_name array to array of objects
-        const names = Array.isArray(res.data.budget_name)
-          ? res.data.budget_name
+        console.log("Budget API response:", res.data);
+        // API returns { budgets: [...] }
+        const budgets = Array.isArray(res.data.budgets)
+          ? res.data.budgets.map((b) => ({
+              id: b.id,
+              budget_name: b.name, // Map name to budget_name for consistency
+              name: b.name,
+              workflow_id: b.workflow_id,
+              workflow_name: b.workflow_name,
+            }))
           : [];
-        const budgets = names.map((name, idx) => ({
-          id: idx + 1, // or use name as id if unique
-          budget_name: name,
-        }));
+        console.log("Parsed budgets:", budgets);
         setBudgetOptions(budgets);
       })
       .catch((err) => console.error("Error fetching budgets:", err));
@@ -127,7 +138,9 @@ const Approvals = () => {
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
-        const response = await axios.get(`${API.API_BASE}/test/departments`, { headers: { Authorization: `Bearer ${token}` } });
+        const response = await axios.get(`${API.API_BASE}/departments`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         setDepartments(response.data);
       } catch (error) {
         console.error("Error fetching departments:", error);
@@ -138,7 +151,10 @@ const Approvals = () => {
   }, [token]);
 
   useEffect(() => {
-    axios.get(`${API.PURCHASE_API}/indenting`, { headers: { Authorization: `Bearer ${token}` } })
+    axios
+      .get(`${API.PURCHASE_API}/indenting`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       .then((response) => setData(response.data))
       .catch((error) => console.error(error));
   }, [token]);
@@ -147,8 +163,12 @@ const Approvals = () => {
     const fetchAllIndentingData = async () => {
       try {
         const [indentingRes, salesRes] = await Promise.all([
-          axios.get(`${API.PURCHASE_API}/indenting`, { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get(`${API.PURCHASE_API}/sales/salesIndenting`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${API.PURCHASE_API}/indenting`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get(`${API.PURCHASE_API}/sales/salesIndenting`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
         ]);
 
         const combinedData = [
@@ -205,11 +225,18 @@ const Approvals = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 10; // Change as needed
 
-  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+  // Sort filtered data by created_at in descending order (latest first)
+  const sortedData = [...filteredData].sort((a, b) => {
+    const dateA = a.created_at ? new Date(a.created_at) : new Date(0);
+    const dateB = b.created_at ? new Date(b.created_at) : new Date(0);
+    return dateB - dateA;
+  });
 
-  const paginatedRequests = filteredData.slice(
+  const totalPages = Math.ceil(sortedData.length / rowsPerPage);
+
+  const paginatedRequests = sortedData.slice(
     (currentPage - 1) * rowsPerPage,
-    currentPage * rowsPerPage
+    currentPage * rowsPerPage,
   );
 
   const handlePageChange = (page) => setCurrentPage(page);
@@ -231,15 +258,18 @@ const Approvals = () => {
     const payload = {
       user_id: selectedItem.user_id,
       status: status,
-      reasons: reasonText, // send reason to backend
+      reason: reasonText, // send reason to backend
     };
 
-    axios.put(`${API.PURCHASE_API}/indenting/update-status/${selectedItem.id}`, payload, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    axios
+      .put(
+        `${API.PURCHASE_API}/indenting/update-status/${selectedItem.indent_id}`,
+        payload,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      )
       .then((response) => {
-        console.log(`${status} successful:`, response.data);
-
         // Show custom PopupModal
         setModalProps({
           type: "success",
@@ -281,11 +311,29 @@ const Approvals = () => {
     })),
   ];
 
-  //   const handleModalClose = () => {
-  //   setModal({ ...modal, open: false });
-  //   // Optional: refresh data or update local state
-  //   fetchData(); // or refetch updated list
-  // };
+  useEffect(() => {
+    const userId = sessionStorage.getItem("userId");
+    if (!userId) return;
+
+    axios
+      .get(`${API.PURCHASE_API}/budget/department/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => {
+        const names = Array.isArray(res.data.budget_name)
+          ? res.data.budget_name
+          : [];
+        const budgets = names.map((b) => ({
+          id: b.id,
+          name: b.name,
+          workflow_id: b.workflow_id,
+        }));
+
+        setBudgetOptions(budgets);
+      })
+      .catch((err) => console.error("Error fetching budgets:", err));
+  }, [token]);
+
   const exportData = filteredData.map((item, idx) => ({
     sno: idx + 1,
     user_id: item.user_id,
@@ -296,6 +344,7 @@ const Approvals = () => {
     quantity: item.quantity,
     uom: item.uom,
     budget:
+      item.budget ||
       budgetOptions.find((b) => b.id === item.budget_id)?.budget_name || "N/A",
     status: item.status,
   }));
@@ -346,31 +395,31 @@ const Approvals = () => {
                     />
                     <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                   </div>
-                  <div className="w-1/6 bg-white  ">
-                    <Select
-                      className="w-full bg-[#FFFFFF]"
-                      styles={selectStyles}
-                      options={budgetSelectOptions}
-                      value={
-                        budgetSelectOptions.find(
-                          (opt) => opt.value === selectedBudget
-                        ) || budgetSelectOptions[0]
-                      }
-                      onChange={(opt) => setSelectedBudget(opt.value)}
-                      isSearchable
-                      placeholder="All Budgets"
-                    />
-                  </div>
                   <div className="w-1/6 ">
                     <Select
-                      className="w-full bg-[#FFFFFF]"
-                      styles={selectStyles}
+                      className="w-full"
+                      styles={{
+                        ...selectStyles,
+                        control: (provided) => ({
+                          ...provided,
+                          backgroundColor: "#FFFFFF",
+                        }),
+                        menu: (provided) => ({
+                          ...provided,
+                          backgroundColor: "#FFFFFF",
+                        }),
+                        option: (provided, state) => ({
+                          ...provided,
+                          backgroundColor: state.isFocused
+                            ? "#F3F4F6"
+                            : "#FFFFFF",
+                          color: "#111827",
+                        }),
+                      }}
                       options={statusOptions}
-                      value={
-                        statusOptions.find(
-                          (opt) => opt.value === selectedStatus
-                        ) || statusOptions[0]
-                      }
+                      value={statusOptions.find(
+                        (opt) => opt.value === selectedStatus,
+                      )}
                       onChange={(opt) => setSelectedStatus(opt.value)}
                       isSearchable
                       placeholder="All Status"
@@ -386,19 +435,16 @@ const Approvals = () => {
                 </div>
                 <div
                   className="overflow-x-auto rounded-lg shadow bg-white p-4"
-                  style={{ maxHeight: 400, overflowY: "auto", minWidth: 900 }}
+                  style={{ maxHeight: 600, overflowY: "auto", minWidth: 900 }}
                 >
                   <table className="w-full bg-white rounded-lg border-collapse">
                     <thead className="border-b-2 border-black top-0 bg-white z-10">
                       <tr className="p-4">
                         <th>S. No.</th>
                         <th className="p-2">User Id</th>
+                        <th className="p-2">Indent ID</th>
+                        {/* <th className="p-2">Budget</th> */}
                         <th className="p-2">Department</th>
-                        <th className="p-2">Request</th>
-                        <th className="p-2">Request for</th>
-                        <th className="p-2">Quantity</th>
-                        <th className="p-2">UOM</th>
-                        <th className="p-2">Budget</th>
                         <th className="p-2">Status</th>
                       </tr>
                     </thead>
@@ -412,46 +458,48 @@ const Approvals = () => {
                             <td className="p-2">
                               {index + 1 + (currentPage - 1) * rowsPerPage}
                             </td>
-                            {/* <td className="p-2">{item.user_id}</td> */}
-                            {/* <td className="p-2">{item.user_id?.name || "N/A"}</td> */}
-                           
+
                             <td className="p-2">
                               {typeof item.user_id === "object"
                                 ? item.user_id.name || "N/A"
                                 : item.user_id || "N/A"}
                             </td>
+                            <td className="p-2">{item.indent_id || "N/A"}</td>
+                            {/* <td className="p-2">
+                              {(() => {
+                                console.log("Item:", item, "Budget options:", budgetOptions);
+                                const found = budgetOptions.find(
+                                  (b) => String(b.id) === String(item.budget_id),
+                                );
+                                console.log("Found budget:", found);
+                                return found?.budget_name || found?.name || item.budget || "N/A";
+                              })()}
+                            </td> */}
+
                             <td className="p-2">
                               {departments.find(
-                                (b) => b.dept_id === item.dept_id
+                                (b) => b.dept_id === item.dept_id,
                               )?.dept_name || "N/A"}
                             </td>
-                            <td className="p-2">{item.asset_name}</td>
-                            <td className="p-2">{item.request_for}</td>
-                            <td className="p-2">{item.quantity}</td>
-                            <td className="p-2">{item.uom}</td>
+
                             {/* <td className="p-2">
                               {budgetOptions.find(
                                 (b) => b.id === item.budget_id
-                              )?.budget_name || "N/A"}
-                            </td> */}
-                            <td className="p-2">
-                              {budgetOptions.find(
-                                (b) => b.id === item.budget_id
                               )?.budget_name?.name || "N/A"}
-                            </td>
+                            </td> */}
                             <td
                               className={`cursor-pointer ${
                                 item.status === "Pending"
                                   ? "text-yellow-500 underline"
                                   : item.status === "Approved"
-                                  ? "text-[#0FB900] underline"
-                                  : item.status === "Rejected"
-                                  ? "text-[#f33535] underline"
-                                  : item.status === "Updated"
-                                  ? "text-[#f33535] underline"
-                                  : item.status === "Resubmitted"
-                                  ? "text-[#2500b9]"
-                                  : ""
+                                    ? "text-[#0FB900] underline"
+                                    : item.status === "Rejected"
+                                      ? "text-[#f33535] underline"
+                                      : item.status === "Updated"
+                                        ? "text-[#f33535] underline"
+                                        : item.status === "Resubmitted"
+                                          ? "text-[#2500b9]"
+                                          : ""
                               }`}
                               onClick={() =>
                                 (item.status === "Pending" ||
@@ -535,96 +583,83 @@ const Approvals = () => {
               </button>
 
               <h2 className="text-xl font-bold text-left mb-1">
-                #{selectedItem.id}
+                {selectedItem.indent_id} Details
               </h2>
               <p className="text-sm text-gray-600 mb-4">
                 {departments.find((b) => b.dept_id === selectedItem.dept_id)
                   ?.dept_name || "N/A"}
               </p>
 
-              {/* Grid layout for form fields */}
-              <div className="grid grid-cols-4 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium">
-                    Request for
-                  </label>
-                  <input
-                    type="text"
-                    className="border rounded-md w-full px-2 py-1"
-                    value={selectedItem.request_for}
-                    readOnly
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium">Category</label>
-                  <input
-                    type="text"
-                    className="border rounded-md w-full px-2 py-1"
-                    value={selectedItem.category_name || "Category name"}
-                    readOnly
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium">
-                    Request Material
-                  </label>
-                  <input
-                    type="text"
-                    className="border rounded-md w-full px-2 py-1"
-                    value={selectedItem.asset_name}
-                    readOnly
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium">Quantity</label>
-                  <input
-                    type="text"
-                    className="border rounded-md w-full px-2 py-1"
-                    value={selectedItem.quantity}
-                    readOnly
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium">UOM</label>
-                  <input
-                    type="text"
-                    className="border rounded-md w-full px-2 py-1"
-                    value={selectedItem.uom}
-                    readOnly
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium">Budget</label>
-                  <input
-                    type="text"
-                    className="border rounded-md w-full px-2 py-1"
-                    value={
-                      budgetOptions.find((b) => b.id === selectedItem.budget_id)
-                        ?.budget_name || "N/A"
-                    }
-                    readOnly
-                  />
-                </div>
+              {/* Details table (renders multiple line items if available) */}
+              <div className="overflow-x-auto border rounded-lg mt-2 mb-4">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="p-3 text-left">Sr.No.</th>
+                      <th className="p-3 text-left">Request for</th>
+                      <th className="p-3 text-left">Category</th>
+                      <th className="p-3 text-left">Material</th>
+                      <th className="p-3 text-left">Quantity</th>
+                      <th className="p-3 text-left">Uom</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(Array.isArray(selectedItem.products) &&
+                    selectedItem.products.length > 0
+                      ? selectedItem.products
+                      : [
+                          {
+                            request_for:
+                              selectedItem.request_for || "Item Name",
+                            category:
+                              selectedItem.category_name ||
+                              selectedItem.category ||
+                              "Category Name",
+                            asset_name: selectedItem.asset_name || "Asset Name",
+                            quantity: selectedItem.quantity || "-",
+                            uom: selectedItem.uom || "-",
+                            workflow: selectedItem.workflow || "Workflow name",
+                            budget:
+                              budgetOptions.find(
+                                (b) => b.id === selectedItem.budget_id,
+                              )?.budget_name || "₹50000.00",
+                            description: selectedItem.remarks || "",
+                          },
+                        ]
+                    ).map((it, idx) => (
+                      <tr
+                        key={idx}
+                        className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                      >
+                        <td className="p-3 align-top">{idx + 1}</td>
+                        <td className="p-3 align-top">
+                          <div className="font-medium">{it.request_for}</div>
+                          {it.remarks && (
+                            <div className="text-xs text-gray-500">
+                              {it.remarks}
+                            </div>
+                          )}
+                        </td>
+                        <td className="p-3 align-top">{it.category}</td>
+                        <td className="p-3 align-top">{it.asset_name}</td>
+                        <td className="p-3 align-top">{it.quantity}</td>
+                        <td className="p-3 align-top">{it.uom}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
 
-              <div className="mb-6">
-                <label className="block text-sm font-medium mb-1">
-                  Description
-                </label>
-                <textarea
-                  className="border rounded-md w-full px-2 py-2"
-                  rows="4"
-                  value={selectedItem.remarks}
-                  readOnly
-                />
-              </div>
+              {selectedItem.remarks && (
+                <div className="mt-2 mb-4">
+                  <p className="font-semibold mb-1">Description:</p>
+                  <div className="p-3 border rounded-lg bg-white text-sm text-justify">
+                    {selectedItem.remarks}
+                  </div>
+                </div>
+              )}
 
-              {/* Action buttons selectedItem */}
+              {/* Action buttons selectedItem (keep original alignment/behavior) */}
               {selectedItem.status === "Pending" ? (
                 <div className="flex justify-between">
                   <div>
@@ -742,10 +777,10 @@ const Approvals = () => {
               if (modalProps.type === "success") {
                 setData((prevData) =>
                   prevData.map((item) =>
-                    item.id === selectedItem.id
+                    item.indent_id === selectedItem.indent_id
                       ? { ...item, status: modalProps.status }
-                      : item
-                  )
+                      : item,
+                  ),
                 );
                 closePopup();
               }

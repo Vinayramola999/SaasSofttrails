@@ -40,7 +40,7 @@ const TemplateMappingForm = ({ activeTab, allModules, subTabs, moduleTableNames 
   const getColumnNamesByTableName = async () => {
     console.warn('REST:', moduleTableNames);
     const queryParams = moduleTableNames.map((tableName) => `tableName=${tableName}`).join("&");
-    const url = `https://saaspro.softtrails.net/saas/ucs/pro/api/modules/columns?${queryParams}`;
+    const url = `https://ucsdemo.softtrails.net/api/modules/columns?${queryParams}`;
     const token = getToken();
     const response = await axios.get(url, {
       headers: { Authorization: `Bearer ${token}` }
@@ -74,7 +74,7 @@ const TemplateMappingForm = ({ activeTab, allModules, subTabs, moduleTableNames 
         const role = notificationType === "email" ? "Email" : "SMS";
         const token = getToken();
 
-        const url = `https://saaspro.softtrails.net/saas/ucs/pro/ucs/getVariables?templateId=${templateId}&Role=${role}`;
+        const url = `https://ucsdemo.softtrails.net/ucs/getVariables?templateId=${templateId}&Role=${role}`;
         const res = await axios.get(url, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -112,7 +112,7 @@ const TemplateMappingForm = ({ activeTab, allModules, subTabs, moduleTableNames 
       const token = getToken();
       console.warn('REST:', moduleTableNames);
       const queryParams = moduleTableNames.map((tableName) => `tableName=${tableName}`).join("&");
-      const columnsUrl = `https://saaspro.softtrails.net/saas/ucs/pro/api/modules/columns?${queryParams}`;
+      const columnsUrl = `https://ucsdemo.softtrails.net/api/modules/columns?${queryParams}`;
       const templatesRes = await axios.get(columnsUrl, { headers: { Authorization: `Bearer ${token}` } })
       setColumns(templatesRes.data);
     } catch (error) {
@@ -124,7 +124,7 @@ const TemplateMappingForm = ({ activeTab, allModules, subTabs, moduleTableNames 
   const getAllSms = async () => {
     try {
       const token = getToken();
-      const tableDataUrl = "https://saaspro.softtrails.net/saas/ucs/pro/ucs/all";
+      const tableDataUrl = "https://ucsdemo.softtrails.net/ucs/all";
       const tableDataRes = await axios.get(tableDataUrl, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -212,8 +212,8 @@ const TemplateMappingForm = ({ activeTab, allModules, subTabs, moduleTableNames 
     try {
       const token = getToken();
       const servicesUrl = notificationType === "email"
-        ? "https://saaspro.softtrails.net/saas/ucs/pro/api/email/all"
-        : "https://saaspro.softtrails.net/saas/ucs/pro/api/sms/all";
+        ? "https://ucsdemo.softtrails.net/api/email/all"
+        : "https://ucsdemo.softtrails.net/api/sms/all";
       const servicesRes = await axios.get(servicesUrl, { headers: { Authorization: `Bearer ${token}` } })
       setCurrentServices(servicesRes.data);
     } catch (error) {
@@ -231,8 +231,8 @@ const TemplateMappingForm = ({ activeTab, allModules, subTabs, moduleTableNames 
       try {
         const templatesUrl =
           notificationType === "email"
-            ? "https://saaspro.softtrails.net/saas/ucs/pro/api/templates/getByRole/Email"
-            : "https://saaspro.softtrails.net/saas/ucs/pro/api/templates/getByRole/Sms";
+            ? "https://ucsdemo.softtrails.net/api/templates/getByRole/Email"
+            : "https://ucsdemo.softtrails.net/api/templates/getByRole/Sms";
 
         const res = await axios.get(templatesUrl, {
           headers: { Authorization: `Bearer ${token}` },
@@ -242,7 +242,8 @@ const TemplateMappingForm = ({ activeTab, allModules, subTabs, moduleTableNames 
         // ✅ Set templates in state
         setCurrentTemplates(res.data);
 
-          
+        // Agar columns ka alag response hota to usko yahan map karte
+        // Abhi ke liye maine templates se hi set kar diya
       } catch (error) {
         console.error("Error fetching initial data for form:", error);
       }
@@ -260,7 +261,6 @@ const TemplateMappingForm = ({ activeTab, allModules, subTabs, moduleTableNames 
   const handleSubmit = async () => {
     const typeLabel = notificationType === "email" ? "Email" : "SMS";
 
-    // Basic client-side validation
     if (!initialConfig.selectedService) {
       Swal.fire({ icon: "warning", title: "Missing Field", text: `Please select a Service Name for ${typeLabel}.` });
       return;
@@ -269,7 +269,6 @@ const TemplateMappingForm = ({ activeTab, allModules, subTabs, moduleTableNames 
       Swal.fire({ icon: "warning", title: "Missing Field", text: `Please select a Template ID or Name for ${typeLabel}.` });
       return;
     }
-    /* Variable mapping validation disabled to allow submitting without mapping every variable.
     for (const variable of initialConfig.variables) {
       const selectedValue = initialConfig.selectedVariables[variable];
       if (!selectedValue) {
@@ -281,18 +280,11 @@ const TemplateMappingForm = ({ activeTab, allModules, subTabs, moduleTableNames 
         return;
       }
     }
-    */
 
-    setIsLoading(true);
     try {
       const token = getToken();
-      if (!token) {
-        console.error('No auth token found in sessionStorage.');
-        Swal.fire({ icon: 'warning', title: 'Authentication Error', text: 'Session expired or not logged in. Please login again.' });
-        return;
-      }
-console.warn("All modules:", allModules);
-      const url = "https://saaspro.softtrails.net/saas/ucs/pro/ucs/mappedVariables";
+      const url = "https://ucsdemo.softtrails.net/ucs/mappedVariables";
+
       const type = notificationType === "email" ? "Email" : "SMS";
       const moduleInfo = allModules.find((m) => m.subModuleName === activeTab);
 
@@ -325,13 +317,10 @@ console.warn("All modules:", allModules);
         payload.smsService = initialConfig.selectedService;
       }
 
-      console.log('Submitting mapping payload to', url, { payload });
 
       const res = await axios.post(url, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
-
-      console.log('Submission response:', res && res.data);
 
       // Show backend message if provided (e.g. "Module updated successfully.")
       let successMessage = 'Template Mapped Successfully!';
@@ -352,12 +341,7 @@ console.warn("All modules:", allModules);
       });
       Swal.fire({ icon: "success", title: "Success", text: successMessage });
     } catch (error) {
-      console.error("Error during submission:", error);
-      // Prefer backend-provided message when available
-      const serverMsg = error?.response?.data?.message || error?.response?.data || error?.message;
-      Swal.fire({ icon: "error", title: "Submission Failed", text: serverMsg || "An error occurred during submission." });
-    } finally {
-      setIsLoading(false);
+      Swal.fire({ icon: "error", title: "Submission Failed", text: "An error occurred during submission." });
     }
   };
   useEffect(() => {

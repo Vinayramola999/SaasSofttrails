@@ -33,7 +33,7 @@ const AssetManagementPage = () => {
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false); // Used for MessageModal
-  
+
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(25);
@@ -51,7 +51,7 @@ const AssetManagementPage = () => {
   const [isFileModalOpen, setIsFileModalOpen] = useState(false);
   const [fileFieldName, setFileFieldName] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
-  
+
   // Bulk Upload
   const [showBulkUploadModal, setShowBulkUploadModal] = useState(false);
   const [bulkCategory, setBulkCategory] = useState("");
@@ -108,9 +108,9 @@ const AssetManagementPage = () => {
       .replace(/([a-z])([A-Z])/g, "$1 $2")
       .replace(/([A-Z][a-z]*)/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .trim();
-    
+
     // Simple color logic (can be expanded)
-    const colorClass = "text-blue-500"; 
+    const colorClass = "text-blue-500";
     return (
       <span className={`px-2 py-1 rounded-full text-sm font-medium ${colorClass}`}>
         {formattedStage}
@@ -138,32 +138,32 @@ const AssetManagementPage = () => {
       if (categoryName === "All Assets") {
         const page = offsetOrPage > 0 ? offsetOrPage : 1;
         response = await assetService.fetchAllAssets(page, limit, search);
-        
+
         if (response && response.success && response.records) {
-           newData = response.records.flatMap(record => record.data.map(item => ({
-             ...item,
-             categoryName: record.category 
-           })));
+          newData = response.records.flatMap(record => record.data.map(item => ({
+            ...item,
+            categoryName: record.category
+          })));
 
-           newColumns = [
-             { columnName: "Asset Name", dataType: "text" },
-             { columnName: "categoryName", dataType: "text" },
-             { columnName: "created_at", dataType: "date" },
-             { columnName: "status", dataType: "text" },
-             { columnName: "stages", dataType: "text" }
-           ];
+          newColumns = [
+            { columnName: "Asset Name", dataType: "text" },
+            { columnName: "categoryName", dataType: "text" },
+            { columnName: "created_at", dataType: "date" },
+            { columnName: "status", dataType: "text" },
+            { columnName: "stages", dataType: "text" }
+          ];
 
-           const totalCount = response.records.reduce((acc, curr) => acc + (curr.total || 0), 0);
+          const totalCount = response.records.reduce((acc, curr) => acc + (curr.total || 0), 0);
 
-           newPagination = {
-             total: totalCount,
-             limit: limit,
-             offset: (page - 1) * limit,
-             page: page
-           };
+          newPagination = {
+            total: totalCount,
+            limit: limit,
+            offset: (page - 1) * limit,
+            page: page
+          };
         }
       } else {
-        const offset = offsetOrPage; 
+        const offset = offsetOrPage;
         response = await assetService.fetchTableData(categoryName, offset, limit, search);
 
         const { columns = [], data = [], pagination = {} } = response || {};
@@ -172,13 +172,13 @@ const AssetManagementPage = () => {
           categoryName: response.table || selectedCategory,
         }));
         newColumns = columns;
-        
+
         newPagination = {
-            total: pagination.total ?? data.length,
-            limit: pagination.limit ?? limit,
-            offset: pagination.offset ?? offset,
-            nextOffset: pagination.nextOffset,
-            prevOffset: pagination.prevOffset
+          total: pagination.total ?? data.length,
+          limit: pagination.limit ?? limit,
+          offset: pagination.offset ?? offset,
+          nextOffset: pagination.nextOffset,
+          prevOffset: pagination.prevOffset
         };
       }
 
@@ -213,32 +213,32 @@ const AssetManagementPage = () => {
   };
 
   const handlePageChange = useCallback(async (direction) => {
-      if (isPaginating || !pagination) return;
-      setIsPaginating(true);
-  
-      const totalPages = Math.ceil(pagination.total / pagination.limit);
-      let newOffset = pagination.offset;
-  
-      if (direction === "next") {
-        if (pagination.offset + pagination.limit >= pagination.total) return;
-        newOffset = pagination.nextOffset ?? (pagination.offset + pagination.limit < pagination.total ? pagination.offset + pagination.limit : pagination.offset);
-      } else if (direction === "prev") {
-        if (pagination.offset <= 0) return;
-        newOffset = pagination.prevOffset ?? (pagination.offset - pagination.limit >= 0 ? pagination.offset - pagination.limit : 0);
-      }
-  
-      let fetchParam = newOffset;
-      if (selectedCategory === "All Assets") {
-          const newPage = direction === "next" ? currentPage + 1 : currentPage - 1;
-          fetchParam = newPage;
-          setCurrentPage(newPage);
-      } else {
-           setCurrentPage((prev) => direction === "next" ? prev + 1 : prev - 1);
-      }
+    if (isPaginating || !pagination) return;
+    setIsPaginating(true);
 
-      await fetchTableData(selectedCategory, fetchParam, pagination.limit, searchTerm);
-      setTimeout(() => setIsPaginating(false), 300);
-    },
+    const totalPages = Math.ceil(pagination.total / pagination.limit);
+    let newOffset = pagination.offset;
+
+    if (direction === "next") {
+      if (pagination.offset + pagination.limit >= pagination.total) return;
+      newOffset = pagination.nextOffset ?? (pagination.offset + pagination.limit < pagination.total ? pagination.offset + pagination.limit : pagination.offset);
+    } else if (direction === "prev") {
+      if (pagination.offset <= 0) return;
+      newOffset = pagination.prevOffset ?? (pagination.offset - pagination.limit >= 0 ? pagination.offset - pagination.limit : 0);
+    }
+
+    let fetchParam = newOffset;
+    if (selectedCategory === "All Assets") {
+      const newPage = direction === "next" ? currentPage + 1 : currentPage - 1;
+      fetchParam = newPage;
+      setCurrentPage(newPage);
+    } else {
+      setCurrentPage((prev) => direction === "next" ? prev + 1 : prev - 1);
+    }
+
+    await fetchTableData(selectedCategory, fetchParam, pagination.limit, searchTerm);
+    setTimeout(() => setIsPaginating(false), 300);
+  },
     [pagination, selectedCategory, isPaginating, searchTerm, currentPage]
   );
 
@@ -316,7 +316,7 @@ const AssetManagementPage = () => {
       try {
         const categoryToUse = assetToDelete.categoryName || selectedCategory;
         await assetService.deleteAsset(assetToDelete.unique_id, categoryToUse);
-        
+
         const currentOffsetOrPage = selectedCategory === "All Assets" ? currentPage : pagination.offset;
         fetchTableData(selectedCategory, currentOffsetOrPage, pagination.limit, searchTerm);
 
@@ -346,7 +346,7 @@ const AssetManagementPage = () => {
       setFormData((prev) => ({ ...prev, [name]: files[0] }));
       return;
     }
-    
+
     // Validation logic (simplified)
     const field = dynamicFields.find((f) => f.columnName === name);
     let errorMsg = "";
@@ -358,17 +358,17 @@ const AssetManagementPage = () => {
     setFormErrors((prev) => ({ ...prev, [name]: errorMsg }));
 
     if (name === "category") {
-       fetchFormFieldsForCategory(value);
+      fetchFormFieldsForCategory(value);
     }
   };
 
   const fetchFormFieldsForCategory = async (catName) => {
-      try {
-          const response = await assetService.fetchTableData(catName, 0, 1, "");
-          setDynamicFields(response.columns || []);
-      } catch (e) {
-          console.error(e);
-      }
+    try {
+      const response = await assetService.fetchTableData(catName, 0, 1, "");
+      setDynamicFields(response.columns || []);
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const handleDateChange = (date, columnName) => {
@@ -376,15 +376,15 @@ const AssetManagementPage = () => {
     handleChange({ target: { name: columnName, value: date ? format(date, "yyyy-MM-dd") : "" } });
   };
 
- const handleSubmit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const categoryToSubmit = formData.category || (selectedCategory !== "All Assets" ? selectedCategory : "");
     if (!categoryToSubmit || categoryToSubmit === "All Assets") {
-        setMessage("Please select a valid category (not 'All Assets').");
-        setMessageType("error");
-        setIsModalOpen(true);
-        return false;
+      setMessage("Please select a valid category (not 'All Assets').");
+      setMessageType("error");
+      setIsModalOpen(true);
+      return false;
     }
 
     const userId = sessionStorage.getItem("userId");
@@ -398,61 +398,61 @@ const AssetManagementPage = () => {
 
     // ⭐ Convert Purchase Date from ISO → YYYY-MM-DD
     if (submissionData["Purchase Date"]) {
-        submissionData["Purchase Date"] = submissionData["Purchase Date"].split("T")[0];
+      submissionData["Purchase Date"] = submissionData["Purchase Date"].split("T")[0];
     }
 
     // ⭐ Remove empty values (same as OLD working logic)
     const filteredValues = Object.fromEntries(
-        Object.entries(submissionData).filter(
-            ([key, value]) =>
-                key !== "unique_id" &&
-                key !== "category_id" &&
-                key !== "categoryName" &&
-                value !== "" &&
-                value !== null &&
-                value !== undefined
-        )
+      Object.entries(submissionData).filter(
+        ([key, value]) =>
+          key !== "unique_id" &&
+          key !== "category_id" &&
+          key !== "categoryName" &&
+          value !== "" &&
+          value !== null &&
+          value !== undefined
+      )
     );
 
     // ⭐ Build update payload same as OLD working version
     const payload = editingAssetId
-        ? {
-            action: "AssetAddition",
-            category_id: categoryObj.categoryId,
-            unique_id: editingAssetId,
-            fieldsToUpdate: filteredValues,
-            submodule: "Movable"
-        }
-        : {
-            category_id: categoryObj.categoryId,
-            user_id: parseInt(userId),
-            action: "AssetAddition",
-            values: filteredValues,
-            submodule: "Movable"
-        };
+      ? {
+        action: "AssetAddition",
+        category_id: categoryObj.categoryId,
+        unique_id: editingAssetId,
+        fieldsToUpdate: filteredValues,
+        submodule: "Movable"
+      }
+      : {
+        category_id: categoryObj.categoryId,
+        user_id: parseInt(userId),
+        action: "AssetAddition",
+        values: filteredValues,
+        submodule: "Movable"
+      };
 
     try {
-        let res;
-        if (editingAssetId) res = await assetService.updateAsset(payload);
-        else res = await assetService.createAsset(payload, categoryToSubmit);
+      let res;
+      if (editingAssetId) res = await assetService.updateAsset(payload);
+      else res = await assetService.createAsset(payload, categoryToSubmit);
 
-        if (JSON.stringify(res).toLowerCase().includes("error")) {
-            setMessage("Failed");
-            setMessageType("error");
-        } else {
-            setMessage("Success");
-            setMessageType("success");
-            setIsAssetModalOpen(false);
-            const currentOffsetOrPage = selectedCategory === "All Assets" ? currentPage : pagination.offset;
-            fetchTableData(selectedCategory, currentOffsetOrPage, pagination.limit, searchTerm);
-        }
-    } catch (err) {
-        setMessage("Error");
+      if (JSON.stringify(res).toLowerCase().includes("error")) {
+        setMessage("Failed");
         setMessageType("error");
+      } else {
+        setMessage("Success");
+        setMessageType("success");
+        setIsAssetModalOpen(false);
+        const currentOffsetOrPage = selectedCategory === "All Assets" ? currentPage : pagination.offset;
+        fetchTableData(selectedCategory, currentOffsetOrPage, pagination.limit, searchTerm);
+      }
+    } catch (err) {
+      setMessage("Error");
+      setMessageType("error");
     }
 
     setIsModalOpen(true);
-};
+  };
 
   const handleApproval = async (unique_id) => {
     const assetToApprove = tableData.data.find((row) => row.unique_id === unique_id);
@@ -463,7 +463,7 @@ const AssetManagementPage = () => {
     const userId = sessionStorage.getItem("userId");
 
     if (!categoryName || !categoryId || !userId) {
-        setMessage("Missing info"); setMessageType("error"); setIsModalOpen(true); return;
+      setMessage("Missing info"); setMessageType("error"); setIsModalOpen(true); return;
     }
 
     const payload = {
@@ -476,12 +476,12 @@ const AssetManagementPage = () => {
     };
 
     try {
-        await assetService.approveAsset(unique_id, payload);
-        setMessage("Sent for approval"); setMessageType("success");
-        const currentOffsetOrPage = selectedCategory === "All Assets" ? currentPage : pagination.offset;
-        fetchTableData(selectedCategory, currentOffsetOrPage, pagination.limit, searchTerm);
+      await assetService.approveAsset(unique_id, payload);
+      setMessage("Sent for approval"); setMessageType("success");
+      const currentOffsetOrPage = selectedCategory === "All Assets" ? currentPage : pagination.offset;
+      fetchTableData(selectedCategory, currentOffsetOrPage, pagination.limit, searchTerm);
     } catch (e) {
-        setMessage("Failed"); setMessageType("error");
+      setMessage("Failed"); setMessageType("error");
     }
     setIsModalOpen(true);
   };
@@ -489,73 +489,73 @@ const AssetManagementPage = () => {
   // --- File Upload Handlers ---
 
   const handleFileUpload = async (file) => {
-      try {
-          const publishId = await assetService.getDmsPublishId();
-          if (!publishId) return null;
-          
-          const userId = sessionStorage.getItem("userId");
-          const uploadData = new FormData();
-          uploadData.append("documents", file);
-          uploadData.append("ref", "DMS");
-          uploadData.append("metadata", JSON.stringify([{
-              service: "Asset Management",
-              publish_id: parseInt(publishId),
-              user_id: userId,
-              document_name: file.name
-          }]));
+    try {
+      const publishId = await assetService.getDmsPublishId();
+      if (!publishId) return null;
 
-          const data = await assetService.uploadFileToDMS(uploadData);
-          return data.uploaded_files?.[0]?.file_url || null;
-      } catch (e) {
-          console.error(e);
-          return null;
-      }
+      const userId = sessionStorage.getItem("userId");
+      const uploadData = new FormData();
+      uploadData.append("documents", file);
+      uploadData.append("ref", "DMS");
+      uploadData.append("metadata", JSON.stringify([{
+        service: "Asset Management",
+        publish_id: parseInt(publishId),
+        user_id: userId,
+        document_name: file.name
+      }]));
+
+      const data = await assetService.uploadFileToDMS(uploadData);
+      return data.uploaded_files?.[0]?.file_url || null;
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
   };
 
   const handleBulkUploadSubmit = async (e) => {
-      e.preventDefault();
-      if (!bulkCategory || !bulkFile) return;
-      setIsUploading(true);
-      const formData = new FormData();
-      formData.append("file", bulkFile);
-      formData.append("action", "AssetAddition");
-      formData.append("submodule", "Movable");
-      formData.append("category", bulkCategory);
+    e.preventDefault();
+    if (!bulkCategory || !bulkFile) return;
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append("file", bulkFile);
+    formData.append("action", "AssetAddition");
+    formData.append("submodule", "Movable");
+    formData.append("category", bulkCategory);
 
-      try {
-          await assetService.bulkUpload(bulkCategory, formData);
-          setMessage("Upload successful"); setMessageType("success");
-          setShowBulkUploadModal(false);
-          setBulkFile(null);
-      } catch (e) {
-          setMessage("Upload failed"); setMessageType("error");
-      } finally {
-          setIsUploading(false);
-          setIsModalOpen(true);
-      }
+    try {
+      await assetService.bulkUpload(bulkCategory, formData);
+      setMessage("Upload successful"); setMessageType("success");
+      setShowBulkUploadModal(false);
+      setBulkFile(null);
+    } catch (e) {
+      setMessage("Upload failed"); setMessageType("error");
+    } finally {
+      setIsUploading(false);
+      setIsModalOpen(true);
+    }
   };
-const handleDownloadTemplate = () => {
-  const removeFields = [
-    "unique_id",
-    "category_id",
-    "status",
-    "stages",
-    "created_at",
-    "id",
-    "sub_stages",
-    "toapprove",
-    "categoryName"
-  ];
+  const handleDownloadTemplate = () => {
+    const removeFields = [
+      "unique_id",
+      "category_id",
+      "status",
+      "stages",
+      "created_at",
+      "id",
+      "sub_stages",
+      "toapprove",
+      "categoryName"
+    ];
 
-  const headers = dynamicFields
-    .filter(f => !removeFields.includes(f.columnName))  // Remove unwanted ones
-    .map(f => f.columnName);
+    const headers = dynamicFields
+      .filter(f => !removeFields.includes(f.columnName))  // Remove unwanted ones
+      .map(f => f.columnName);
 
-  const ws = XLSX.utils.json_to_sheet([], { header: headers });
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Template");
-  XLSX.writeFile(wb, "Template.xlsx");
-};
+    const ws = XLSX.utils.json_to_sheet([], { header: headers });
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Template");
+    XLSX.writeFile(wb, "Template.xlsx");
+  };
 
 
   // --- Render ---

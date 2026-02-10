@@ -1,6 +1,6 @@
 import React from "react";
 
-const SearchInput = ({
+const SearchButton = ({
  value,
   onChange,
   placeholder = "Search...",
@@ -17,4 +17,4 @@ const SearchInput = ({
   );
 };
 
-export default SearchInput;
+export default SearchButton;

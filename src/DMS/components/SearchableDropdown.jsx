@@ -1,4 +1,4 @@
-// This file is named SearchableDropdown.jsx and is already in PascalCase.
+  // This file is named SearchableDropdown.jsx and is already in PascalCase.
 import { useState, useEffect, useRef } from "react";
 
 export default function SearchableDropdown({ options, placeholder, onSelect }) {

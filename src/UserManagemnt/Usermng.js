@@ -16,6 +16,8 @@ import { faEdit, faTrash, } from '@fortawesome/free-solid-svg-icons';
 import AddButton from "../NewComponents/AddButton";
 import { FaPlus } from "react-icons/fa";
 import MessageModal from "../NewComponents/MessageModal"; 
+import { MAIN_API_BASE } from '../config/apiBase';
+
 const Usermng = () => {
     const [departments, setDepartments] = useState([]);
     const [subdepartments, setSubDepartments] = useState([]);
@@ -80,7 +82,7 @@ const Usermng = () => {
 
     const confirmDelete = async () => {
         try {
-            const response = await fetch("https://devapi.softtrails.net/saas/test/users", {
+            const response = await fetch(`${MAIN_API_BASE}/users`, {
                 headers: {
                     "Content-Type": "application/json",
                     Authorization: `Bearer ${token}`,
@@ -137,17 +139,17 @@ const Usermng = () => {
         }
     };
 
-    const fetchDepartments = () => fetchCommon('https://devapi.softtrails.net/saas/test/departments', setDepartments, 'departments');
-    const fetchSubDepartments = () => fetchCommon('https://devapi.softtrails.net/saas/test/sub_dept/sub_dept', setSubDepartments, 'sub-departments');
-    const fetchDesignations = () => fetchCommon('https://devapi.softtrails.net/saas/test/designation', setDesignations, 'designations');
-    const fetchLocation = () => fetchCommon('https://devapi.softtrails.net/saas/test/loc', setLocations, 'locations');
-    const fetchDomains = () => fetchCommon('https://devapi.softtrails.net/saas/test/domain', setDomains, 'domains');
+    const fetchDepartments = () => fetchCommon(`${MAIN_API_BASE}/departments`, setDepartments, 'departments');
+    const fetchSubDepartments = () => fetchCommon(`${MAIN_API_BASE}/sub_dept/sub_dept`, setSubDepartments, 'sub-departments');
+    const fetchDesignations = () => fetchCommon(`${MAIN_API_BASE}/designation`, setDesignations, 'designations');
+    const fetchLocation = () => fetchCommon(`${MAIN_API_BASE}/loc`, setLocations, 'locations');
+    const fetchDomains = () => fetchCommon(`${MAIN_API_BASE}/domain`, setDomains, 'domains');
 
     const fetchUsers = async () => {
         try {
             const currentToken = sessionStorage.getItem('token');
             if (!currentToken) return;
-            const response = await axios.get('https://devapi.softtrails.net/saas/test/users/getusers', {
+            const response = await axios.get(`${MAIN_API_BASE}/users/getusers`, {
                 headers: { Authorization: `Bearer ${currentToken}` }
             });
             const sortedData = response.data.users.sort((a, b) =>
@@ -247,7 +249,7 @@ const Usermng = () => {
             console.log("Signup payload:", payload);
 
             // Step 1: Sign up user
-            const response = await axios.post('https://devapi.softtrails.net/saas/test/users/signup', payload, {
+            const response = await axios.post(`${MAIN_API_BASE}/users/signup`, payload, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
@@ -263,7 +265,7 @@ const Usermng = () => {
                 if (user_id) {
                     try {
                         const leaveResponse = await axios.post(
-                            'https://devapi.softtrails.net/hrms/test/leave/leave-balances',
+                            `${MAIN_API_BASE}/leave/leave-balances`,
                             { user_id },
                             {
                                 headers: {
@@ -410,7 +412,7 @@ const Usermng = () => {
                 const currentUserId = sessionStorage.getItem('userId');
                 const currentToken = sessionStorage.getItem('token');
                 if (!currentUserId || !currentToken) return;
-                const response = await axios.get(`https://devapi.softtrails.net/saas/test/access/access/${currentUserId}`, {
+                const response = await axios.get(`${MAIN_API_BASE}/access/access/${currentUserId}`, {
                     headers: { 'Authorization': `Bearer ${currentToken}` },
                 });
                 const userAccess = response.data;
@@ -434,7 +436,7 @@ const Usermng = () => {
         if (sessionUserId && token) {
             const fetchAllUsersForManagerDropdown = async () => {
                 try {
-                    const response = await axios.get('https://devapi.softtrails.net/saas/test/users/getusers', {
+                    const response = await axios.get(`${MAIN_API_BASE}/users/getusers`, {
                         headers: { Authorization: `Bearer ${token}` },
                     });
                     setAllUsersData(response.data.users);
@@ -540,7 +542,7 @@ const [modalMessage, setModalMessage] = useState(""); // for MessageModal
             };
 
             const response = await axios.put(
-                "https://devapi.softtrails.net/saas/test/users/user/update",
+                `${MAIN_API_BASE}/users/user/update`,
                 payload,
                 {
                     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
@@ -551,7 +553,7 @@ const [modalMessage, setModalMessage] = useState(""); // for MessageModal
                 const updatedUserId = response.data.user.user_id;
                 try {
                     await axios.post(
-                        "https://devapi.softtrails.net/hrms/test/leave/leave-balances",
+                        `${MAIN_API_BASE}/leave/leave-balances`,
                         { user_id: updatedUserId },
                         { headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` } }
                     );
@@ -614,7 +616,7 @@ const [modalMessage, setModalMessage] = useState(""); // for MessageModal
     const fetchCategories = async () => {
         try {
             const token = sessionStorage.getItem('token');
-            const response = await axios.get('https://devapi.softtrails.net/saas/test/user-category/all', {
+            const response = await axios.get(`${MAIN_API_BASE}/user-category/all`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 

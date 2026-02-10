@@ -2,10 +2,9 @@
 import { useState, useCallback } from 'react';
 import axios from 'axios';
 import { API_PERMISSIONS } from '../Customer/utils/constants';
-// import API_GLOBAL_BASE_URL from '../config/api';
+import API_GLOBAL_BASE_URL from '../config/api';
 
 const useAccessControl = () => {
-   const API_GLOBAL_BASE_URL = process.env.REACT_APP_MAIN_BASE || "http://13.204.15.86:3002"; 
   const [permissions, setPermissions] = useState({
     createCustomer: false,
     createContact: false,

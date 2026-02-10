@@ -1,6 +1,7 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash } from '@fortawesome/free-solid-svg-icons';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import excel from '../assests/excel.png';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
@@ -8,8 +9,10 @@ import { saveAs } from 'file-saver';
 import Swal from 'sweetalert2';
 import AddButton from "../NewComponents/AddButton";
 import { FaPlus } from "react-icons/fa";
+import { MAIN_API_BASE } from '../config/apiBase';
 
 const DomainTable = () => {
+    const navigate = useNavigate();
     const [domains, setDomains] = useState([]);
     const [newDomainName, setNewDomainName] = useState('');
     const [loading, setLoading] = useState(false);
@@ -32,7 +35,7 @@ const DomainTable = () => {
         }
         try {
             setLoading(true);
-            const response = await axios.post('https://devapi.softtrails.net/saas/test/domain', {
+            const response = await axios.post(`${MAIN_API_BASE}/domain`, {
                 domain_name: newDomainName,
                 description: newDomainDescription,
             }, {
@@ -78,7 +81,7 @@ const DomainTable = () => {
     const fetchDomains = async () => {
         const token = sessionStorage.getItem('token');
         try {
-            const response = await axios.get('https://devapi.softtrails.net/saas/test/domain', {
+            const response = await axios.get(`${MAIN_API_BASE}/domain`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 }
@@ -104,7 +107,7 @@ const DomainTable = () => {
     const handleDelete = async (id) => {
         const token = sessionStorage.getItem('token');
         try {
-            await axios.delete(`https://devapi.softtrails.net/saas/test/domain/${id}`, {
+            await axios.delete(`${MAIN_API_BASE}/domain/${id}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 }
@@ -179,7 +182,7 @@ const DomainTable = () => {
                 </button>
             </div>
             {isAddModalOpen && (
-                <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-20">
+                <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
                     <div className="bg-white p-4 sm:p-6 rounded-lg w-full max-w-xs sm:max-w-md mx-4 sm:mx-6 lg:max-w-lg">
                         <h2 className="text-lg sm:text-xl font-bold mb-4 text-center">Create Domain</h2>
                         <form
@@ -285,7 +288,7 @@ const DomainTable = () => {
                                     <td className="px-5 py-4 text-left text-[14px] text-black">{(currentPage - 1) * itemsPerPage + index + 1}</td>
                                     <td className="px-5 py-4 text-left text-[14px] text-black">{domain.domain_name}</td>
                                     <td className="px-5 py-4 text-left text-[14px] text-black">{domain.description || "NA"}</td>
-                                    <td className="py-4 px-4 border-b space-x-2"><button onClick={() => confirmDelete(domain)} className="text-red-500 hover:text-red-700"><FontAwesomeIcon icon={faTrash} /></button></td>
+                                    <td className="py-4 px-4 space-x-2"><button onClick={() => confirmDelete(domain)} className="text-red-500 hover:text-red-700"><FontAwesomeIcon icon={faTrash} /></button></td>
                                 </tr>
                             ))}
                         </tbody>

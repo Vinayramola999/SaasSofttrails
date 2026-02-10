@@ -33,11 +33,11 @@ const CardsImagePart = () => {
     useEffect(() => {
         const fetchAccess = async () => {
             try {
-                const token = sessionStorage.getItem('token'); // or localStorage
+                const token = sessionStorage.getItem('token'); // or sessionStorage
                 const userId = sessionStorage.getItem('userId'); // make sure it's set
                 const cardTitles = allServices.map((service) => service.key); // extract all keys
 
-                const res = await axios.post('https://saaspro.softtrails.net/saas/ucs/pro/access/verify-access',
+                const res = await axios.post('http://13.204.15.86:8336/access/verify-access',
                     {
                         user_id: parseInt(userId),
                         pages: cardTitles,

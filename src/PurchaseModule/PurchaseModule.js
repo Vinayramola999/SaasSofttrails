@@ -1,7 +1,7 @@
 import axios from "axios";
 import React, { useState, useEffect, useRef } from "react";
 import API from "../config/api";
-import ProfileDropdown from "../ProfileDropdown";
+//import ProfileDropdown from "../../ProfileDropdown";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import RaiseRequest from "./RaiseRequest";
@@ -31,7 +31,7 @@ const PurchaseModule = () => {
     if (userId) {
       const fetchUserData = async () => {
         try {
-          const response = await axios.get(`${API.API_BASE}/test/users/id_user/${userId}`, {
+          const response = await axios.get(`${API.API_BASE}/users/id_user/${userId}`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           if (response.data) {
@@ -52,7 +52,7 @@ const PurchaseModule = () => {
       return;
     }
     try {
-      await axios.post(`${API.API_BASE}/test/users/verify-token`, { token });
+      await axios.post(`${API.API_BASE}/users/verify-token`, { token });
       navigate("/PurchaseModule");
     } catch (error) {
       sessionStorage.removeItem("token");
@@ -118,7 +118,7 @@ const PurchaseModule = () => {
             </div>
 
             {/* Tab Content */}
-            <div className="mt-2">
+<div className="mt-2 h-[calc(100vh-120px)] overflow-y-auto pr-2">
               {activeTab === "raiseRequest" && (
                 <RaiseRequest deptName={userData?.dept_name || ""} />
               )}{" "}

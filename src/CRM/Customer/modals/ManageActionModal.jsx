@@ -3,13 +3,13 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import ConfirmationModal from "../../../NewComponents/ConfirmationModal";
 import MessageModal from "../../../NewComponents/MessageModal";
+import API_BASE_URL from "../../config/api";
 
+const ACTIONS_API = `${API_BASE_URL}/uniworkflow/get-All/actions?module_name=Customer Relation Management`;
+const MODULES_API =
+  "https://devapi.softtrails.net/node/demo/uniworkflow/modules/with-submodules";
 
 const ManageActionModal = ({ open, onClose, onActionsUpdated }) => {
-  const API_BASE_URL = process.env.REACT_APP_URL_workflow || "http://13.204.15.86:3002";
-
-  const ACTIONS_API = `${API_BASE_URL}/uniworkflow/get-All/actions?module_name=Customer Relation Management`;
-  const MODULES_API = `${API_BASE_URL}/uniworkflow/modules/with-submodules`;
   const [identifier, setIdentifier] = useState("");
   const [description, setDescription] = useState("");
   const [actions, setActions] = useState([]);
@@ -34,14 +34,7 @@ const ManageActionModal = ({ open, onClose, onActionsUpdated }) => {
   // Fetch actions
   const fetchActions = async () => {
     try {
-      const token = sessionStorage.getItem("token");
-
-      const response = await axios.get(ACTIONS_API, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
+      const response = await axios.get(ACTIONS_API);
       const actionsData = response.data?.actions || [];
       setActions(
         Array.isArray(actionsData)
@@ -55,50 +48,46 @@ const ManageActionModal = ({ open, onClose, onActionsUpdated }) => {
   };
 
   // Fetch workflows
- useEffect(() => {
-  if (!selectedSubModule) {
-    setAllWorkflows([]);
-    setSelectedWorkflow(null);
-    return;
-  }
-
-  const fetchWorkflows = async () => {
-    try {
-      const token = sessionStorage.getItem("token");
-
-      const res = await axios.get(
-        `${API_BASE_URL}/uniworkflow/workflow/get-modules/module`,
-        {
-          params: {
-            module_name: selectedModule?.product_name, // ✅ dynamic module
-            sub_module_name: selectedSubModule.sub_module,
-          },
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      setAllWorkflows(res.data?.workflows || []);
-      setSelectedWorkflow(null);
-    } catch (error) {
-      console.error("Failed to fetch workflows:", error);
+  useEffect(() => {
+    if (!selectedSubModule) {
       setAllWorkflows([]);
       setSelectedWorkflow(null);
+      return;
     }
-  };
 
-  fetchWorkflows();
-}, [selectedSubModule, selectedModule]);
+    const fetchWorkflows = async () => {
+      try {
+        const res = await axios.get(
+          `${API_BASE_URL}uniworkflow/workflow/get-modules/module`,
+          {
+            params: {
+              module_name: selectedModule?.product_name,  // ✅ dynamic module
+              sub_module_name: selectedSubModule.sub_module,
+            },
+          }
+        );
 
+        setAllWorkflows(res.data?.workflows || []);
+        setSelectedWorkflow(null);
+      } catch (error) {
+        console.error("Failed to fetch workflows:", error);
+        setAllWorkflows([]);
+        setSelectedWorkflow(null);
+      }
+    };
+
+    fetchWorkflows();
+  }, [selectedSubModule]);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      const token = sessionStorage.getItem("token");
-      const moduleRes = await axios.get(MODULES_API, { headers: { Authorization: `Bearer ${token}`, }, });
+      const moduleRes = await axios.get(MODULES_API);
       const modulesData = moduleRes.data?.data || [];
-      const crmModule = modulesData.find((m) => m.module_name?.toLowerCase() === "customer relation management");
+
+      const crmModule = modulesData.find(
+        (m) => m.module_name?.toLowerCase() === "customer relation management"
+      );
 
       const normalizedModules = modulesData.map((m) => ({
         product_name: m.module_name,

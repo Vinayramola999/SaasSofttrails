@@ -72,18 +72,38 @@ const DocumentUpload = () => {
 
   const handleServiceChange = async (id) => {
     setSelectedServiceId(id);
+    setSelectedDocTypeId(null);
+    setSelectedAllowedId(null);
+    setAllowDocs([]);
+    setSelectedFormats([]);
+
+    if (!id) {
+      setDocTypes([]);
+      return;
+    }
     const types = await fetchDocTypes(token, id);
     setDocTypes(types);
   };
 
   const handleDocTypeChange = async (id) => {
     setSelectedDocTypeId(id);
+    setSelectedAllowedId(null);
+    setSelectedFormats([]);
+
+    if (!id) {
+      setAllowDocs([]);
+      return;
+    }
     const allowed = await fetchAllowed(token, selectedServiceId, id);
     setAllowDocs(allowed);
   };
 
   const handleAllowedChange = async (id) => {
     setSelectedAllowedId(id);
+    if (!id) {
+      setSelectedFormats([]);
+      return;
+    }
     const formats = await fetchFormats(
       token,
       selectedServiceId,
@@ -367,6 +387,7 @@ const DocumentUpload = () => {
                           Document Type *
                         </label>
                         <SearchableDropdown
+                          key={selectedServiceId}
                           options={docTypes}
                           placeholder="select doctypes"
                           onSelect={(option) => {
@@ -380,6 +401,7 @@ const DocumentUpload = () => {
                           Allowed Documents *
                         </label>
                         <SearchableDropdown
+                          key={selectedDocTypeId}
                           options={allowDocs}
                           placeholder="select allowed docs"
                           onSelect={(option) => {

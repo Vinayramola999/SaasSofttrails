@@ -1,6 +1,6 @@
 import React from "react";
 
-const AddButton = ({ onClick, children, className = "", icon: Icon }) => {
+const PrimaryButton = ({ onClick, children, className = "", icon: Icon }) => {
   return (
     <button
       onClick={onClick}
@@ -12,4 +12,4 @@ const AddButton = ({ onClick, children, className = "", icon: Icon }) => {
   );
 };
 
-export default AddButton;
+export default PrimaryButton;

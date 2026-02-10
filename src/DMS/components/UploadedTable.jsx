@@ -1,20 +1,26 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 
 const UploadTable = ({ docs, handleDelete }) => {
   const [deleteTargetId, setDeleteTargetId] = useState(null);
   const [previewDoc, setPreviewDoc] = useState(null);
+  const [approvalPopupData, setApprovalPopupData] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
 
-  const rowsPerPage = 7;
+  const rowsPerPage = 8;
   const totalPages = Math.ceil(docs.length / rowsPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [docs.length]);
+
   const paginatedDocs = docs.slice(
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
 
   return (
-    <div className="flex flex-col h-[570px] bg-white rounded-md">
+    <div className="flex flex-col h-[606px] bg-white rounded-md">
       <div className="overflow-auto flex-grow">
         <table className="min-w-full text-sm">
           <thead className="text-black font-medium border-b border-black">
@@ -24,9 +30,10 @@ const UploadTable = ({ docs, handleDelete }) => {
               <th className="px-4 py-4 text-left">Document Type</th>
               <th className="px-4 py-4 text-left">Allowed DocType</th>
               <th className="px-4 py-4 text-left">Upload Date</th>
-              <th className="px-4 py-4 text-left">Upload By</th>
+              <th className="px-4 py-4 text-left">Uploaded By</th>
               <th className="px-4 py-4 text-left">File</th>
-              <th className="px-4 py-4 text-left">Visibility</th>
+              {/* <th className="px-4 py-4 text-left">Visibility</th>
+              <th className="px-4 py-4 text-left">Approval</th> */}
               <th className="px-4 py-4 text-left">Action</th>
             </tr>
           </thead>
@@ -52,6 +59,7 @@ const UploadTable = ({ docs, handleDelete }) => {
                   </td>
                   <td className="px-4 py-3">{doc.uploaded_at.split("T")[0]}</td>
                   <td className="px-4 py-3">{doc.uploaded_by.name}</td>
+
                   <td className="px-4 py-3">
                     <a
                       onClick={(e) => {
@@ -64,7 +72,7 @@ const UploadTable = ({ docs, handleDelete }) => {
                       {doc.document_name}
                     </a>
                   </td>
-                  <td className="px-4 py-3">
+                  {/* <td className="px-4 py-3">
                     <p
                       className={`${
                         doc.visibility ? "text-green-600" : "text-red-600"
@@ -73,6 +81,27 @@ const UploadTable = ({ docs, handleDelete }) => {
                       {doc.visibility ? "Public" : "Private"}
                     </p>
                   </td>
+                  <td className="px-4 py-3">
+                    <p
+                      className={`${
+                        doc.approval_needed ? "text-green-600" : "text-red-600"
+                      }`}
+                    >
+                      {doc.approval_needed ? (
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            setApprovalPopupData(doc.approval);
+                          }}
+                          className="text-sm text-blue-600 hover:underline mt-1"
+                        >
+                          <p>Yes</p>
+                        </button>
+                      ) : (
+                        "No"
+                      )}
+                    </p>
+                  </td> */}
                   <td className="px-4 py-3 flex items-center gap-2">
                     <button
                       onClick={(e) => {
@@ -158,6 +187,48 @@ const UploadTable = ({ docs, handleDelete }) => {
               src={previewDoc.document_url}
               className="w-full h-full"
             ></iframe>
+          </div>
+        </div>
+      )}
+
+      {approvalPopupData && (
+        <div className="fixed inset-0 backdrop-blur-sm flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-3xl w-max max-w-lg min-w-[400px] relative flex flex-col items-center border border-black shadow-lg">
+            <h1 className="text-2xl py-4 text-blue-700 font-bold">
+              Approval Status
+            </h1>
+            <div className="w-full text-left px-4">
+              <p className="text-lg text-gray-800 mb-2">
+                <strong>Action:</strong>{" "}
+                <span
+                  className={`font-normal text-md border px-2 py-1 rounded-full ${
+                    approvalPopupData.action === "APPROVED"
+                      ? "bg-green-500 text-white"
+                      : approvalPopupData.action === "REJECTED"
+                      ? "bg-red-500 text-white"
+                      : approvalPopupData.action === "RESUBMITTED"
+                      ? "bg-yellow-500 text-white"
+                      : "bg-blue-100 text-black"
+                  }`}
+                >
+                  {approvalPopupData.action || "N/A"}
+                </span>
+              </p>
+              <p className="text-lg text-gray-800 mb-4 flex flex-col">
+                <strong>Reason:</strong>
+                <span className="font-normal">
+                  {approvalPopupData.reason || "No reason provided"}
+                </span>
+              </p>
+            </div>
+            <div className="buttons gap-4 flex justify-center pt-2 w-full">
+              <button
+                className="bg-blue-500 hover:bg-blue-700 text-white px-6 py-2 rounded-md text-lg"
+                onClick={() => setApprovalPopupData(null)}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

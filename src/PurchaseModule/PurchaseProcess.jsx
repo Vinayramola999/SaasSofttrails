@@ -3,10 +3,12 @@ import Select from "react-select";
 import axios from "axios";
 import API from "../config/api";
 import Quotation from "./rfpTabs/Quotation";
+import ShortlistedQuotation from "./rfpTabs/ShortlistedQuotation";
 import PurchaseOrder from "./rfpTabs/PurchaseOrder";
 import Supplies from "./rfpTabs/Supplies";
 import PopupModal from "./PopupModal";
 import RFPShared from "./rfpTabs/RFPShared";
+import Grn from "./GRN/Grn";
 
 const PurchaseProcess = ({ onClose, selectedContacts }) => {
   const getToken = () => sessionStorage.getItem("token");
@@ -33,8 +35,10 @@ const PurchaseProcess = ({ onClose, selectedContacts }) => {
     title: "",
     message: "",
   });
+  const [indentItems, setIndentItems] = useState([]); // items for selected RFP
+
   const sortedData = [...data].sort((a, b) =>
-    a.contact_person.localeCompare(b.contact_person)
+    a.contact_person.localeCompare(b.contact_person),
   );
 
   const filteredData = [
@@ -48,13 +52,14 @@ const PurchaseProcess = ({ onClose, selectedContacts }) => {
           item.email_id?.toLowerCase().includes(searchLower) ||
           item.phone_num?.toLowerCase().includes(searchLower) ||
           item.asset_name?.toLowerCase().includes(searchLower) ||
-          item.status?.toLowerCase().includes(searchLower))
+          item.status?.toLowerCase().includes(searchLower)),
     ),
   ];
-
+  // ...existing code...
   const handleIndentChange = async (e) => {
     const selectedRfpId = e.target.value;
     setIndentId(selectedRfpId);
+    setIndentItems([]); // reset previously loaded items
 
     if (!selectedRfpId) {
       setRequestFor("");
@@ -64,18 +69,34 @@ const PurchaseProcess = ({ onClose, selectedContacts }) => {
     }
 
     try {
-      const response = await axios.get(`${API.PURCHASE_API}/indenting/rfp/${selectedRfpId}`, { headers: { Authorization: `Bearer ${token}` } });
+      const response = await axios.get(
+        `${API.PURCHASE_API}/indenting/rfp/${selectedRfpId}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
 
       const apiData = response.data;
 
-      if (apiData.data && apiData.data.length > 0) {
-        const indenting = apiData.data[0].indenting;
+      // Support new API shape: { rfp_info: {...}, items: [...] }
+      // Fallback to older shape if needed.
+      const itemsFromNewShape = Array.isArray(apiData?.items)
+        ? apiData.items
+        : null;
 
-        setRequestFor(indenting.request_for || "");
-        setCategory(indenting.category || "");
-        setRequestAsset(indenting.asset_name || "");
+      const itemsFromOldShape = Array.isArray(apiData?.data?.[0]?.indenting)
+        ? apiData.data[0].indenting
+        : null;
+
+      const items = itemsFromNewShape || itemsFromOldShape || [];
+
+      setIndentItems(items);
+
+      if (items.length === 1) {
+        const it = items[0];
+        setRequestFor(it.request_for || "");
+        setCategory(it.category || "");
+        setRequestAsset(it.asset_name || "");
       } else {
-        // No data found
+        // multiple or zero items -> clear single inputs (table will show items if more than 1)
         setRequestFor("");
         setCategory("");
         setRequestAsset("");
@@ -85,6 +106,7 @@ const PurchaseProcess = ({ onClose, selectedContacts }) => {
       setRequestFor("");
       setCategory("");
       setRequestAsset("");
+      setIndentItems([]);
     }
   };
 
@@ -96,29 +118,32 @@ const PurchaseProcess = ({ onClose, selectedContacts }) => {
     }
   };
 
-const handleSend = async (e) => {
-  if (!Array.isArray(selected) || selected.length === 0) {
-    setModalProps({
-      type: "warning",
-      title: "Warning!",
-      message: "Please select at least one contact.",
-      onClose: () => setShowModal(false),
-    });
-    setShowModal(true);
-    return;
-  }
+  const handleSend = async (e) => {
+    if (!Array.isArray(selected) || selected.length === 0) {
+      setModalProps({
+        type: "warning",
+        title: "Warning!",
+        message: "Please select at least one contact.",
+        onClose: () => setShowModal(false),
+      });
+      setShowModal(true);
+      return;
+    }
 
-  // Get selectedRfpId from the Select event or from state
-  const selectedRfpId = e?.target?.value || indentId;
+    // Get selectedRfpId from the Select event or from state
+    const selectedRfpId = e?.target?.value || indentId;
 
-  try {
-    // 1️⃣ Share RFP first (use selectedRfpId)
-    await axios.post(`${API.PURCHASE_API}/rfps/share_rfp/${selectedRfpId}`, { email_id: selected }, { headers: { Authorization: `Bearer ${token}` } });
+    try {
+      // 1️⃣ Share RFP first (use selectedRfpId)
+      await axios.post(
+        `${API.PURCHASE_API}/rfps/share_rfp/${selectedRfpId}`,
+        { email_id: selected },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
 
-      // 2️⃣ Continue with UCS send as before
-      // ...existing UCS send logic...
-      // Fetch modules for uniqueIdentifierName
-      const modulesRes = await axios.get(`${API.API_BASE}/ucs/test/api/modules`, { headers: { Authorization: `Bearer ${token}` } });
+      const modulesRes = await axios.get(`${API.UCS_API}/api/modules`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const modules = modulesRes.data;
       const productModule = Array.isArray(modules)
         ? modules.find((m) => m.applicationName === "Product Management")
@@ -126,7 +151,10 @@ const handleSend = async (e) => {
       const uniqueIdentifierName =
         productModule?.uniqueIdentifierName || "PM-R-SR";
       // Fetch RFP details
-      const rfpRes = await axios.get(`${API.PURCHASE_API}/indenting/rfp/${indentId}`, { headers: { Authorization: `Bearer ${token}` } });
+      const rfpRes = await axios.get(
+        `${API.PURCHASE_API}/indenting/rfp/${indentId}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
       const rfpData = rfpRes.data?.data?.[0];
       const indenting = rfpData?.indenting || {};
       const additionalDescription = rfpData?.additionalDescription || {};
@@ -134,7 +162,7 @@ const handleSend = async (e) => {
       // Prepare payload
       const firstSelectedEmail = selected[0];
       const selectedContact = data.find(
-        (item) => item.email_id === firstSelectedEmail
+        (item) => item.email_id === firstSelectedEmail,
       );
 
       const payload = {
@@ -147,7 +175,9 @@ const handleSend = async (e) => {
       };
 
       // Send RFP (UCS)
-      const response = await axios.post(`${API.API_BASE}/ucs/test/ucs/send`, payload, { headers: { Authorization: `Bearer ${token}` } });
+      const response = await axios.post(`${API.UCS_API}/ucs/send`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       if (
         response.data === "Sent Successfully" ||
@@ -185,120 +215,52 @@ const handleSend = async (e) => {
     }
   };
 
-  // const handleSend = async () => {
-  //   if (!Array.isArray(selected) || selected.length === 0) {
-  //     setModalProps({
-  //       type: "warning",
-  //       title: "Warning!",
-  //       message: "Please select at least one contact.",
-  //       onClose: () => setShowModal(false),
-  //     });
-  //     setShowModal(true);
-  //     return;
-  //   }
-
-  //   try {
-  //     // Fetch modules for uniqueIdentifierName
-  //     const modulesRes = await axios.get(
-  //       "https://devapi.softtrails.net/saas/ucs/test/api/modules",
-  //       { headers: { Authorization: `Bearer ${token}` } }
-  //     );
-  //     const modules = modulesRes.data;
-  //     const productModule = Array.isArray(modules)
-  //       ? modules.find((m) => m.applicationName === "Product Management")
-  //       : null;
-  //     const uniqueIdentifierName =
-  //       productModule?.uniqueIdentifierName || "PM-R-SR";
-  //     console.log(uniqueIdentifierName, "uniqueIdentifierName");
-  //     // Fetch RFP details
-  //     const rfpRes = await axios.get(
-  //       `https://devapi.softtrails.net/saas/purchase/test/purchase/indenting/rfp/${indentId}`,
-  //       { headers: { Authorization: `Bearer ${token}` } }
-  //     );
-  //     const rfpData = rfpRes.data?.data?.[0];
-  //     const indenting = rfpData?.indenting || {};
-  //     const additionalDescription = rfpData?.additionalDescription || {};
-
-  //     // Prepare payload
-  //     const firstSelectedEmail = selected[0];
-  //     const selectedContact = data.find(
-  //       (item) => item.email_id === firstSelectedEmail
-  //     );
-
-  //     const payload = {
-  //       uniqueIdentifierName,
-  //       contact_person: selectedContact?.contact_person || "Contact Person",
-  //       email_id: selected.join(","),
-  //       rfp_id: indenting.rfp_id || indentId,
-  //       rfp_file_link: additionalDescription.rfp_file_link || "",
-  //       email: firstSelectedEmail || "",
-  //     };
-
-  //     // Send RFP
-  //     const response = await axios.post(
-  //       "https://devapi.softtrails.net/saas/ucs/test/ucs/send",
-  //       payload,
-  //       { headers: { Authorization: `Bearer ${token}` } }
-  //     );
-
-  //     if (
-  //       response.data === "Sent Successfully" ||
-  //       response.data?.message === "Sent Successfully" ||
-  //       response.data?.success === true
-  //     ) {
-  //       // When showing the modal, always provide a fallback for onClose
-  //       setModalProps({
-  //         type: "success",
-  //         title: "Success!",
-  //         message: "RFP sent successfully.",
-  //         onClose: () => {
-  //           setShowModal(false);
-  //           setSelected([]);
-  //           if (typeof onClose === "function") onClose(); // Only call if it's a function
-  //         },
-  //       });
-  //       setShowModal(true);
-  //     } else {
-  //       setModalProps({
-  //         type: "error",
-  //         title: "Error!",
-  //         message: "Failed to send RFP. Please try again.",
-  //         onClose: () => setShowModal(false),
-  //       });
-  //       setShowModal(true);
-  //     }
-  //   } catch (error) {
-  //     setModalProps({
-  //       type: "error",
-  //       title: "Error!",
-  //       message: "Failed to send RFP. Please try again.",
-  //       onClose: () => setShowModal(false),
-  //     });
-  //     setShowModal(true);
-  //   }
-  // };
-
   const tabs = [
     { id: "RFP", label: "RFP" },
     { id: "RfpShared", label: "RFP Shared" },
     { id: "Quotation", label: "Quotation" },
+    { id: "Shortlisted Quotation", label: "Shortlisted Quotation" },
     { id: "PurchaseOrder", label: "Purchase Order" },
-    { id: "Supplies", label: "Supplies" },
+    { id: "GRN", label: "GRN" },
+    // { id: "Supplies", label: "Supplies" },
   ];
+
+  // useEffect(() => {
+  //   const fetchIndentData = async () => {
+  //     try {
+  //       const response = await axios.get(`${API.PURCHASE_API}/indenting/rfp`, {
+  //         headers: { Authorization: `Bearer ${token}` },
+  //       });
+  //       setIndentOptions(response.data);
+  //     } catch (error) {
+  //       console.error("Error fetching indent data:", error);
+  //     }
+  //   };
+
+  //   fetchIndentData();
+  // }, [token]);
 
   useEffect(() => {
     const fetchIndentData = async () => {
       try {
-        const response = await axios.get(`${API.PURCHASE_API}/indenting/rfp`, { headers: { Authorization: `Bearer ${token}` } });
-        setIndentOptions(response.data);
+        const response = await axios.get(`${API.PURCHASE_API}/rfps/rfp`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        // Expecting: { data: [{ rfp_id: "RFP20251119-618" }, ...] }
+        const rfps = Array.isArray(response.data?.data)
+          ? response.data.data
+          : Array.isArray(response.data)
+            ? response.data
+            : [];
+        setIndentOptions(rfps);
       } catch (error) {
-        console.error("Error fetching indent data:", error);
+        console.error("Error fetching RFP data:", error);
+        setIndentOptions([]);
       }
     };
 
     fetchIndentData();
   }, [token]);
-
   // Fetch contacts when indentId changes
   useEffect(() => {
     if (!indentId) return;
@@ -306,12 +268,15 @@ const handleSend = async (e) => {
     const fetchSupplierContacts = async () => {
       setLoading(true);
       try {
-        const response = await axios.get(`${API.PURCHASE_API}/S_contact/supplier-contacts/rfp/${indentId}`, { headers: { Authorization: `Bearer ${token}` } });
+        const response = await axios.get(
+          `${API.PURCHASE_API}/S_contact/supplier-contacts/rfp/${indentId}`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
         const contacts = response.data?.data || [];
         setData(contacts);
       } catch (error) {
         console.error("Error fetching supplier contacts:", error);
-        setData([]); // Clear old data on error
+        setData([]);
       } finally {
         setLoading(false);
       }
@@ -319,19 +284,24 @@ const handleSend = async (e) => {
 
     fetchSupplierContacts();
   }, [indentId, token]);
+
   const rfpOptions = indentOptions.map((indent) => ({
     value: indent.rfp_id,
     label: indent.rfp_id,
   }));
 
- useEffect(() => {
+  useEffect(() => {
     if (showModal) {
       const fetchSuppliers = async () => {
         try {
           // Fetch both supplier-contacts and suppliers endpoints and merge
           const [contactsRes, suppliersRes] = await Promise.allSettled([
-            axios.get(`${API.PURCHASE_API}/S_contact/supplier-contacts`, { headers: { Authorization: `Bearer ${token}` } }),
-            axios.get(`${API.PURCHASE_API}/supplier/suppliers`, { headers: { Authorization: `Bearer ${token}` } }),
+            axios.get(`${API.PURCHASE_API}/S_contact/supplier-contacts`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+            axios.get(`${API.PURCHASE_API}/supplier/suppliers`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
           ]);
 
           const contacts =
@@ -354,7 +324,11 @@ const handleSend = async (e) => {
                 s.supplier_name ||
                 "",
               email_id:
-                s.email || s.email_id || s.primary_email || s.contact_email || "",
+                s.email ||
+                s.email_id ||
+                s.primary_email ||
+                s.contact_email ||
+                "",
               phone_num: s.phone || s.phone_num || s.mobile || "",
               asset_name: s.asset_name || "",
               status: s.status || "",
@@ -365,7 +339,7 @@ const handleSend = async (e) => {
           const merged = [
             ...contacts,
             ...normalizedSuppliers.filter(
-              (ns) => !contacts.some((c) => c.email_id === ns.email_id)
+              (ns) => !contacts.some((c) => c.email_id === ns.email_id),
             ),
           ];
 
@@ -387,8 +361,12 @@ const handleSend = async (e) => {
       try {
         // Reuse same logic: fetch both endpoints and merge
         const [contactsRes, suppliersRes] = await Promise.allSettled([
-          axios.get(`${API.PURCHASE_API}/S_contact/supplier-contacts`, { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get(`${API.PURCHASE_API}/supplier/suppliers`, { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get(`${API.PURCHASE_API}/S_contact/supplier-contacts`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          axios.get(`${API.PURCHASE_API}/supplier/suppliers`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
         ]);
 
         const contacts =
@@ -420,7 +398,7 @@ const handleSend = async (e) => {
         const merged = [
           ...contacts,
           ...normalizedSuppliers.filter(
-            (ns) => !contacts.some((c) => c.email_id === ns.email_id)
+            (ns) => !contacts.some((c) => c.email_id === ns.email_id),
           ),
         ];
 
@@ -441,13 +419,13 @@ const handleSend = async (e) => {
       item.email_id?.toLowerCase().includes(searchLower) ||
       item.phone_num?.toLowerCase().includes(searchLower) ||
       item.asset_name?.toLowerCase().includes(searchLower) ||
-      item.status?.toLowerCase().includes(searchLower)
+      item.status?.toLowerCase().includes(searchLower),
   );
   const displayData = showAllSuppliers
     ? [
         ...filteredData,
         ...filteredSuppliers.filter(
-          (s) => !filteredData.some((f) => f.email_id === s.email_id)
+          (s) => !filteredData.some((f) => f.email_id === s.email_id),
         ),
       ]
     : filteredData;
@@ -457,7 +435,7 @@ const handleSend = async (e) => {
 
   const paginatedData = displayData.slice(
     (currentPage - 1) * rowsPerPage,
-    currentPage * rowsPerPage
+    currentPage * rowsPerPage,
   );
   const handlePrevPage = () => setCurrentPage((p) => Math.max(1, p - 1));
   const handleNextPage = () =>
@@ -468,7 +446,6 @@ const handleSend = async (e) => {
 
   return (
     <div className="">
-
       <div className="p-3 w-full">
         {/* Tabs */}
         <div className="flex space-x-4 p-4 ">
@@ -520,45 +497,75 @@ const handleSend = async (e) => {
                     </div>
                   </div>
 
-                  <div>
+                  {/* MULTIPLE ITEMS TABLE */}
+                  {Array.isArray(indentItems) && indentItems.length > 1 ? (
+                    <div className="col-span-2">
+                      <label className="block text-sm font-medium mb-2">
+                        Items in RFP
+                      </label>
+                      <div className="overflow-x-auto bg-white border rounded">
+                        <table className="w-full text-sm">
+                          <thead className="bg-gray-100">
+                            <tr>
+                              <th className="p-2 text-left">Request For</th>
+                              <th className="p-2 text-left">Category</th>
+                              <th className="p-2 text-left">Material</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {indentItems.map((it, i) => (
+                              <tr key={i} className="border-t">
+                                <td className="p-2">{it.request_for || "-"}</td>
+                                <td className="p-2">{it.category || "-"}</td>
+                                <td className="p-2">{it.asset_name || "-"}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">
+                          Request for
+                        </label>
+                        <input
+                          type="text"
+                          readOnly
+                          value={requestFor}
+                          className="w-3/4 p-2 border rounded bg-gray-100"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium mb-1">
+                          Category
+                        </label>
+                        <input
+                          type="text"
+                          readOnly
+                          value={category}
+                          className="w-3/4 p-2 border rounded bg-gray-100"
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {!(Array.isArray(indentItems) && indentItems.length > 1) && (
+                  <div className="mb-4">
                     <label className="block text-sm font-medium mb-1">
-                      Request for
+                      Request asset
                     </label>
                     <input
                       type="text"
                       readOnly
-                      value={requestFor}
-                      onChange={(e) => setRequestFor(e.target.value)}
-                      className="w-3/4 p-2 border rounded bg-gray-100"
+                      value={requestAsset}
+                      className="w-1/4 p-2 border rounded bg-gray-100"
                     />
                   </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Category
-                    </label>
-                    <input
-                      type="text"
-                      readOnly
-                      value={category}
-                      onChange={(e) => setCategory(e.target.value)}
-                      className="w-3/4 p-2 border rounded bg-gray-100"
-                    />
-                  </div>
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">
-                    Request asset
-                  </label>
-                  <input
-                    type="text"
-                    readOnly
-                    value={requestAsset}
-                    onChange={(e) => setRequestAsset(e.target.value)}
-                    className="w-1/4 p-2 border rounded bg-gray-100"
-                  />
-                </div>
+                )}
 
                 <div className="flex justify-between items-center mb-2">
                   <input
@@ -566,7 +573,7 @@ const handleSend = async (e) => {
                     placeholder="Search"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="w-1/2 p-2 rounded-lg border border-blue-300 bg-blue-50 text-black focus:ring-2 focus:ring-blue-300 focus:outline-none transition"
+                    className="w-1/4 p-2 rounded-lg border border-blue-300 bg-blue-50 text-black focus:ring-2 focus:ring-blue-300 focus:outline-none transition"
                   />
                 </div>
                 <div className="overflow-x-auto max-h-[400px]">
@@ -584,7 +591,7 @@ const handleSend = async (e) => {
                               setSelected(
                                 e.target.checked
                                   ? displayData.map((item) => item.email_id)
-                                  : []
+                                  : [],
                               )
                             }
                           />
@@ -612,7 +619,10 @@ const handleSend = async (e) => {
                             colSpan="6"
                             className="p-4 text-center text-gray-500"
                           >
-                            No contacts found.
+                            No contacts found related to your asset.
+                            <br />
+                            You can view other suppliers by clicking on View
+                            More.{" "}
                           </td>
                         </tr>
                       ) : (
@@ -675,7 +685,6 @@ const handleSend = async (e) => {
                   >
                     Send RFP
                   </button>
-                
                 </div>
               </div>{" "}
               {showSendOptions && (
@@ -729,9 +738,11 @@ const handleSend = async (e) => {
               )}
             </>
           )}
-{activeTab === "RfpShared" && <RFPShared />}
+          {activeTab === "RfpShared" && <RFPShared />}
           {activeTab === "Quotation" && <Quotation />}
+          {activeTab === "Shortlisted Quotation" && <ShortlistedQuotation />}
           {activeTab === "PurchaseOrder" && <PurchaseOrder />}
+          {activeTab === "GRN" && <Grn />}
           {activeTab === "Supplies" && <Supplies />}
         </div>
       </div>

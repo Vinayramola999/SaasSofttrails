@@ -1,7 +1,7 @@
 import React from "react";
 import { FaTrash } from "react-icons/fa";
 
-const DeleteComponents = ({ isOpen, onClose, onConfirm, title = "Delete vendor", message = "Are you sure you want to delete vendor?" }) => {
+const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, title = "Delete vendor", message = "Are you sure you want to delete vendor?" }) => {
     if (!isOpen) return null;
 
     return (
@@ -30,4 +30,4 @@ const DeleteComponents = ({ isOpen, onClose, onConfirm, title = "Delete vendor",
         </div>
     );
 };
-export default DeleteComponents;
+export default DeleteConfirmationModal;

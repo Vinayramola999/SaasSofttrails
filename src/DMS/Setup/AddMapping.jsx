@@ -94,6 +94,8 @@ const ServiceDocsRelation = () => {
           allowed_size: formData.size,
           status: formData.status,
           review: formData.review || "pending",
+          visibility: formData.visibility,
+          approval_needed: formData.approval,
         },
         token
       );
@@ -199,6 +201,7 @@ const ServiceDocsRelation = () => {
           serviceOptions={serviceOptions}
           doctypeOptions={doctypeOptions}
           allowedDocsOptions={allowedDocsOptions}
+          onUpdate={handleFetchMap}
         />
       </div>
       {isModalOpen && (
@@ -293,8 +296,8 @@ const ServiceDocsRelation = () => {
                   </div>
                 </div>
               </div>
-              <div className="selected grid grid-cols-2 gap-2">
-                <div className="data space-y-1">
+              <div className="selected grid grid-cols-1 gap-2">
+                {/* <div className="data space-y-1">
                   <div className="flex items-center justify-between bg-gray-100 rounded-lg px-4 py-3">
                     <label
                       htmlFor="visibilityToggle"
@@ -336,7 +339,7 @@ const ServiceDocsRelation = () => {
                       className="toggle-checkbox w-5 h-5 text-blue-600 rounded focus:ring-blue-500 focus:ring-2"
                     />
                   </div>
-                </div>
+                </div> */}
                 <div>
                   {selectedFormats.length > 0 && (
                     <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">

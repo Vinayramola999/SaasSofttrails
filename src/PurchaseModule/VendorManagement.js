@@ -42,9 +42,9 @@ const VendorManagement = () => {
   const [materialData, setMaterialData] = useState([]);
   const createdBy = sessionStorage.getItem("userId");
   const [assetType, setAssetType] = useState(" "); // Default to "new"
-   const getToken = () => sessionStorage.getItem("token");
+  const getToken = () => sessionStorage.getItem("token");
   const token = getToken();
-   const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const [modalProps, setModalProps] = useState({});
   const columns = [
     { header: "S. No.", accessor: "sno" },
@@ -56,11 +56,13 @@ const VendorManagement = () => {
     { header: "Status", accessor: "status" },
   ];
 
-
   const fetchSuppliers = () => {
     axios
-      .get(`${API.PURCHASE_API}/supplier/suppliers`, { headers: { Authorization: `Bearer ${token}` } })
+      .get(`${API.PURCHASE_API}/supplier/suppliers`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       .then((response) => {
+        console.log("Fetched suppliers:", response.data);
         setSuppliers(response.data);
       })
       .catch((error) => {
@@ -101,41 +103,43 @@ const VendorManagement = () => {
   //     });
   // }, []);
 
-    //Fetch workflow
- // ...existing code...
-useEffect(() => {
-  const fetchWorkflows = async () => {
-    try {
-      const res = await axios.get(
-        `${API.WORKFLOW_API}/uniworkflow/workflow/get-modules/module?module_name=Purchase Management&sub_module_name=Vendor Management`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+  //Fetch workflow
+  // ...existing code...
+  useEffect(() => {
+    const fetchWorkflows = async () => {
+      try {
+        const res = await axios.get(
+          `${API.WORKFLOW_API}/workflow/get-modules/module?module_name=Purchase Management&sub_module_name=Vendor Management`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
 
-      // Try common response shapes then normalize to { workflowid, workflowname }
-      const rawList = res.data?.workflows || res.data?.data || res.data || [];
-      const workflowsList = Array.isArray(rawList) ? rawList : [];
+        // Try common response shapes then normalize to { workflowid, workflowname }
+        const rawList = res.data?.workflows || res.data?.data || res.data || [];
+        const workflowsList = Array.isArray(rawList) ? rawList : [];
 
-      const normalized = workflowsList.map((w) => ({
-        workflowid: w.workflowid ?? w.workflow_id ?? w.id ?? w._id ?? "",
-        workflowname:
-          w.workflowname ??
-          w.workflow_name ??
-          w.name ??
-          w.moduleName ??
-          w.displayName ??
-          "",
-      })).filter((w) => w.workflowid && w.workflowname);
+        const normalized = workflowsList
+          .map((w) => ({
+            workflowid: w.workflowid ?? w.workflow_id ?? w.id ?? w._id ?? "",
+            workflowname:
+              w.workflowname ??
+              w.workflow_name ??
+              w.name ??
+              w.moduleName ??
+              w.displayName ??
+              "",
+          }))
+          .filter((w) => w.workflowid && w.workflowname);
 
-      setWorkflows(normalized);
-    } catch (err) {
-      console.error("Error fetching workflows:", err, err?.response?.data);
-      setWorkflows([]);
-    }
-  };
+        setWorkflows(normalized);
+      } catch (err) {
+        console.error("Error fetching workflows:", err, err?.response?.data);
+        setWorkflows([]);
+      }
+    };
 
-  fetchWorkflows();
-}, [token]);
-// ...existing code...
+    fetchWorkflows();
+  }, [token]);
+  // ...existing code...
 
   const getWorkflowName = (id) => {
     const workflow = workflows.find((w) => w.workflowid === id);
@@ -150,14 +154,14 @@ useEffect(() => {
     pan_no: "",
     tan_number: "",
     address: "",
-    city: "", 
+    city: "",
     state: "",
     country: " ",
     pincode: "",
     lead: "John",
     workflow_id: "",
     current_stage: "Initiated",
-    // status: "",
+    status: "Active",
   });
 
   const filteredSuppliers = suppliers.filter((vendor) => {
@@ -187,7 +191,9 @@ useEffect(() => {
   }));
   useEffect(() => {
     axios
-      .get(`${API.PURCHASE_API}/supplier/suppliers`, { headers: { Authorization: `Bearer ${token}` } })
+      .get(`${API.PURCHASE_API}/supplier/suppliers`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       .then((response) => {
         setSuppliers(response.data);
       })
@@ -220,6 +226,7 @@ useEffect(() => {
     if (!vendorData.email_id) newErrors.email_id = "Required";
     if (!vendorData.gst_number) newErrors.gst_number = "Required";
     if (!vendorData.pan_no) newErrors.pan_no = "Required";
+    if (!vendorData.tan_number) newErrors.tan_number = "Required";
 
     if (Object.keys(newErrors).length > 0) {
       setValidationErrors(newErrors);
@@ -245,14 +252,16 @@ useEffect(() => {
           vendorData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-  setModalProps({
+        console.log("Add vendor response:", response.data);
+        setModalProps({
           type: "success",
           title: "Success",
           message: "Vendor added successfully.",
           onClose: () => {
             setShowModal(false);
             setShowPopup(false);
-            fetchSuppliers();
+            // fetchSuppliers();
+            setSuppliers(prev => [...prev, response.data]); // Add the new vendor directly
             setVendorData({
               supplier_name: "",
               gst_number: "",
@@ -268,12 +277,13 @@ useEffect(() => {
               lead: "John",
               workflow_id: "",
               current_stage: "Initiated",
+              status: "Active",
             });
             setShowApprovalModal(true);
           },
         });
         setShowModal(true);
-      }catch (error) {
+      } catch (error) {
         const apiErrors = {};
         if (error.response && error.response.data?.errors) {
           error.response.data.errors.forEach((msg, idx) => {
@@ -283,7 +293,7 @@ useEffect(() => {
           });
           setValidationErrors(apiErrors);
         } else {
-         setModalProps({
+          setModalProps({
             type: "error",
             title: "Error",
             message: "Something went wrong.",
@@ -342,8 +352,10 @@ useEffect(() => {
   const handleConfirmDelete = () => {
     if (!selectedVendor) return;
 
-      axios
-        .delete(`${API.PURCHASE_API}/supplier/suppliers/${selectedVendor.id}`, { headers: { Authorization: `Bearer ${token}` } })
+    axios
+      .delete(`${API.PURCHASE_API}/supplier/suppliers/${selectedVendor.id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       .then((response) => {
         console.log("Deleted:", response.data);
         setIsDeleteModalOpen(false);
@@ -385,6 +397,7 @@ useEffect(() => {
       }
 
       setVendorData({
+        supplier_id: selectedVendor.id || "",
         name: selectedVendor.supplier_name || "",
         landline: selectedVendor.landline_num || "",
         email: selectedVendor.email_id || "",
@@ -403,7 +416,10 @@ useEffect(() => {
   const fetchContactDetails = async () => {
     if (selectedVendor?.supplier_id) {
       try {
-          const response = await axios.get(`${API.PURCHASE_API}/S_contact/supplier-contacts/supplier/${selectedVendor.supplier_id}`, { headers: { Authorization: `Bearer ${token}` } });
+        const response = await axios.get(
+          `${API.PURCHASE_API}/S_contact/supplier-contacts/supplier/${selectedVendor.supplier_id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
         setContactDetails(response.data || []);
       } catch (error) {
         console.error("Error fetching contact details:", error);
@@ -444,13 +460,16 @@ useEffect(() => {
     setShowVendorPopup(true);
 
     try {
-        const response = await axios.get(`${API.PURCHASE_API}/S_contact/supplier-contacts/supplier/${vendor.id}`, { headers: { Authorization: `Bearer ${token}` } });
+      const response = await axios.get(
+        `${API.PURCHASE_API}/S_contact/supplier-contacts/supplier/${vendor.id}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       setContactDetails(response.data || []);
     } catch (error) {
       console.error("Error fetching contact details:", error);
     }
   };
-const handleUpdate = async (e) => {
+  const handleUpdate = async (e) => {
     e.preventDefault();
 
     // show confirm modal instead of Swal.confirm
@@ -460,7 +479,11 @@ const handleUpdate = async (e) => {
       message: "Are you sure you want to update contact details?",
       onConfirm: async () => {
         try {
-            await axios.put(`${API.PURCHASE_API}/S_contact/supplier-contacts/${selectedContact.contact_id}`, selectedContact, { headers: { Authorization: `Bearer ${token}` } });
+          await axios.put(
+            `${API.PURCHASE_API}/S_contact/supplier-contacts/${selectedContact.contact_id}`,
+            selectedContact,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
           setIsEditPopupOpen(false);
           await fetchContactDetails();
 
@@ -487,104 +510,6 @@ const handleUpdate = async (e) => {
     });
     setShowModal(true);
   };
-  // const handleUpdate = async (e) => {
-  //   e.preventDefault();
-
-  //   const confirmResult = await Swal.fire({
-  //     html: `
-  //       <div style="display: flex; flex-direction: column; align-items: center;">
-  //         <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 20 20">
-  //           <path fill="#005AE6" d="M10 20a10 10 0 1 1 0-20a10 10 0 0 1 0 20m2-13c0 .28-.21.8-.42 1L10 9.58c-.57.58-1 1.6-1 2.42v1h2v-1c0-.29.21-.8.42-1L13 9.42c.57-.58 1-1.6 1-2.42a4 4 0 1 0-8 0h2a2 2 0 1 1 4 0m-3 8v2h2v-2z"/>
-  //         </svg>
-  //         <div style="margin-top: 15px; font-weight: bold; font-size: 18px; color: #005AE6;">
-  //           Update Contact?
-  //         </div>
-  //         <div style="margin-top: 8px; font-size: 14px; color: #555;">
-  //           Are you sure you want to update contact details?
-  //         </div>
-  //       </div>
-  //     `,
-  //     showCancelButton: true,
-  //     confirmButtonText: "Confirm",
-  //     cancelButtonText: "Cancel",
-  //     reverseButtons: true,
-  //     customClass: {
-  //       popup: "square-popup",
-  //       cancelButton: "custom-cancel-button",
-  //       confirmButton: "custom-confirm-button",
-  //     },
-  //   });
-
-  //   if (confirmResult.isConfirmed) {
-  //     try {
-  //       await axios.put(
-  //         `${API.PURCHASE_API}/S_contact/supplier-contacts/${selectedContact.contact_id}`,
-  //         selectedContact,
-  //                     { headers: { Authorization: `Bearer ${token}` } }
-  //       );
-  //       setIsEditPopupOpen(false);
-  //       await fetchContactDetails();
-
-  //       await Swal.fire({
-  //         icon: "success",
-  //         title: "Success",
-  //         text: "Contact details were successfully updated.",
-  //         confirmButtonText: "Continue",
-  //         customClass: {
-  //           popup: "square-popup",
-  //           title: "swal-title",
-  //         },
-  //       });
-  //     } catch (error) {
-  //       console.error("Failed to update contact", error);
-  //       Swal.fire({
-  //         icon: "error",
-  //         title: "Update Failed",
-  //         text: "Could not update contact. Please try again.",
-  //       });
-  //     }
-  //   }
-  // };
-
-  // const handleDelete = async (contact) => {
-  //   const confirmResult = await Swal.fire({
-  //     icon: "warning",
-  //     title: "Delete Contact?",
-  //     text: `Are you sure you want to delete ${contact.name}?`,
-  //     showCancelButton: true,
-  //     confirmButtonText: "Yes, delete it!",
-  //     cancelButtonText: "Cancel",
-  //     customClass: {
-  //       popup: "square-popup",
-  //       confirmButton: "custom-confirm-button",
-  //       cancelButton: "custom-cancel-button",
-  //     },
-  //   });
-
-  //   if (confirmResult.isConfirmed) {
-  //     try {
-  //       await axios.delete(
-  //         `${API.PURCHASE_API}/S_contact/supplier-contacts/${contact.contact_id}`,
-  //                     { headers: { Authorization: `Bearer ${token}` } }
-  //       );
-
-  //       Swal.fire({
-  //         icon: "success",
-  //         title: "Deleted!",
-  //         text: `"${contact.contact_person}" has been deleted successfully.`,
-  //       });
-
-  //       await fetchContactDetails(); // Refresh list
-  //     } catch (error) {
-  //       console.error("Failed to delete contact:", error);
-  //       Swal.fire({
-  //         icon: "error",
-  //         title: "Delete Failed",
-  //         text: "There was a problem deleting the contact.",
-  //       });
-  //     }
-  //   }
-  // };
 
   const handleDelete = async (contact) => {
     setModalProps({
@@ -639,148 +564,125 @@ const handleUpdate = async (e) => {
     status: "",
   });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const payload = {
-        ...formData,
-        category_type: "Operational", // You can add dynamic values if needed
-
-        supplier_id: 15,
-        contact_person: "Jane Doe",
-        phone_num: "9997878587",
-        email_id: "ayush@example.com",
-        address: "456 Avenue",
-        city: "Mumbai",
-        state: "Maharashtra",
-        country: "India",
-        pincode: "400001",
-        department: "Finance",
-        designation: "Manager",
-        category: "Machinery",
-        asset_name: "Lathe Machine",
-        date_of_start: "2025-05-01",
-        date_of_end: "2025-12-31",
-      };
-
-     const response = await axios.post(
-        `${API.PURCHASE_API}/S_contact/supplier-contacts`,
-        payload,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      setModalProps({
-        type: "success",
-        title: "Success",
-        message: "Contact added successfully!",
-        onClose: () => setShowModal(false),
-      });
-      setShowModal(true);
-      setShowContactPopup(false);
-    } catch (error) {
-      console.error(error);
-      setModalProps({
-        type: "error",
-        title: "Error",
-        message: "Failed to add contact",
-        onClose: () => setShowModal(false),
-      });
-      setShowModal(true);
-    }
-  };
-
- // ...existing code...
-useEffect(() => {
-  // clear when no requestFor
-  if (!requestFor) {
-    setCategoryOptions([]);
-    setCategory("");
-    // clear material-related state as well
-    setAssetOptions([]);
-    setMaterialData([]);
-    setRequestAsset("");
-    return;
-  }
-
-  const fetchCategories = async () => {
-    // ...existing fetchCategories code...
-  };
-
-  fetchCategories();
-}, [requestFor, token]);
-// ...existing code...
-
-// Replace the other useEffect that fetches assets
-useEffect(() => {
-  // if either requestFor or category is missing, clear material dropdown/data
-  if (!requestFor || !category) {
-    setAssetOptions([]);
-    setMaterialData([]);
-    setRequestAsset("");
-    return;
-  }
-
-  const fetchFromPurchaseAndColumns = async () => {
-    try {
-      const fetchFromPurchase = axios.get(`${API.PURCHASE_API}/assets?request_for=${encodeURIComponent(requestFor)}&category=${encodeURIComponent(category)}`, { headers: { Authorization: `Bearer ${token}` } });
-
-      const fetchFromColumnTypes = axios.get(`${API.COLUMN_TYPES_API}/getColumnTypesAndData/${encodeURIComponent(category)}`, { headers: { Authorization: `Bearer ${token}` } });
-
-      const [res1, res2] = await Promise.allSettled([fetchFromPurchase, fetchFromColumnTypes]);
-
-      // normalize purchase assets
-      let purchaseArr = [];
-      if (res1.status === "fulfilled" && res1.value?.data) {
-        const d = res1.value.data;
-        purchaseArr = Array.isArray(d) ? d : Array.isArray(d?.data) ? d.data : [];
-      }
-
-      // normalize column data
-      let columnArr = [];
-      if (res2.status === "fulfilled" && res2.value?.data) {
-        const d2 = res2.value.data;
-        columnArr = Array.isArray(d2?.data) ? d2.data : Array.isArray(d2) ? d2 : [];
-      }
-
-      const purchaseAssets = purchaseArr
-        .map((item) => ({
-          asset_name: item.asset_name || item.material_name || item.name || item["Asset Name"] || "",
-          source: "purchaseAssets",
-          ...item,
-        }))
-        .filter((i) => i.asset_name);
-
-      const columnAssets = columnArr
-        .map((item) => ({
-          asset_name: item.material_name || item["Asset Name"] || item.asset_name || "",
-          source: "columnTypes",
-          ...item,
-        }))
-        .filter((i) => i.asset_name);
-
-      const combined = [...purchaseAssets, ...columnAssets];
-      const filtered = combined.filter((item) => item.asset_name);
-
-      // dedupe asset names
-      const uniqueAssetNames = Array.from(new Set(filtered.map((i) => i.asset_name.trim()))).sort();
-
-      setAssetOptions(uniqueAssetNames);
-      setMaterialData(filtered);
-      setRequestAsset("");
-    } catch (err) {
-      console.error("Error fetching combined asset data:", err);
+  useEffect(() => {
+    // clear when no requestFor
+    if (!requestFor) {
+      setCategoryOptions([]);
+      setCategory("");
+      // clear material-related state as well
       setAssetOptions([]);
       setMaterialData([]);
       setRequestAsset("");
+      return;
     }
-  };
 
-  fetchFromPurchaseAndColumns();
-}, [assetType, category, requestFor, token]);
-// ...existing code...
-  
+    const fetchCategories = async () => {
+      // ...existing fetchCategories code...
+    };
+
+    fetchCategories();
+  }, [requestFor, token]);
+  // ...existing code...
+
+  // Replace the other useEffect that fetches assets
+  useEffect(() => {
+    // if either requestFor or category is missing, clear material dropdown/data
+    if (!requestFor || !category) {
+      setAssetOptions([]);
+      setMaterialData([]);
+      setRequestAsset("");
+      return;
+    }
+
+    const fetchFromPurchaseAndColumns = async () => {
+      try {
+        const fetchFromPurchase = axios.get(
+          `${API.PURCHASE_API}/assets?request_for=${encodeURIComponent(
+            requestFor
+          )}&category=${encodeURIComponent(category)}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        const fetchFromColumnTypes = axios.get(
+          `${API.COLUMN_TYPES_API}/getColumnTypesAndData/${encodeURIComponent(
+            category
+          )}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        const [res1, res2] = await Promise.allSettled([
+          fetchFromPurchase,
+          fetchFromColumnTypes,
+        ]);
+
+        // normalize purchase assets
+        let purchaseArr = [];
+        if (res1.status === "fulfilled" && res1.value?.data) {
+          const d = res1.value.data;
+          purchaseArr = Array.isArray(d)
+            ? d
+            : Array.isArray(d?.data)
+            ? d.data
+            : [];
+        }
+
+        // normalize column data
+        let columnArr = [];
+        if (res2.status === "fulfilled" && res2.value?.data) {
+          const d2 = res2.value.data;
+          columnArr = Array.isArray(d2?.data)
+            ? d2.data
+            : Array.isArray(d2)
+            ? d2
+            : [];
+        }
+
+        const purchaseAssets = purchaseArr
+          .map((item) => ({
+            asset_name:
+              item.asset_name ||
+              item.material_name ||
+              item.name ||
+              item["Asset Name"] ||
+              "",
+            source: "purchaseAssets",
+            ...item,
+          }))
+          .filter((i) => i.asset_name);
+
+        const columnAssets = columnArr
+          .map((item) => ({
+            asset_name:
+              item.material_name || item["Asset Name"] || item.asset_name || "",
+            source: "columnTypes",
+            ...item,
+          }))
+          .filter((i) => i.asset_name);
+
+        const combined = [...purchaseAssets, ...columnAssets];
+        const filtered = combined.filter((item) => item.asset_name);
+
+        // dedupe asset names
+        const uniqueAssetNames = Array.from(
+          new Set(filtered.map((i) => i.asset_name.trim()))
+        ).sort();
+
+        setAssetOptions(uniqueAssetNames);
+        setMaterialData(filtered);
+        setRequestAsset("");
+      } catch (err) {
+        console.error("Error fetching combined asset data:", err);
+        setAssetOptions([]);
+        setMaterialData([]);
+        setRequestAsset("");
+      }
+    };
+
+    fetchFromPurchaseAndColumns();
+  }, [assetType, category, requestFor, token]);
+
   const [contactData, setContactData] = useState({
-    supplier_id: 1,
+    supplier_id: "",
     contact_person: "",
     phone_num: "",
     email_id: "",
@@ -798,32 +700,17 @@ useEffect(() => {
     date_of_end: "",
   });
 
-  // const handleAddContact = async () => {
-  //   try {
-  //     const response = await axios.post(
-  //       `${API.PURCHASE_API}/S_contact/supplier-contacts`,
-  //       contactData,
-  //       { headers: { Authorization: `Bearer ${token}` } } 
-  //     );
+ const handleAddContact = async () => {
+   try {
+      // ensure supplier_id is present in payload (use contactData.supplier_id or selectedVendor.id)
+      const payload = {
+        ...contactData,
+        supplier_id: contactData.supplier_id || selectedVendor?.id || null,
+      };
 
-  //     if (response.status === 200 || response.status === 201) {
-  //       Swal.fire("Contact added successfully!");
-  //       setShowContactPopup(false);
-  //       // Optionally reset the form
-  //     } else {
-  //       Swal.fire("Failed to add contact.");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error adding contact:", error);
-  //     Swal.fire("Something went wrong. Please try again.");
-  //   }
-  // };
-
-  const handleAddContact = async () => {
-    try {
       const response = await axios.post(
         `${API.PURCHASE_API}/S_contact/supplier-contacts`,
-        contactData,
+        payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
@@ -846,62 +733,88 @@ useEffect(() => {
       setShowModal(true);
     }
   };
-// ...existing code...
-useEffect(() => {
-  // clear when no requestFor
-  if (!requestFor) {
-    setCategoryOptions([]);
-    setCategory("");
-    return;
-  }
-
-  const fetchCategories = async () => {
-    try {
-      const formattedRequestFor = requestFor
-        .toString()
-        .toLowerCase()
-        .replace(/\s+/g, "");
-
-      const [res1, res2] = await Promise.allSettled([
-        axios.get(`${API.COLUMN_TYPES_API}/getColumnTypesAndData/${formattedRequestFor}`),
-        axios.get(`${API.PURCHASE_API}/assets?request_for=${requestFor}`, { headers: { Authorization: `Bearer ${token}` } }),
-      ]);
-
-      // Normalize res1
-      let catsFromFirst = [];
-      if (res1?.status === "fulfilled" && res1.value?.data) {
-        const d = res1.value.data;
-        const arr = Array.isArray(d) ? d : Array.isArray(d?.data) ? d.data : [];
-        catsFromFirst = arr.map((c) => (c.categoriesname || c.categoryname || c.name || "").trim()).filter(Boolean);
-      }
-
-      // Normalize res2 (assets) - common shape: [{ category: "..." }, ...]
-      let catsFromSecond = [];
-      if (res2?.status === "fulfilled" && res2.value?.data) {
-        const d2 = res2.value.data;
-        const arr2 = Array.isArray(d2) ? d2 : Array.isArray(d2?.data) ? d2.data : [];
-        catsFromSecond = arr2.map((a) => (a.category || a.categoryname || a.CATEGORY || "").trim()).filter(Boolean);
-      }
-
-      // If first API failed but second has data, use second
-      const mergedCategories = Array.from(new Set([...catsFromFirst, ...catsFromSecond])).sort();
-
-      // If still empty, try to surface raw values for debugging in UI (optional)
-      if (mergedCategories.length === 0) {
-        console.warn("No categories found from APIs. res1/res2 raw:", res1, res2);
-      }
-
-      setCategoryOptions(mergedCategories);
-      setCategory("");
-    } catch (err) {
-      console.error("Error fetching categories:", err);
+  // ...existing code...
+  useEffect(() => {
+    // clear when no requestFor
+    if (!requestFor) {
       setCategoryOptions([]);
+      setCategory("");
+      return;
     }
-  };
 
-  fetchCategories();
-}, [requestFor, token]);
-// ...existing code...
+    const fetchCategories = async () => {
+      try {
+        const formattedRequestFor = requestFor
+          .toString()
+          .toLowerCase()
+          .replace(/\s+/g, "");
+
+        const [res1, res2] = await Promise.allSettled([
+          axios.get(
+            `${API.COLUMN_TYPES_API}/getColumnTypesAndData/${formattedRequestFor}`
+          ),
+          axios.get(`${API.PURCHASE_API}/assets?request_for=${requestFor}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+        ]);
+
+        // Normalize res1
+        let catsFromFirst = [];
+        if (res1?.status === "fulfilled" && res1.value?.data) {
+          const d = res1.value.data;
+          const arr = Array.isArray(d)
+            ? d
+            : Array.isArray(d?.data)
+            ? d.data
+            : [];
+          catsFromFirst = arr
+            .map((c) =>
+              (c.categoriesname || c.categoryname || c.name || "").trim()
+            )
+            .filter(Boolean);
+        }
+
+        // Normalize res2 (assets) - common shape: [{ category: "..." }, ...]
+        let catsFromSecond = [];
+        if (res2?.status === "fulfilled" && res2.value?.data) {
+          const d2 = res2.value.data;
+          const arr2 = Array.isArray(d2)
+            ? d2
+            : Array.isArray(d2?.data)
+            ? d2.data
+            : [];
+          catsFromSecond = arr2
+            .map((a) =>
+              (a.category || a.categoryname || a.CATEGORY || "").trim()
+            )
+            .filter(Boolean);
+        }
+
+        // If first API failed but second has data, use second
+        const mergedCategories = Array.from(
+          new Set([...catsFromFirst, ...catsFromSecond])
+        ).sort();
+
+        // If still empty, try to surface raw values for debugging in UI (optional)
+        if (mergedCategories.length === 0) {
+          console.warn(
+            "No categories found from APIs. res1/res2 raw:",
+            res1,
+            res2
+          );
+        }
+
+        setCategoryOptions(mergedCategories);
+        setCategory("");
+      } catch (err) {
+        console.error("Error fetching categories:", err);
+        setCategoryOptions([]);
+      }
+    };
+
+    fetchCategories();
+  }, [requestFor, token]);
+  // ...existing code...
 
   return (
     <div className="flex">
@@ -915,49 +828,7 @@ useEffect(() => {
             + Add Vendor
           </button>
 
-          {showApprovalModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-              <div className="bg-white p-6 rounded-lg max-w-lg w-full relative shadow-lg">
-                <button
-                  onClick={() => setShowApprovalModal(false)}
-                  className="absolute top-2 right-2 text-red-500 text-2xl font-bold"
-                >
-                  &times;
-                </button>
-                <h2 className="text-xl font-semibold mb-4">Approval Groups</h2>
-                <div className="mb-4">
-                  <label className="block mb-1">Vendor Request</label>
-                  <select className="border w-full p-2 rounded-lg mb-2">
-                    {/* Options here */}
-                  </select>
-                  <label className="flex items-center gap-2 mb-2">
-                    <input type="checkbox" /> Bypass
-                  </label>
-                  <label className="block mb-1">Vendor Approver</label>
-                  <select className="border w-full p-2 rounded-lg mb-2">
-                    {/* Options here */}
-                  </select>
-                  <label className="flex items-center gap-2">
-                    <input type="checkbox" /> Bypass
-                  </label>
-                </div>
-                <div className="flex justify-end gap-4">
-                  <button
-                    // onClick={handleSubmitApproval}
-                    className="bg-blue-600 text-white px-6 py-2 rounded-lg"
-                  >
-                    Submit
-                  </button>
-                  <button
-                    onClick={() => setShowApprovalModal(false)}
-                    className="border border-black px-6 py-2 rounded-lg"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+         
         </div>
         {/* Add Vendor Popup */}
         {showPopup && (
@@ -1450,12 +1321,14 @@ useEffect(() => {
           />
         </div>
         {/* Table */}
- <div
-        className="overflow-x-auto rounded-lg shadow bg-white p-4"
-        style={{ maxHeight: 400, overflowY: "auto", minWidth: 900 }}
-      >        <table className="w-full bg-white rounded-lg border-collapse">
+        <div
+          className="overflow-x-auto rounded-lg shadow bg-white p-4"
+          style={{ maxHeight: 400, overflowY: "auto", minWidth: 900 }}
+        >
+          {" "}
+          <table className="w-full bg-white rounded-lg border-collapse">
             <thead className="border-b-2 border-black  bg-white z-10">
-            <tr className="border-b-2 border-gray-200 text-black text-left">
+              <tr className="border-b-2 border-gray-200 text-black text-left">
                 <th className="p-2">S. No.</th>
                 <th className="p-2">Vendor</th>
                 <th className="p-2">Email</th>
@@ -1496,7 +1369,14 @@ useEffect(() => {
                     />
                     <FaRegIdCard
                       className="text-gray-700 cursor-pointer"
-                      onClick={() => setShowContactPopup(true)}
+                      onClick={() => {
+                        setSelectedVendor(vendor);
+                        setContactData((prev) => ({
+                          ...prev,
+                          supplier_id: vendor?.id || "",
+                        }));
+                        setShowContactPopup(true);
+                      }}
                     />
                   </td>
                 </tr>
@@ -1508,7 +1388,7 @@ useEffect(() => {
           <div className="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center z-50">
             <div className="bg-white p-6 rounded-lg max-w-6xl w-full relative shadow-lg overflow-auto max-h-[90vh]">
               <button
-                className="absolute top-2 right-2 text-red-600 text-xl"
+                className="absolute top-2 right-2 text-red-600 text-4xl"
                 onClick={() => setShowVendorPopup(false)}
               >
                 ×
@@ -2076,7 +1956,8 @@ useEffect(() => {
                   className="bg-[#005AE6] text-white w-1/6 px-6 py-2 rounded-lg"
                   onClick={() => {
                     axios
-                      .put(`${API.PURCHASE_API}/supplier/suppliers/${selectedVendor.id}`,
+                      .put(
+                        `${API.PURCHASE_API}/supplier/suppliers/${selectedVendor.id}`,
                         {
                           supplier_name: vendorData.name,
                           landline_num: vendorData.landline,
@@ -2093,8 +1974,7 @@ useEffect(() => {
                           current_stage: selectedVendor.current_stage,
                           status: selectedVendor.status,
                         },
-                                { headers: { Authorization: `Bearer ${token}` } }
-
+                        { headers: { Authorization: `Bearer ${token}` } }
                       )
                       .then((res) => {
                         Swal.fire(
@@ -2204,7 +2084,6 @@ useEffect(() => {
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="Request For"
                         variant="outlined"
                         size="small"
                         className="border w-full p-2 rounded-lg"
@@ -2242,7 +2121,6 @@ useEffect(() => {
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="Category"
                         variant="outlined"
                         size="small"
                         className="border w-full p-2 rounded-lg"
@@ -2274,7 +2152,6 @@ useEffect(() => {
                     renderInput={(params) => (
                       <TextField
                         {...params}
-                        label="Material"
                         variant="outlined"
                         size="small"
                         className="border w-full p-2 rounded-lg"
@@ -2501,7 +2378,12 @@ useEffect(() => {
           <button className="px-2 py-1 border rounded-md">{">"}</button>
         </div>
         <>
-              {showModal && <PopupModal {...modalProps} onClose={modalProps?.onClose || (() => setShowModal(false))} />}
+          {showModal && (
+            <PopupModal
+              {...modalProps}
+              onClose={modalProps?.onClose || (() => setShowModal(false))}
+            />
+          )}
         </>
       </div>
     </div>

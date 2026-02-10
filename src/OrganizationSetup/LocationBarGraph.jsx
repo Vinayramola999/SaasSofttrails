@@ -1,151 +1,147 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Bar } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-} from "chart.js";
-import ChartDataLabels from "chartjs-plugin-datalabels";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-  ChartDataLabels
-);
+import Chart from "react-apexcharts";
+import { MAIN_API_BASE } from "../config/apiBase";
 
 const CityUserChart = () => {
-  const [locations, setLocations] = useState([]);
-  const [users, setUsers] = useState([]);
-
-  // useEffect(() => {
-  //   const token = sessionStorage.getItem("token"); // Get token from sessionStorage
-  //   const headers = {
-  //     Authorization: `Bearer ${token}`,
-  //   };
-
-  //   // Fetch locations
-  //   axios
-  //     .get("https://devapi.softtrails.net/saas/test/loc", { headers })
-  //     .then((res) => setLocations(res.data))
-  //     .catch((err) => console.error("Error fetching locations:", err));
-
-  //   // Fetch users
-  //   axios
-  //     .get("https://devapi.softtrails.net/saas/test/users", { headers })
-  //     .then((res) => setUsers(res.data))
-  //     .catch((err) => console.error("Error fetching users:", err));
-  // }, []);
+  const [series, setSeries] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = sessionStorage.getItem("token"); // Get token from sessionStorage
-    if (!token) return;
-
-    const headers = { Authorization: `Bearer ${token}` };
-
-    // Fetch locations
-    axios
-      .get("https://devapi.softtrails.net/saas/test/loc", { headers })
-      .then((res) => {
-        if (res.data) {
-          setLocations(res.data); 
-        } else {
-          setLocations([]);
+    const fetchData = async () => {
+      try {
+        const token = sessionStorage.getItem("token");
+        if (!token) {
+          setLoading(false);
+          return;
         }
-      })
-      .catch((err) => console.error("Error fetching locations:", err));
 
-    // Fetch users
-    axios
-      .get("https://devapi.softtrails.net/saas/test/users", { headers })
-      .then((res) => {
-        if (res.data && res.data.users) {
-          setUsers(res.data.users);
-        } else {
-          setUsers([]);
-        }
-      })
-      .catch((err) => console.error("Error fetching users:", err));
+        const headers = { Authorization: `Bearer ${token}` };
+
+        const [locRes, usersRes] = await Promise.all([
+          axios.get(`${MAIN_API_BASE}/loc`, { headers }),
+          axios.get(`${MAIN_API_BASE}/users`, { headers })
+        ]);
+
+        const locations = locRes.data || [];
+        const users = usersRes.data?.users || [];
+
+        const localityCounts = {};
+        locations.forEach(loc => { localityCounts[loc.locality] = 0; });
+
+        users.forEach(user => {
+          if (user.locality) {
+            localityCounts[user.locality] = (localityCounts[user.locality] || 0) + 1;
+          }
+        });
+
+        // Sort by count desc and take top 10 to clear clutter
+        const sortedLocs = Object.keys(localityCounts)
+          .filter(loc => localityCounts[loc] > 0)
+          .sort((a, b) => localityCounts[b] - localityCounts[a]);
+
+        // Limit x-axis if too many
+        const topLocs = sortedLocs.length > 15 ? sortedLocs.slice(0, 15) : sortedLocs;
+
+        setCategories(topLocs);
+        setSeries([{
+          name: 'Employees',
+          data: topLocs.map(loc => localityCounts[loc])
+        }]);
+
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        setSeries([]);
+        setCategories([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, []);
 
-  const getUserCountByLocality = (locality) => {
-    return users.filter(
-      (user) =>
-        user.locality &&
-        user.locality.toLowerCase() === locality.toLowerCase()
-    ).length;
-  };
-
-  const localityLabels = locations.map((loc) => loc.locality);
-  const cityMap = Object.fromEntries(locations.map((loc) => [loc.locality, loc.city]));
-  const userCounts = localityLabels.map((locality) => getUserCountByLocality(locality));
-
-  const chartData = {
-    labels: localityLabels,
-    datasets: [
-      {
-        label: "Users per Locality",
-        data: userCounts,
-        backgroundColor: "blue",
-        hoverBackgroundColor: "darkblue",
-        barThickness: 18,
-        maxBarThickness: 20,
-        categoryPercentage: 0.6,
-        barPercentage: 0.8,
-      },
-    ],
-  };
-
   const chartOptions = {
-    responsive: true,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: (tooltipItem) => {
-            const locality = chartData.labels[tooltipItem.dataIndex];
-            const city = cityMap[locality];
-            const users = tooltipItem.raw;
-            return `Users: ${users}, Locality: ${locality}, City: ${city}`;
-          },
-        },
-      },
-      datalabels: {
-        display: false,
-      },
+    chart: {
+      type: 'bar',
+      fontFamily: 'Inter, sans-serif',
+      toolbar: { show: false },
+      zoom: { enabled: false }
     },
-    scales: {
+    // Varied palette: Emerald, Teal, Cyan, Sky, Blue, Indigo
+    colors: ['#10B981', '#14B8A6', '#06B6D4', '#0EA5E9', '#3B82F6', '#6366F1'],
+    plotOptions: {
+      bar: {
+        horizontal: false,
+        borderRadius: 4,
+        columnWidth: '55%',
+        distributed: true, // Distributed colors
+      }
+    },
+    dataLabels: {
+      enabled: false,
+    },
+    xaxis: {
+      categories: categories,
+      labels: {
+        rotate: -45,
+        style: {
+          fontSize: '11px',
+          fontFamily: 'Inter, sans-serif',
+          colors: '#64748B'
+        }
+      },
+      axisBorder: { show: false },
+      axisTicks: { show: false }
+    },
+    yaxis: {
+      labels: {
+        style: {
+          colors: '#64748B',
+          fontSize: '11px',
+          fontFamily: 'Inter, sans-serif',
+        },
+        formatter: (val) => Math.floor(val)
+      },
+      axisBorder: { show: false }
+    },
+    grid: {
+      borderColor: '#F1F5F9',
+      strokeDashArray: 4,
+      yaxis: { lines: { show: true } },
+      xaxis: { lines: { show: false } },
+      padding: { top: 0, right: 0, bottom: 0, left: 10 }
+    },
+    tooltip: {
+      theme: 'light',
       y: {
-        beginAtZero: true,
-        ticks: {
-          precision: 0,
-        },
-        grid: {
-          display: false, // ❌ hide y-axis grid lines
-        },
+        formatter: function (val) {
+          return val + " User(s)"
+        }
       },
-      x: {
-        grid: {
-          display: false, // ❌ hide x-axis grid lines
-        },
-      },
-    },
+      style: { fontSize: '12px' }
+    }
   };
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-md border border-blue-300 w-full h-[300px] flex flex-col items-center justify-center overflow-auto scrollbar-hide">
-      <div className="flex justify-center items-center mt-4">
-        <h2 className="text-lg font-semibold ">Location</h2>
+    <div className="w-full h-full min-h-[320px] bg-white rounded-xl border border-gray-200 p-5 flex flex-col">
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <h2 className="text-base font-bold text-gray-900">User Distribution</h2>
+          <p className="text-xs text-gray-500 mt-0.5">Active users by location</p>
+        </div>
       </div>
-      <Bar data={chartData} options={chartOptions} />
+
+      {loading ? (
+        <div className="flex-1 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
+        </div>
+      ) : (
+        <div className="flex-1 w-full">
+          <Chart options={chartOptions} series={series} type="bar" height={220} width="100%" />
+        </div>
+      )}
     </div>
   );
 };

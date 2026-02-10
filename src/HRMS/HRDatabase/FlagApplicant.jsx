@@ -5,7 +5,8 @@ import { saveAs } from "file-saver";
 import excel from '../../assests/excel.png';
 import folder from '../../assests/folder.png';
 import { DeleteIcon } from "../../NewComponents/ReactIcons";
-import DeleteConfirmModal from "../../NewComponents/DeleteConfirmModal"; // ✅ modal
+import DeleteConfirmModal from "../../NewComponents/DeleteConfirmModal"; 
+import { HRMS_API_BASE } from "../../config/apiBase";
 
 const FlagApplicant = () => {
     const [data, setData] = useState([]);
@@ -33,7 +34,7 @@ const FlagApplicant = () => {
     const fetchData = async () => {
         const token = sessionStorage.getItem("token");
         try {
-            const response = await axios.get("https://devapi.softtrails.net/hrms/test/resume/flagged", {
+            const response = await axios.get(`${HRMS_API_BASE}/resume/flagged`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -75,7 +76,7 @@ const FlagApplicant = () => {
     const handleConfirm = async () => {
         try {
             setLoading(true);
-            const res = await fetch(`https://devapi.softtrails.net/hrms/test/resume/flagged/${deleteId}`, {
+            const res = await fetch(`${HRMS_API_BASE}/resume/flagged/${deleteId}`, {
                 method: "DELETE",
                 headers: {
                     Authorization: `Bearer ${sessionStorage.getItem("token")}`,
@@ -86,7 +87,7 @@ const FlagApplicant = () => {
                 const errorText = await res.text();
                 throw new Error(errorText || "Failed to delete");
             }
-            const updatedRes = await fetch("https://devapi.softtrails.net/hrms/test/resume/flagged", {
+            const updatedRes = await fetch(`${HRMS_API_BASE}/resume/flagged`, {
                 headers: {
                     Authorization: `Bearer ${sessionStorage.getItem("token")}`,
                 },
@@ -217,29 +218,28 @@ const FlagApplicant = () => {
         saveAs(blob, `Flagged_Candidates_${new Date().toISOString().slice(0, 10)}.xlsx`);
     };
 
-    const handlePreview = async (id) => {
-        try {
-            const res = await fetch(
-                `https://devapi.softtrails.net/hrms/test/resume/flagged/resume/${id}`,
-                {
-                    method: "GET",
-                    headers: {
-                        Authorization: `Bearer ${sessionStorage.getItem("token")}`,
-                    },
-                }
-            );
+    // const handlePreview = async (id) => {
+    //     try {
+    //         const res = await fetch(`${HRMS_API_BASE}/resume/flagged/resume/${id}`,
+    //             {
+    //                 method: "GET",
+    //                 headers: {
+    //                     Authorization: `Bearer ${sessionStorage.getItem("token")}`,
+    //                 },
+    //             }
+    //         );
 
-            if (!res.ok) {
-                throw new Error(`Failed to fetch resume: ${res.status}`);
-            }
+    //         if (!res.ok) {
+    //             throw new Error(`Failed to fetch resume: ${res.status}`);
+    //         }
 
-            const blob = await res.blob();
-            const url = URL.createObjectURL(blob);
-            window.open(url, "_blank");
-        } catch (err) {
-            console.error("Error previewing resume:", err);
-        }
-    };
+    //         const blob = await res.blob();
+    //         const url = URL.createObjectURL(blob);
+    //         window.open(url, "_blank");
+    //     } catch (err) {
+    //         console.error("Error previewing resume:", err);
+    //     }
+    // };
 
     return (
         <div>
@@ -391,16 +391,17 @@ const FlagApplicant = () => {
                         </div>
 
                         {/* Uploaded Resume */}
-                        <div className="mt-6">
-                            <div className="text-sm text-gray-500 font-medium mb-2">Uploaded file:</div>
-                            <button
-                                onClick={() => handlePreview(selected.id, selected.name)}
-                                className="flex items-center border border-gray-300 rounded px-4 py-2 text-sm text-green-600 hover:underline"
-                            >
-                                <img src={folder} alt="preview" className="w-5 h-5 mr-2" /><span className="ml-1 font-medium text-black">{selected.name}.pdf</span>
-                            </button>
+                        <div className="mt-6 flex flex-col">
+                            <div className="text-sm text-gray-500 font-medium mb-2">
+                                Upload file:
+                            </div>
+                            {selected.resume ? (
+                                <a href={selected.resume} target="_blank" rel="noopener noreferrer" className="flex items-center px-4 py-2 text-sm text-green-600 hover:underline" >
+                                    <img src={folder} alt="resume" className="w-5 h-5 mr-2" />
+                                    <span className="ml-1 font-medium text-black">{selected.name}.pdf</span>
+                                </a>
+                            ) : (<span className="text-gray-400 italic">No file uploaded</span>)}
                         </div>
-
                     </div>
                 </div>
             )}

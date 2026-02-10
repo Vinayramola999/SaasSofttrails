@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import axios from 'axios';
 import Swal from "sweetalert2";
+import { MAIN_API_BASE } from '../config/apiBase';
 
-const OtpVerificationPopup1 = ({ email, onClose }) => {
+const OtpVerificationPopup = ({ email, onClose }) => {
   const [otp, setOtp] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -14,13 +15,13 @@ const OtpVerificationPopup1 = ({ email, onClose }) => {
 
   const handleVerifyOtp = async () => {
     try {
-      const token = sessionStorage.getItem('token'); 
-      const to = sessionStorage.getItem('schema_name');
-      const response = await axios.post('https://devapi.softtrails.net/saas/test/otp/verify-otp',
-        { email, otp ,to },
+      const token = sessionStorage.getItem('token'); // Or wherever you store the token
+
+      const response = await axios.post(`${MAIN_API_BASE}/otp/verify-otp`,
+        { email, otp },
         {
           headers: {
-            'Authorization': `Bearer ${token}`, 
+            'Authorization': `Bearer ${token}`, // Add token to the headers
           }
         }
       );
@@ -60,7 +61,7 @@ const OtpVerificationPopup1 = ({ email, onClose }) => {
   //   }
   //   try {
   //     const token = sessionStorage.getItem('token'); 
-  //     await axios.post('https://devapi.softtrails.net/saas/test/otp/reset-password',
+  //     await axios.post(`${MAIN_API_BASE}/otp/reset-password`,
   //       { email, password, confirmPassword },
   //       {
   //         headers: {
@@ -91,10 +92,8 @@ const OtpVerificationPopup1 = ({ email, onClose }) => {
     }
     try {
       const token = sessionStorage.getItem("token"); 
-      const to = sessionStorage.getItem("schema_name");
-      await axios.post(
-        "https://devapi.softtrails.net/saas/test/otp/reset-password",
-        { email, password, confirmPassword ,to },
+      await axios.post(`${MAIN_API_BASE}/otp/reset-password`,
+        { email, password, confirmPassword },
         {
           headers: {
             Authorization: `Bearer ${token}`, 
@@ -205,4 +204,4 @@ const OtpVerificationPopup1 = ({ email, onClose }) => {
     </div>
   );
 };
-export default OtpVerificationPopup1;
+export default OtpVerificationPopup;

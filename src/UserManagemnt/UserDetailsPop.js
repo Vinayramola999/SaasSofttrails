@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { MAIN_API_BASE } from '../config/apiBase';
 import axios from 'axios';
 
 function UserDetails({ user, onClose }) {
@@ -9,8 +10,7 @@ function UserDetails({ user, onClose }) {
   const [loadingCategory, setLoadingCategory] = useState(true);
 
   useEffect(() => {
-  // ✅ Fetch all users
-  fetch('https://devapi.softtrails.net/saas/test/users/getusers', {
+  fetch(`${MAIN_API_BASE}/users/getusers`, {
     headers: {
       'Authorization': `Bearer ${sessionStorage.getItem('token')}`,
     },
@@ -35,8 +35,7 @@ function UserDetails({ user, onClose }) {
   const fetchCategories = async () => {
     try {
       const currentToken = sessionStorage.getItem('token');
-      const response = await axios.get(
-        'https://devapi.softtrails.net/saas/test/user-category/all',
+      const response = await axios.get(`${MAIN_API_BASE}/user-category/all`,
         {
           headers: { Authorization: `Bearer ${currentToken}` },
         }
@@ -63,6 +62,7 @@ function UserDetails({ user, onClose }) {
 
   fetchCategories();
 }, [user.manager_id]);
+
 
   const bandOptions = [
     { value: 1, label: 'A' },

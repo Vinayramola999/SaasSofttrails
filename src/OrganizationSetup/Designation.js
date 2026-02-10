@@ -10,7 +10,7 @@ import Swal from 'sweetalert2';
 import AddButton from "../NewComponents/AddButton";
 import { FaPlus } from "react-icons/fa";
 import SearchButton from "../NewComponents/SearchButton";
-
+import { MAIN_API_BASE } from '../config/apiBase';
 
 const DesignationTable = () => {
     const navigate = useNavigate();
@@ -31,7 +31,7 @@ const DesignationTable = () => {
 
     const fetchDesignations = async () => {
         try {
-            const response = await axios.get('https://devapi.softtrails.net/saas/test/designation', {
+            const response = await axios.get(`${MAIN_API_BASE}/designation`, {
                 headers: {
                     "Authorization": `Bearer ${token}`
                 }
@@ -58,7 +58,7 @@ const DesignationTable = () => {
             setLoading(true);
             setFormError(''); // Clear any existing error
 
-            const response = await axios.post('https://devapi.softtrails.net/saas/test/designation', {
+            const response = await axios.post(`${MAIN_API_BASE}/designation`, {
                 designation: newDesignationName,
                 description: newDesignationDescription,
             }, {
@@ -94,7 +94,7 @@ const DesignationTable = () => {
 
     const handleDelete = async (id) => {
         try {
-            await axios.delete(`https://devapi.softtrails.net/saas/test/designation/${id}`, {
+            await axios.delete(`${MAIN_API_BASE}/designation/${id}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -185,7 +185,7 @@ const DesignationTable = () => {
         try {
             const token = sessionStorage.getItem("token"); // Get token from storage
 
-            const response = await fetch(`https://devapi.softtrails.net/saas/test/designation/${selectedDesignationId}`, {
+            const response = await fetch(`${MAIN_API_BASE}/designation/${selectedDesignationId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -232,25 +232,17 @@ const DesignationTable = () => {
             setLoading(false);
         }
     };
-
-
     /********************* END *******************/
     return (
         <div className=" w-full">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-3">
                 <AddButton onClick={() => setIsAddModalOpen(true)} icon={FaPlus}>Add Designation</AddButton>
                 <div className="flex-grow"><SearchButton value={searchTerm} onChange={handleSearch} /></div>
-
-                <button
-                    onClick={handleDownloadExcel}
-                    className="text-green-500 flex-shrink-0 w-full sm:w-[10%] text-center"
-                >
-                    <img src={excel} alt="logo" className="w-8 h-8 mx-auto" />
-                </button>
+                <button onClick={handleDownloadExcel} className="text-green-500 flex-shrink-0 w-full sm:w-[10%] text-center" > <img src={excel} alt="logo" className="w-8 h-8 mx-auto" /> </button>
             </div>
 
             {isAddModalOpen && (
-                <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-20">
+                <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
                     <div className="bg-white p-6 rounded-lg w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg">
                         <h2 className="text-xl font-bold mb-4">Create Designation</h2>
                         <form
@@ -308,7 +300,7 @@ const DesignationTable = () => {
             )}
 
             {isDeleteModalOpen && (
-                <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-20">
+                <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
                     <div className="bg-white p-6 rounded-lg w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg">
                         {/* Display error if exists */}
                         {deleteError && (
@@ -340,7 +332,7 @@ const DesignationTable = () => {
             )}
 
             {isEditModalOpen && (
-                <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-20">
+                <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex justify-center items-center z-50">
                     <div className="bg-white p-6 rounded-lg w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg">
                         <h2 className="text-xl font-bold mb-4">Edit Designation</h2>
                         <form
@@ -460,8 +452,8 @@ const DesignationTable = () => {
                                     <td className="px-5 py-4 text-left text-[14px] text-black">{(currentPage - 1) * itemsPerPage + index + 1}</td>
                                     <td className="px-5 py-4 text-left text-[14px] text-black">{designation.designation}</td>
                                     <td className="px-5 py-4 text-left text-[14px] text-black">{designation.description}</td>
-                                    <td className={`py-4 px-5 border-b text-[14px] font-semibold ${designation.status === "Active" ? "text-green-600" : "text-red-600"}`}>{designation.status}</td>
-                                    <td className="py-4 px-4 border-b space-x-2">
+                                    <td className={`py-4 px-5 text-[14px] font-semibold ${designation.status === "Active" ? "text-green-600" : "text-red-600"}`}>{designation.status}</td>
+                                    <td className="py-4 px-4 space-x-2">
                                         <button onClick={() => handleEditClick(designation)} className="text-blue-500 hover:text-blue-700"><FontAwesomeIcon icon={faEdit} /></button>
                                         <button onClick={() => confirmDelete(designation)} className="text-red-500 hover:text-red-700 ml-4"><FontAwesomeIcon icon={faTrash} /></button>
                                     </td>

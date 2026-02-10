@@ -4,6 +4,7 @@ import { AiFillEye, AiFillEyeInvisible, AiOutlineLoading } from 'react-icons/ai'
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Button from '../Components/buttons';
+import { MAIN_API_BASE } from '../config/apiBase';
 
 const ChangePassword = () => {
   const [password, setPassword] = useState({
@@ -39,24 +40,6 @@ const ChangePassword = () => {
   const token = getToken();
   console.log('Retrieved token:', token);
 
-  const verifyToken = async () => {
-    if (!token) {
-      navigate('/');
-      return;
-    }
-    try {
-      const response = await axios.post('https://devapi.softtrails.net/saas/test/users/verify-token', {
-        token: token
-      });
-      console.log('Token is valid:', response.data);
-      navigate('/Profile');
-    } catch (error) {
-      console.error('Token verification failed:', error.response ? error.response.data : error.message);
-      sessionStorage.removeItem('token');
-      sessionStorage.removeItem('tokenExpiry');
-      navigate('/');
-    }
-  };
 
   const ChangePassword = async () => {
     if (password.new !== password.confirm) {
@@ -74,7 +57,7 @@ const ChangePassword = () => {
 
     try {
       setLoading(true);
-      const url = 'https://devapi.softtrails.net/saas/test/users/change-password';
+      const url = `${MAIN_API_BASE}/users/change-password`;
       const data = {
         oldPassword: password.old,
         newPassword: password.new,

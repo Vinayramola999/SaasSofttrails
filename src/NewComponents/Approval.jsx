@@ -1,6 +1,6 @@
 import React from 'react';
 
-const Approval = ({ isOpen, onClose, onConfirm, title, message }) => {
+const ApproveModal = ({ isOpen, onClose, onConfirm, title, message }) => {
   if (!isOpen) return null;
 
   return (
@@ -44,4 +44,4 @@ const Approval = ({ isOpen, onClose, onConfirm, title, message }) => {
   );
 };
 
-export default Approval;
+export default ApproveModal;

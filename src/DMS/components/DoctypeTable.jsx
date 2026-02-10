@@ -1,10 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const DoctypeTable = ({ docs = [], handleDelete }) => {
   const [deleteTargetId, setDeleteTargetId] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 7;
   const totalPages = Math.ceil(docs.length / rowsPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [docs.length]);
 
   const paginatedDocs = docs.slice(
     (currentPage - 1) * rowsPerPage,

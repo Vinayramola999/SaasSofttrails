@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import ServiceTable from "../components/ServiceTable";
 import MessageModal from "../components/MessageModal";
 import { fetchServices, addService, deleteService } from "../service/Setup";
@@ -61,7 +61,7 @@ const AddService = () => {
   };
 
   const filteredServices = services.filter((service) =>
-    service.name.toLowerCase().includes(searchTerm.toLowerCase())
+    service.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (

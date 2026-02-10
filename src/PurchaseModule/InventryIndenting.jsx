@@ -7,11 +7,33 @@ import Select from "react-select";
 import PopupModal from "./PopupModal";
 import DownloadTableButtons from "./components/Downloadpdfexcel";
 import { FaFilePdf, FaRegFileAlt } from "react-icons/fa"; // <-- added FaRegFileAlt
+import { generateRfpPdf } from "./components/RfpTemplate";
 
 const InventryIndenting = () => {
   const getToken = () => sessionStorage.getItem("token");
   const token = getToken();
   const [loading, setLoading] = useState(false);
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [productItems, setProductItems] = useState([]);
+  const [assetDetails, setAssetDetails] = useState([]);
+
+  const handleItemSelect = (idx) => {
+    setSelectedItems((prev) => {
+      if (prev.includes(idx)) {
+        return prev.filter((i) => i !== idx);
+      } else {
+        return [...prev, idx];
+      }
+    });
+  };
+
+  const handleSelectAllItems = (e) => {
+    if (e.target.checked) {
+      setSelectedItems(productItems.map((_, idx) => idx));
+    } else {
+      setSelectedItems([]);
+    }
+  };
   const [requests, setRequests] = useState([]);
   const [search, setSearch] = useState("");
   const [asset, setAsset] = useState("");
@@ -19,6 +41,7 @@ const InventryIndenting = () => {
   const [status, setStatus] = useState("");
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isRequestMaterialOpen, setIsRequestMaterialOpen] = useState(false);
+  const [currentIndentId, setCurrentIndentId] = useState(null);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [categoryOptions, setCategoryOptions] = useState([]);
   const createdBy = sessionStorage.getItem("userId");
@@ -31,9 +54,9 @@ const InventryIndenting = () => {
   const [selectedLogoName, setSelectedLogoName] = useState("");
   const [selectedSpecFileName, setSelectedSpecFileName] = useState("");
   const [documentOptions, setDocumentOptions] = useState([]);
+  const [budgetOptions, setBudgetOptions] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [modalProps, setModalProps] = useState({});
-  const [deleteId, setDeleteId] = useState(null);
   const columns = [
     { header: "S. No.", accessor: "sno" },
     { header: "Indent ID", accessor: "id" },
@@ -70,6 +93,9 @@ const InventryIndenting = () => {
     });
     setSelectedLogoName(""); // if you're tracking selected file name
     setSelectedSpecFileName(""); // ✅ reset specification file name
+    setProductItems([]); // Clear product items
+    setSelectedItems([]); // Clear selected items
+    setCurrentIndentId(null); // Clear current indent ID
   };
 
   const handleIconClick = () => {
@@ -95,122 +121,7 @@ const InventryIndenting = () => {
     }
   }, [showRFP]);
 
-  const handleGenerate = async () => {
-    try {
-      const userId = sessionStorage.getItem("userId");
-      if (!userId) throw new Error("User ID not found in session storage");
-      const publish_id = await getDmsPublishId(
-        "purchase",
-        "RFP_SPECIFICATION",
-        "RFP_SPECIFICATION"
-      );
-      // ✅ Validate form fields before upload
-      if (
-        !formData.title ||
-        !formData.issuedDate ||
-        !formData.dueDate ||
-        !formData.file
-        // !formData.description
-      ) {
-        setModalProps({
-          type: "warning",
-          title: "Missing Information",
-          message:
-            "Please fill in all required fields: Title, Dates, File, and Description.",
-          onClose: () => setShowModal(false),
-        });
-        setShowModal(true);
-        return; // stop execution
-      }
-
-      // === Upload Specification File ===
-      const fileFormData = new FormData();
-      fileFormData.append("documents", formData.file);
-      fileFormData.append("ref", "RFP");
-      fileFormData.append(
-        "metadata",
-        JSON.stringify([
-          {
-            service: "purchase",
-            publish_id,
-            user_id: userId,
-            document_name: formData.file?.name || "document-file.pdf",
-          },
-        ])
-      );
-      fileFormData.append("custom_folder", "purchase");
-
-      const fileUploadRes = await axios.post(
-        API.DMS_UPLOAD ||
-          "https://devapi.softtrails.net/saas/dms/test/dmsapi/upload-documents",
-        fileFormData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const fileUrl = fileUploadRes.data?.uploaded_files?.[0]?.file_url;
-      if (!fileUrl) throw new Error("Specification file upload failed");
-
-      // === Prepare and send RFP update payload ===
-      const rfpPayload = {
-        user_id: userId,
-        rfp_id: rfpId,
-        Title: formData.title,
-        rfp_start_date: formData.issuedDate,
-        rfp_end_date: formData.dueDate,
-        upload_file_link: fileUrl,
-        required_doc: { documents: [formData.requiredDocument] },
-        additional_description: {
-          description: formData.description,
-        },
-      };
-
-      const rfpResponse = await axios.put(
-        `${API.PURCHASE_API}/rfps/update_rfp/${rfpId}`,
-        rfpPayload,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      console.log("RFP updated successfully:", rfpResponse.data);
-      setModalProps({
-        type: "success",
-        title: "Success",
-        message: "RFP generated successfully.",
-        onClose: () => setShowModal(false),
-      });
-      setShowRFP(false);
-      resetForm();
-      fetchRequests(); // <-- Refresh table after RFP generated
-    } catch (error) {
-      console.error("Error generating RFP:", error);
-
-      if (error.response?.data?.message === "RFP not found") {
-        setModalProps({
-          type: "warning",
-          title: "RFP not found",
-          message: "Please update the logo and organization name first.",
-          onClose: () => setShowModal(false),
-        });
-      } else {
-        setModalProps({
-          type: "error",
-          title: "Error",
-          message:
-            error.response?.data?.message ||
-            error.response?.data?.error ||
-            error.message ||
-            "Failed to generate RFP.",
-          onClose: () => setShowModal(false),
-        });
-      }
-    }
-  };
-
-  const fetchRequests = async () => {
+const fetchRequests = async () => {
     try {
       const headers = {
         Authorization: `Bearer ${token}`,
@@ -234,7 +145,14 @@ const InventryIndenting = () => {
         item.id = item.indent_id; // 🔹 normalize field
       });
 
-      const combinedData = [...indentingData, ...salesIndentingData];
+      // Sort by created_at in descending order (newest first), falling back to updated_at if created_at is not available
+      const combinedData = [...indentingData, ...salesIndentingData].sort(
+        (a, b) => {
+          const dateA = new Date(a.created_at || a.updated_at);
+          const dateB = new Date(b.created_at || b.updated_at);
+          return dateB - dateA; // descending order (newest first)
+        }
+      );
 
       setRequests(combinedData);
     } catch (error) {
@@ -255,29 +173,7 @@ const InventryIndenting = () => {
     fetchRequests();
   }, []);
 
-  const confirmDelete = async (id) => {
-    try {
-      await axios.delete(`${API.PURCHASE_API}/indenting/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setRequests((prev) => prev.filter((request) => request.id !== id));
-      setModalProps({
-        type: "success",
-        title: "Deleted!",
-        message: "The indent has been deleted.",
-        onClose: () => setShowModal(false),
-      });
-      setShowModal(true);
-    } catch (error) {
-      setModalProps({
-        type: "error",
-        title: "Error!",
-        message: "Failed to delete the indent.",
-        onClose: () => setShowModal(false),
-      });
-      setShowModal(true);
-    }
-  };
+
   const handleRequestMaterialClick = (item) => {
     setSelectedRequest(item);
     setIsRequestMaterialOpen(true);
@@ -296,100 +192,231 @@ const InventryIndenting = () => {
     }
   };
 
-  //  const handleGenerateRFPClick = async (item = null) => {
-  //    const indentingId = item?.id ?? selectedRequest?.id;
-
-  //    if (!indentingId) {
-  //      setModalProps({
-  //        type: "error",
-  //        title: "Error!",
-  //        message: "Indenting ID not found.",
-  //        onClose: () => setShowModal(false),
-  //      });
-  //      setShowModal(true);
-  //      return;
-  //    }
-
-  //    try {
-  //      let response;
-  //      if (typeof indentingId === "string" && indentingId.startsWith("IND-")) {
-  //        response = await axios.put(
-  //          "https://devapi.softtrails.net/saas/purchase/test/purchase/sales/salesIndent",
-  //          { ids: [indentingId] },
-  //          { headers: { Authorization: `Bearer ${token}` } }
-  //        );
-  //        if (response.data?.rfp_id) setRfpId(response.data.rfp_id);
-  //      } else {
-  //        response = await axios.put(
-  //          `https://devapi.softtrails.net/saas/purchase/test/purchase/indenting/${indentingId}/rfp`,
-  //          {},
-  //          { headers: { Authorization: `Bearer ${token}` } }
-  //        );
-  //        if (response.data?.RFP_ID) setRfpId(response.data.RFP_ID);
-  //        else setRfpId(null);
-  //        fetchDetails();
-  //      }
-
-  //      setShowRFP(true);
-  //      fetchDetails();
-  //    } catch (error) {
-  //      console.error("Generate RFP error:", error);
-  //      setModalProps({
-  //        type: "error",
-  //        title: "Error!",
-  //        message:
-  //          error.response?.data?.message ||
-  //          error.response?.data?.error ||
-  //          error.message ||
-  //          "Failed to generate RFP. Please try again.",
-  //        onClose: () => setShowModal(false),
-  //      });
-  //      setShowModal(true);
-  //      fetchDetails();
-  //    }
-  //  };
-
   const handleGenerateRFPClick = async (item = null) => {
-    const indentingId = item?.id ?? selectedRequest?.id;
+    const indentingId =
+      item?.id ??
+      item?.indent_id ??
+      item?.indentId ??
+      selectedRequest?.id ??
+      selectedRequest?.indent_id ??
+      selectedRequest?.indentId;
+
+    // Store the current indent ID to be used in handleSave
+    console.log("✅ handleGenerateRFPClick - Setting currentIndentId:", indentingId);
+    setCurrentIndentId(indentingId);
 
     try {
-      let response;
-      // Check if indentingId is a string and starts with "IND-"
-      if (typeof indentingId === "string" && indentingId.startsWith("CIN-")) {
-        // Sales Indenting API
-        response = await axios.put(
-          `${API.PURCHASE_API}/sales/salesIndent`,
-          { ids: [indentingId] },
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        // Handle response as needed (e.g., setRfpId, etc.)
-        if (response.data.rfp_id) {
-          setRfpId(response.data.rfp_id);
-        }
+      const sourceData = item || selectedRequest;
+      let products = [];
+
+      // Prepare product list
+      if (
+        Array.isArray(sourceData?.products) &&
+        sourceData.products.length > 0
+      ) {
+        products = sourceData.products;
+      } else if (sourceData) {
+        products = [
+          {
+            product_name: sourceData.asset_name || "",
+            asset_name: sourceData.asset_name || "",
+            request_for: sourceData.request_for || "",
+            category: sourceData.category || "",
+            quantity: sourceData.quantity || "",
+            uom: sourceData.uom || "",
+            unit: sourceData.uom || "",
+            workflow: sourceData.workflow_id || "",
+            budget: sourceData.budget_id || sourceData.budget || "",
+            description: sourceData.remarks || sourceData.description || "",
+            id: sourceData.id || null,
+          },
+        ];
+      }
+
+      const mappedProducts = products.map((p) => ({
+        product_name: p.product_name || p.asset_name || "",
+        asset_name: p.asset_name || p.product_name || "",
+        request_for: p.request_for || sourceData?.request_for || "",
+        category: p.category || sourceData?.category || "",
+        quantity: p.quantity || 0,
+        uom: p.uom || p.unit || "",
+        unit: p.uom || p.unit || "",
+        workflow: p.workflow || sourceData?.workflow_id || "",
+        budget: p.budget || p.budget_id || sourceData?.budget_id || "",
+        description:
+          p.description || p.remarks || p.note || sourceData?.remarks || "",
+        id: p.id || null,
+      }));
+
+      setProductItems(mappedProducts);
+      setSelectedItems([]);
+
+      // ✅ Unified RFP API (works for both normal & sales indent)
+      const response = await axios.put(
+        `${API.PURCHASE_API}/indenting/${indentingId}/rfp`,
+        { indenting_id: indentingId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data.RFP_ID) {
+        console.log("🔑 RFP_ID received:", response.data.RFP_ID);
+        setRfpId(response.data.RFP_ID);
       } else {
-        // Indenting RFP API
-        response = await axios.put(
-          `${API.PURCHASE_API}/indenting/${indentingId}/rfp`,
-          {},
+        console.log("⚠️ No RFP_ID in response");
+        setRfpId(null);
+      }
+
+      // Fetch indent details
+      try {
+        const indentResponse = await axios.get(
+          `${API.PURCHASE_API}/indenting/${indentingId}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        if (response.data.RFP_ID) {
-          setRfpId(response.data.RFP_ID);
+
+        if (indentResponse.data) {
+          if (
+            Array.isArray(indentResponse.data.products) &&
+            indentResponse.data.products.length > 0
+          ) {
+            const items = indentResponse.data.products.map((p) => ({
+              product_name: p.product_name || p.asset_name || "",
+              asset_name: p.asset_name || p.product_name || "",
+              request_for:
+                p.request_for || indentResponse.data.request_for || "",
+              category: p.category || indentResponse.data.category || "",
+              quantity: p.quantity || 0,
+              uom: p.uom || p.unit || "",
+              unit: p.uom || p.unit || "",
+              workflow: p.workflow || indentResponse.data.workflow_id || "",
+              budget:
+                p.budget || p.budget_id || indentResponse.data.budget_id || "",
+              description:
+                p.description || p.remarks || indentResponse.data.remarks || "",
+              id: p.id || null,
+            }));
+            setProductItems(items);
+          } else {
+            const items = [
+              {
+                product_name:
+                  indentResponse.data.product_name ||
+                  indentResponse.data.asset_name ||
+                  "",
+                asset_name: indentResponse.data.asset_name || "",
+                request_for: indentResponse.data.request_for || "",
+                category: indentResponse.data.category || "",
+                quantity: indentResponse.data.quantity || 0,
+                uom: indentResponse.data.uom || indentResponse.data.unit || "",
+                unit: indentResponse.data.uom || indentResponse.data.unit || "",
+                workflow: indentResponse.data.workflow_id || "",
+                budget:
+                  indentResponse.data.budget ||
+                  indentResponse.data.budget_id ||
+                  "",
+                description:
+                  indentResponse.data.description ||
+                  indentResponse.data.remarks ||
+                  "",
+                id: indentResponse.data.id || null,
+              },
+            ];
+            setProductItems(items);
+          }
         } else {
-          setRfpId(null);
+          setProductItems([]);
         }
-        // setRfpId(selectedRequest.rfp_id);
-        fetchDetails(); // 👉 fetch latest org + logo data
+      } catch (error) {
       }
 
       setShowRFP(true);
       fetchDetails();
     } catch (error) {
+      const apiMessage = error.response?.data?.message;
+      const apiData = error.response?.data?.data;
+
+      if (apiMessage === "RFP ID already generated" && apiData) {
+        setRfpId(apiData);
+        setShowRFP(true);
+
+        try {
+          const indentResponse = await axios.get(
+            `${API.PURCHASE_API}/indenting/${indentingId}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+
+          if (indentResponse.data) {
+            const items =
+              Array.isArray(indentResponse.data.products) &&
+              indentResponse.data.products.length > 0
+                ? indentResponse.data.products.map((p) => ({
+                    product_name: p.product_name || p.asset_name || "",
+                    asset_name: p.asset_name || p.product_name || "",
+                    request_for:
+                      p.request_for || indentResponse.data.request_for || "",
+                    category: p.category || indentResponse.data.category || "",
+                    quantity: p.quantity || 0,
+                    uom: p.uom || p.unit || "",
+                    unit: p.uom || p.unit || "",
+                    workflow:
+                      p.workflow || indentResponse.data.workflow_id || "",
+                    budget:
+                      p.budget ||
+                      p.budget_id ||
+                      indentResponse.data.budget_id ||
+                      "",
+                    description:
+                      p.description ||
+                      p.remarks ||
+                      indentResponse.data.remarks ||
+                      "",
+                    id: p.id || null,
+                  }))
+                : [
+                    {
+                      product_name:
+                        indentResponse.data.product_name ||
+                        indentResponse.data.asset_name ||
+                        "",
+                      asset_name: indentResponse.data.asset_name || "",
+                      request_for: indentResponse.data.request_for || "",
+                      category: indentResponse.data.category || "",
+                      quantity: indentResponse.data.quantity || 0,
+                      uom:
+                        indentResponse.data.uom ||
+                        indentResponse.data.unit ||
+                        "",
+                      unit:
+                        indentResponse.data.uom ||
+                        indentResponse.data.unit ||
+                        "",
+                      workflow: indentResponse.data.workflow_id || "",
+                      budget:
+                        indentResponse.data.budget ||
+                        indentResponse.data.budget_id ||
+                        "",
+                      description:
+                        indentResponse.data.description ||
+                        indentResponse.data.remarks ||
+                        "",
+                      id: indentResponse.data.id || null,
+                    },
+                  ];
+
+            setProductItems(items);
+          }
+        } catch (innerErr) {
+          console.error("Failed to fetch indent after RFP exists:", innerErr);
+        }
+
+        fetchDetails();
+        return;
+      }
+
       setModalProps({
         type: "error",
         title: "Error!",
         message:
-          error.response?.data?.message ||
+          apiMessage ||
           error.response?.data?.error ||
           error.message ||
           "Failed to generate RFP. Please try again.",
@@ -397,7 +424,7 @@ const InventryIndenting = () => {
       });
       setShowModal(true);
       setShowRFP(true);
-      fetchDetails(); // 👉 fetch latest org + logo data
+      fetchDetails();
 
       if (error.response?.data?.RFP_ID) {
         setRfpId(error.response.data.RFP_ID);
@@ -412,17 +439,35 @@ const InventryIndenting = () => {
   const filteredRequests = requests.filter((item) => {
     let matches = true;
 
-    // ✅ Always show only "Approved" status
     if (item.status !== "Approved") {
       matches = false;
     }
 
     if (search) {
-      const searchTerm = search.toLowerCase();
-      const inAssetName = item.asset_name?.toLowerCase().includes(searchTerm);
-      const inCategory = item.category?.toLowerCase().includes(searchTerm);
-      const inRequestFor = item.request_for?.toLowerCase().includes(searchTerm);
-      if (!(inAssetName || inCategory || inRequestFor)) {
+      // normalize search term and include numeric id/user searches
+      const searchTerm = search.toString().trim().toLowerCase();
+      const inAssetName = item.asset_name
+        ?.toString()
+        .toLowerCase()
+        .includes(searchTerm);
+      const inCategory = item.category
+        ?.toString()
+        .toLowerCase()
+        .includes(searchTerm);
+      const inRequestFor = item.request_for
+        ?.toString()
+        .toLowerCase()
+        .includes(searchTerm);
+      const inIndentId =
+        item.indent_id?.toString().toLowerCase().includes(searchTerm) ||
+        item.id?.toString().toLowerCase().includes(searchTerm);
+      const inUserId = item.user_id
+        ?.toString()
+        .toLowerCase()
+        .includes(searchTerm);
+      if (
+        !(inAssetName || inCategory || inRequestFor || inIndentId || inUserId)
+      ) {
         matches = false;
       }
     }
@@ -457,11 +502,14 @@ const InventryIndenting = () => {
   };
 
   const handlePreviewRFP = async (item) => {
-    if (!item) {
+    // Normalize rfp id from different possible fields
+    const rfpId = item?.rfp_id ?? item?.rfpId ?? item?.RFP_ID ?? item?.rfp;
+
+    if (!rfpId) {
       setModalProps({
         type: "error",
         title: "Error!",
-        message: "Filename is missing!",
+        message: "RFP ID is missing for this record!",
         onClose: () => setShowModal(false),
       });
       setShowModal(true);
@@ -469,20 +517,42 @@ const InventryIndenting = () => {
     }
 
     try {
-      console.log("Previewing RFP:", item.rfp_id);
-      console.log("Using token:", token);
-
+      console.log("🔍 Requesting RFP preview for:", rfpId);
       const response = await axios.get(
-        `${API.PURCHASE_API}/rfps/preview_rfp/${item.rfp_id}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `${API.PURCHASE_API}/rfps/preview_rfp/${rfpId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'arraybuffer' // ✅ Get binary data as arraybuffer
+        }
       );
 
-      console.log("API Response:", response.data);
+      console.log("📦 Response received:", {
+        dataLength: response.data.byteLength,
+        contentType: response.headers['content-type'],
+        status: response.status
+      });
 
-      if (response.data?.fileUrl) {
-        window.open(response.data.fileUrl, "_blank");
+      // ✅ Create proper PDF blob
+      if (response.data && response.data.byteLength > 0) {
+        // Always treat as PDF
+        const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
+        const pdfUrl = window.URL.createObjectURL(pdfBlob);
+        
+        console.log("✅ PDF Blob created, opening in new tab:", pdfUrl);
+        
+        // Open PDF in new tab
+        const newWindow = window.open(pdfUrl, "_blank");
+        
+        if (!newWindow) {
+          throw new Error("Failed to open new tab. Check if pop-ups are allowed.");
+        }
+        
+        // Add filename to the window for reference
+        if (newWindow) {
+          newWindow.document.title = `RFP-${rfpId}.pdf`;
+        }
       } else {
-        throw new Error("File URL not found in response");
+        throw new Error("No file data received from server");
       }
     } catch (error) {
       console.error("Preview RFP Error:", error);
@@ -510,7 +580,7 @@ const InventryIndenting = () => {
       });
       const res = await axios.get(
         API.DMS_MAPPING_CHECK ||
-          "https://devapi.softtrails.net/saas/dms/test/mapping/check",
+          "https://devapi.softtrails.net/saas/mapping/check",
         {
           params: { service_name, doctype, doc_name },
           headers: { Authorization: `Bearer ${token}` },
@@ -524,40 +594,54 @@ const InventryIndenting = () => {
     }
   };
 
-  const handleSave = async () => {
+ const handleSave = async () => {
     try {
+      setLoading(true); // Start loader
       const userId = sessionStorage.getItem("userId");
       if (!userId) throw new Error("User ID not found in session storage");
 
-      let logoUrl = formData.logoUrl; // default to prefilled logo URL
+      // Validate required form fields: End Date is required in the UI.
+      if (!formData.dueDate) {
+        setModalProps({
+          type: "warning",
+          title: "Missing End Date",
+          message: "Please fill the End Date before generating the RFP.",
+          onClose: () => setShowModal(false),
+        });
+        setShowModal(true);
+        setLoading(false); // Stop loader
+        return; // stop further processing until End Date is provided
+      }
 
-      // === Upload Logo only if new file selected ===
-      if (formData.logo instanceof File) {
+    
+      const uploadToDMS = async (file, docType, folderName, docName) => {
+        console.log(`📤 Uploading to DMS:`, { docType, fileName: file.name, docName });
         const publish_id = await getDmsPublishId(
           "purchase",
-          "ORGANIZATION_LOGO",
-          "ORGANIZATION_LOGO"
+          docType,
+          docName || docType
         );
-        const logoFormData = new FormData();
-        logoFormData.append("documents", formData.logo);
-        logoFormData.append("ref", "RFP");
-        logoFormData.append(
+
+        const formData = new FormData();
+        formData.append("documents", file);
+        formData.append("ref", "RFP");
+        formData.append(
           "metadata",
           JSON.stringify([
             {
               service: "purchase",
               publish_id,
               user_id: userId,
-              document_name: formData.logo.name,
+              document_name: file.name,
             },
           ])
         );
-        logoFormData.append("custom_folder", "purchase");
+        formData.append("custom_folder", folderName);
 
-        const logoUploadRes = await axios.post(
+        const uploadRes = await axios.post(
           API.DMS_UPLOAD ||
-            "https://devapi.softtrails.net/saas/dms/test/dmsapi/upload-documents",
-          logoFormData,
+            "https://devapi.softtrails.net/saas/dmsapi/upload-documents",
+          formData,
           {
             headers: {
               "Content-Type": "multipart/form-data",
@@ -566,34 +650,126 @@ const InventryIndenting = () => {
           }
         );
 
-        logoUrl = logoUploadRes.data?.uploaded_files?.[0]?.file_url;
-        if (!logoUrl) throw new Error("Logo upload failed");
-      }
-
-      // === Create RFP ===
-      const rfpPayload = {
-        user_id: userId,
-        rfp_id: rfpId,
-        Organization_Name: formData.organization,
-        Logo: logoUrl,
+        const fileUrl = uploadRes.data?.uploaded_files?.[0]?.file_url;
+        if (!fileUrl) throw new Error(`${docType} upload failed`);
+        return fileUrl;
       };
 
+      // === 1. Upload logo if a file ===
+      let logoUrl = formData.logoUrl;
+      let logoBase64 = ""; // NEW: Will store Base64 version for PDF embedding
+      if (formData.logo instanceof File) {
+        // Convert logo to Base64 for use in PDF (NO CORS issues!)
+        const reader = new FileReader();
+        logoBase64 = await new Promise((resolve, reject) => {
+          reader.onload = () => {
+            console.log("📸 Logo converted to Base64");
+            resolve(reader.result); // This is the Base64 string with data URL prefix
+          };
+          reader.onerror = () => reject(reader.error);
+          reader.readAsDataURL(formData.logo);
+        });
+        
+        // Also upload ORGANIZATION_LOGO to DMS for backup
+        logoUrl = await uploadToDMS(
+          formData.logo,
+          "ORGANIZATION_LOGO",
+          "purchase"
+        );
+      }
+
+      // === 2. Upload user-selected specification file (if any) as RFP_SPECIFICATION ===
+      let specFileUrl = "";
+      if (formData.file instanceof File) {
+        specFileUrl = await uploadToDMS(
+          formData.file,
+          "RFP_SPECIFICATION",
+          "purchase"
+        );
+      }
+
+      // === 3. Generate RFP PDF using generateRfpPdf (which already returns a File object) ===
+      // Use currentIndentId which was set in handleGenerateRFPClick
+      const indentId = currentIndentId || selectedRequest?.id || selectedRequest?.indent_id || selectedRequest?.indentId;
+      console.log("📋 handleSave - Generating PDF with:", { 
+        currentIndentId, 
+        indentId, 
+        rfpId,
+        rfpIdState: rfpId,
+        hasLogoBase64: !!logoBase64  // NEW: Show Base64 is available
+      });
+      const pdfFile = await generateRfpPdf({
+        ...formData,
+        rfpId,
+        logoUrl, // Pass the resolved logoUrl (either uploaded or from formData)
+        logoBase64, // NEW: Pass Base64 version (fastest - no CORS!)
+        productItems,
+        assetDetails,
+        indentId: indentId,
+        indent_id: indentId,
+        id: indentId,
+      });
+
+      const generatedRfpUrl = await uploadToDMS(
+        pdfFile,
+        "RFP",
+        "purchase",
+        "Generated RFP"
+      );
+
+      let additionalDocUrl = "";
+      if (formData.additionalDoc instanceof File) {
+        additionalDocUrl = await uploadToDMS(
+          formData.additionalDoc,
+          "ADDITIONAL_DOC",
+          "purchase"
+        );
+      }
+
+      const rfpPayload = {
+        rfp_id: rfpId || undefined,
+        user_id: Number(userId),
+        Organization_Name: formData.organization || "",
+        Logo: logoUrl || "",
+        Title: formData.title || "",
+        Start_Date: formData.issuedDate || "",
+        End_Date: formData.dueDate || "",
+        Upload_file: specFileUrl || "",
+        additional_description: {
+          description: formData.description || "",
+          notes: formData.notes || "",
+        },
+        required_doc: Array.isArray(formData.requiredDocument)
+          ? formData.requiredDocument.length
+          : formData.requiredDocument || 0,
+        required_doc_name: Array.isArray(formData.requiredDocument)
+          ? formData.requiredDocument.join(", ")
+          : formData.requiredDocument || "",
+        additional_doc_link: additionalDocUrl || "",
+        rfp_file_link: generatedRfpUrl || "",
+      };
+
+
+      // === 6. Call create_rfp API ===
       const rfpResponse = await axios.post(
         `${API.PURCHASE_API}/rfps/create_rfp`,
         rfpPayload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      console.log("RFP created successfully:", rfpResponse.data);
       setModalProps({
         type: "success",
         title: "Success!",
         message: "RFP created successfully!",
-        onClose: () => setShowModal(false),
+        onClose: () => {
+          setShowModal(false);
+          setShowRFP(false); // Close the RFP modal
+          fetchRequests(); // Refresh the table
+        },
       });
       setShowModal(true);
+      setLoading(false); // Stop loader
     } catch (error) {
-      console.error("Error saving RFP:", error);
       const apiMsg =
         error.response?.data?.message ||
         error.response?.data?.error ||
@@ -605,9 +781,9 @@ const InventryIndenting = () => {
         onClose: () => setShowModal(false),
       });
       setShowModal(true);
+      setLoading(false); // Stop loader
     }
   };
-
   const fetchDetails = async () => {
     try {
       setLoading(true);
@@ -656,7 +832,7 @@ const InventryIndenting = () => {
     };
 
     fetchCategoryOptions();
-  }, [requestfor]);
+  }, [requestfor, token]);
   const requestForOptions = [
     { value: "Movable", label: "Movable" },
     { value: "Raw Materials", label: "Raw Materials" },
@@ -674,7 +850,7 @@ const InventryIndenting = () => {
     const fetchDocumentOptions = async () => {
       try {
         // 1. Get service_id for "purchase"
-        const serviceRes = await axios.get(`${API.API_BASE}/dms/test/service`, {
+        const serviceRes = await axios.get(`${API.API_BASE}/service`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const purchaseService = serviceRes.data.find(
@@ -684,7 +860,7 @@ const InventryIndenting = () => {
         const service_id = purchaseService.id;
 
         // 2. Get doctype_id for "POI" (or any doctype you want)
-        const doctypeRes = await axios.get(`${API.API_BASE}/dms/test/doctype`, {
+        const doctypeRes = await axios.get(`${API.API_BASE}/doctype`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const doctype = doctypeRes.data.find(
@@ -695,7 +871,7 @@ const InventryIndenting = () => {
 
         // 3. Fetch document options using service_id and doctype_id
         const docRes = await axios.get(
-          `${API.API_BASE}/dms/test/dmsapi/upload?service_id=${service_id}&doctype_id=${doctype_id}`,
+          `${API.API_BASE}/dmsapi/upload?service_id=${service_id}&doctype_id=${doctype_id}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         setDocumentOptions(
@@ -712,10 +888,10 @@ const InventryIndenting = () => {
     };
 
     fetchDocumentOptions();
-  }, [showRFP]);
+  }, [showRFP, token]);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 6; // Change as needed
+  const rowsPerPage = 10; // Change as needed
 
   const totalPages = Math.ceil(filteredRequests.length / rowsPerPage);
 
@@ -724,6 +900,10 @@ const InventryIndenting = () => {
     (currentPage - 1) * rowsPerPage,
     currentPage * rowsPerPage
   );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, asset, requestfor, department, status, requests]);
 
   const exportData = filteredRequests.map((item, idx) => ({
     sno: idx + 1,
@@ -738,6 +918,40 @@ const InventryIndenting = () => {
     status: item.status,
   }));
 
+  useEffect(() => {
+    const loadBudgets = async () => {
+      try {
+        const res = await axios.get(`${API.PURCHASE_API}/budget/get-budget`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = Array.isArray(res.data) ? res.data : res.data?.data || [];
+        const mapped = data.map((item, idx) => ({
+          id:
+            item.id ??
+            item.budget_id ??
+            (item.budget_name ? idx + 1 : idx + 1), // fallback id
+          budget_name:
+            item.budget_name || item.name || item.budget || String(item.id || item.budget_id || idx + 1),
+        }));
+        setBudgetOptions(mapped);
+      } catch (err) {
+        console.error("Error fetching budgets (get-budget):", err);
+        setBudgetOptions([]);
+      }
+    };
+
+    loadBudgets();
+  }, [token]);
+
+    const getBudgetDisplayName = (budgetVal) => {
+    if (budgetVal === null || budgetVal === undefined) return "";
+    const found = budgetOptions.find(
+      (b) =>
+        String(b.id) === String(budgetVal) ||
+        String(b.budget_name) === String(budgetVal)
+    );
+    return found ? found.budget_name : String(budgetVal);
+  };
   return (
     <div className="p-2">
       <div className="flex gap-4 mb-4">
@@ -785,7 +999,7 @@ const InventryIndenting = () => {
       </div>
       <div
         className="overflow-x-auto rounded-lg shadow bg-white p-4"
-        style={{ maxHeight: 400, overflowY: "auto", minWidth: 900 }}
+        style={{ maxHeight: 600, overflowY: "auto", minWidth: 900 }}
       >
         <table className="w-full bg-white rounded-lg border-collapse">
           <thead className="border-b-2 border-black">
@@ -793,11 +1007,7 @@ const InventryIndenting = () => {
             <tr>
               <th className="p-2 text-center">S. No.</th>
               <th className="p-2 text-center">Indent ID</th>
-              <th className="p-2 text-center">Request for</th>
-              <th className="p-2 text-center">Category</th>
-              {/* <th className="p-2 text-center">Request Material</th> */}
               <th className="p-2 text-center">RFP ID</th>
-              <th className="p-2 text-center">Quantity</th>
               <th className="p-2 text-center">Approval Date</th>
               <th className="p-2 text-center">Action</th>
             </tr>
@@ -809,41 +1019,20 @@ const InventryIndenting = () => {
                   {index + 1 + (currentPage - 1) * rowsPerPage}
                 </td>
                 <td
-                  className="p-2 text-center cursor-pointer"
+                  className="p-2 text-center cursor-pointer text-blue-600"
                   onClick={() => handleRequestMaterialClick(item)}
                 >
-                  {item.id}
+                  {item.indent_id}
                 </td>
-                <td className="p-2 text-center ">{item.request_for}</td>
-                <td className="p-2 text-center">{item.category}</td>
-                {/* <td
-                  className="p-2 text-center  text-custome-blue cursor-pointer"
-                  onClick={() => handleRequestMaterialClick(item)}
-                >
-                  {item.asset_name}
-                </td> */}
-                <td className="p-2 text-center">
-                  {item.rfp_id || ""}
-                </td>
-                <td className="p-2 text-center">{item.quantity}</td>
+
+                <td className="p-2 text-center">{item.rfp_id || ""}</td>
                 <td className="p-2 text-center">
                   {new Date(item.updated_at).toLocaleDateString("en-GB")}
                 </td>
 
-                {/* {item.rfp_id ? (
-                  <td
-                    className="p-2 flex items-center justify-center text-custome-blue font-semibold cursor-pointer"
-                    onClick={() => handlePreviewRFP(item)}
-                  >
-                    <FaFilePdf color="red" size={18} />
-                  </td>
-                ) : (
-                  <td className="p-2 text-center text-black-400 font-bold"></td>
-                )}
-               */}
                 <td className="p-2 flex items-center justify-center gap-2">
                   {/* Preview PDF (only when rfp_id exists) */}
-                  {item.rfp_id ? (
+                  {item?.rfp_id ?? item?.rfpId ?? item?.RFP_ID ?? item?.rfp ? (
                     <div
                       className="text-custome-blue cursor-pointer"
                       title="Preview RFP"
@@ -903,54 +1092,84 @@ const InventryIndenting = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded-xl w-[90%] md:w-[50%] max-h-[80vh] overflow-y-auto shadow-lg">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Indent Details</h2>
+              <div>
+                <h2 className="text-xl font-semibold">Raise request details</h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  Indent Id: {selectedRequest.indent_id || "N/A"}
+                </p>
+              </div>
               <button onClick={() => setIsRequestMaterialOpen(false)}>
                 <span className="text-red-500 text-2xl">✖</span>
               </button>
             </div>
 
-            <div className="grid grid-cols-2 gap-y-3 gap-x-6 text-sm">
-              <div className="flex">
-                <span className="font-semibold w-32">Indent Id:</span>
-                <span>{selectedRequest.id || "9876543234567"}</span>
-              </div>
-              <div className="flex">
-                <span className="font-semibold w-32">Request for:</span>
-                <span>{selectedRequest.request_for || "Raw material"}</span>
-              </div>
+            <div className="overflow-x-auto border rounded-lg mt-4">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="p-3 text-left">Sr.No.</th>
+                    <th className="p-3 text-left">Request for</th>
+                    <th className="p-3 text-left">Category</th>
+                    <th className="p-3 text-left">Material</th>
+                    <th className="p-3 text-left">Quantity</th>
+                    <th className="p-3 text-left">Uom</th>
+                    <th className="p-3 text-left">Budget</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(Array.isArray(selectedRequest.products) &&
+                  selectedRequest.products.length > 0
+                    ? selectedRequest.products
+                    : [
+                        {
+                          request_for:
+                            selectedRequest.request_for || "Item Name",
+                          category: selectedRequest.category || "Category Name",
+                          asset_name:
+                            selectedRequest.asset_name || "Asset Name",
+                          quantity: selectedRequest.quantity || "08",
+                          uom: selectedRequest.uom || "-",
+                          // workflow: selectedRequest.workflow || "Workflow name",
+                          budget: selectedRequest.budget || "NA",
+                          description: "Description Example xyz",
+                        },
+                      ]
+                  ).map((item, index) => (
+                    <tr
+                      key={index}
+                      className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                    >
+                      <td className="p-3 align-top">{index + 1}</td>
+                      <td className="p-3 align-top">
+                        <div className="font-medium">{item.request_for}</div>
+                        {item.description && (
+                          <div className="text-xs text-gray-500">
+                            {item.description}
+                          </div>
+                        )}
+                      </td>
+                      <td className="p-3 align-top">{item.category}</td>
+                      <td className="p-3 align-top">{item.asset_name}</td>
+                      <td className="p-3 align-top">{item.quantity}</td>
+                      <td className="p-3 align-top">{item.uom}</td>
 
-              <div className="flex">
-                <span className="font-semibold w-32">Category:</span>
-                <span>{selectedRequest.category || "category name"}</span>
-              </div>
-              <div className="flex">
-                <span className="font-semibold w-32">Request material:</span>
-                <span>{selectedRequest.asset_name || "Computer"}</span>
-              </div>
-
-              <div className="flex">
-                <span className="font-semibold w-32">Quantity:</span>
-                <span>{selectedRequest.quantity || "98"}</span>
-              </div>
-              <div className="flex">
-                <span className="font-semibold w-32">UOM:</span>
-                <span>{selectedRequest.uom || "xyz"}</span>
-              </div>
-
-              <div className="flex">
-                <span className="font-semibold w-32">Workflow:</span>
-                <span>{selectedRequest.workflow || "Workflow name"}</span>
-              </div>
-              <div className="flex">
-                <span className="font-semibold w-32">Budget:</span>
-                <span>{selectedRequest.budget || "Dehradun"}</span>
-              </div>
+                       <td className="p-3 align-top">
+                     {getBudgetDisplayName(item.budget ?? item.budget_id ?? selectedRequest.budget)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
 
-            <div className="mt-4">
-              <p className="font-semibold mb-1">Description:</p>
-              <p className="text-justify text-sm">{selectedRequest.remarks}</p>
-            </div>
+            {selectedRequest.remarks && (
+              <div className="mt-4">
+                <p className="font-semibold mb-1">Description:</p>
+                <div className="p-3 border rounded-lg bg-white text-sm text-justify">
+                  {selectedRequest.remarks}
+                </div>
+              </div>
+            )}
 
             <div className="mt-6 flex justify-start gap-4">
               <button
@@ -973,9 +1192,18 @@ const InventryIndenting = () => {
 
       {showRFP && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-          <div className="bg-white rounded-xl p-5 w-[95%] max-w-3xl">
+          <div className="bg-white rounded-xl p-5 w-[95%] max-w-3xl max-h-[80vh] overflow-y-auto">
+            {/* Loader Overlay */}
+            {loading && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[60]">
+                <div className="bg-white rounded-lg p-8 flex flex-col items-center gap-4">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                  <p className="text-gray-700 font-semibold">Creating RFP...</p>
+                </div>
+              </div>
+            )}
             {/* Header */}
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex justify-between items-center mb-3">
               <div>
                 <h2 className="font-semibold text-xl">Request for proposal</h2>
                 <p className="text-sm text-gray-600">
@@ -993,21 +1221,19 @@ const InventryIndenting = () => {
               </button>
             </div>
             {/* Form */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
               {loading ? (
-                <div className="col-span-full text-center py-8 text-blue-600 font-semibold">
+                <div className="col-span-full text-center py-4 text-blue-600 font-semibold">
                   Loading organization details...
                 </div>
               ) : (
                 <>
                   {/* Info message for prefilled data */}
                   {(formData.organization || formData.logoUrl) && (
-                    <div className="col-span-full bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-3 text-sm rounded">
+                    <div className="col-span-full bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-2 text-sm rounded">
                       This logo and organization name are fetched from
-                      previously saved data.
-                      <br />
-                      You can update the existing info or upload a new one
-                      below.
+                      previously saved data.You can update the existing info or
+                      upload a new one below.
                     </div>
                   )}
 
@@ -1064,37 +1290,6 @@ const InventryIndenting = () => {
                       />
                     </div>
                   </div>
-                  {/* <div>
-                    <label className="block font-medium mb-1">
-                      Your Image/logo <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      ref={fileInputRef}
-                      onChange={handleLogoChange}
-                      className="hidden"
-                    />
-                    <div
-                      onClick={handleIconClick}
-                      className="flex items-center justify-between border border-gray-300 rounded px-3 py-2 w-full text-sm text-gray-700 cursor-pointer bg-white"
-                    >
-                      <span className="truncate w-full">
-                        {formData.logoUrl || selectedLogoName || "Upload logo"}
-                      </span>
-                      <FaUpload className="text-gray-400 ml-2 flex-shrink-0" />
-                    </div>
-                  </div> */}
-
-                  {/* GO Button */}
-                  <div className="flex items-end">
-                    <button
-                      onClick={handleSave}
-                      className="bg-custome-blue text-white px-4 py-2 text-sm rounded w-full"
-                    >
-                      GO
-                    </button>
-                  </div>
                 </>
               )}
             </div>
@@ -1136,13 +1331,66 @@ const InventryIndenting = () => {
                 />
               </div>
             </div>
+            {/* Material/Asset Details Table */}
+            <div className="col-span-full mb-4">
+              <h3 className="font-medium mb-2">Material / Asset Details</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse bg-white shadow-sm rounded-lg">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="p-3 text-left border-b"></th>
+                      <th className="p-3 text-left border-b">Request for</th>
+                      <th className="p-3 text-left border-b">Category</th>
+                      <th className="p-3 text-left border-b">Asset Name</th>
+                      <th className="p-3 text-left border-b">Quantity</th>
+                      <th className="p-3 text-left border-b">UOM</th>
+                      {/* <th className="p-3 text-left border-b">Workflow</th> */}
+                      <th className="p-3 text-left border-b">Budget</th>
+                      <th className="p-3 text-left border-b">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {productItems.map((item, idx) => (
+                      <tr key={idx} className="hover:bg-gray-50">
+                        <td className="p-3 border-b">
+                          <input
+                            type="checkbox"
+                            checked={selectedItems?.includes(idx)}
+                            onChange={() => handleItemSelect(idx)}
+                          />
+                        </td>
+                        <td className="p-3 border-b">
+                          <div className="font-medium">
+                            {item.request_for || "-"}
+                          </div>
+                        </td>
+                        <td className="p-3 border-b">{item.category || "-"}</td>
+                        <td className="p-3 border-b">
+                          {item.asset_name || item.product_name || "-"}
+                        </td>
+                        <td className="p-3 border-b">{item.quantity ?? "-"}</td>
+                        <td className="p-3 border-b">
+                          {item.uom || item.unit || "-"}
+                        </td>
+                        {/* <td className="p-3 border-b">{item.workflow || "-"}</td> */}
+                         <td className="p-3 align-top">
+                      {getBudgetDisplayName(item.budget ?? item.budget_id ?? selectedRequest.budget)}
+                      </td>
+                        <td className="p-3 border-b">
+                          {item.description || "-"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
             {/* File Upload */}
-            {/* File Upload */}
-            <div className="mb-6 border-2 border-dashed border-gray-400 p-6 text-center rounded">
-              <p className="mb-2 text-gray-600">
+            <div className="mb-4 border-2 border-dashed border-gray-400 p-4 text-center rounded">
+              <p className="mb-1 text-gray-600">
                 Choose a specification file or drag & drop it here.
               </p>
-              <p className="mb-2 text-sm text-gray-500">
+              <p className="mb-1 text-sm text-gray-500">
                 PDF format, up to 10 MB.
               </p>
 
@@ -1162,27 +1410,15 @@ const InventryIndenting = () => {
               </label>
 
               {selectedSpecFileName && (
-                <p className="mt-2 text-sm text-green-600 font-medium">
+                <p className="mt-1 text-sm text-green-600 font-medium">
                   Selected File: {selectedSpecFileName}
                 </p>
               )}
             </div>
-            {/* Description */}
-            <div className="mb-4">
-              <label className="block font-medium">
-                Additional Description
+              <div className="mb-3">
+              <label className="block font-medium mb-1">
+                Required Documents
               </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value })
-                }
-                rows={3}
-                className="border border-gray-300 rounded px-3 py-2 w-full"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block font-medium">Required Documents</label>
               <Select
                 options={documentOptions}
                 value={documentOptions.filter((opt) =>
@@ -1201,12 +1437,68 @@ const InventryIndenting = () => {
                 isSearchable
                 isMulti
                 className="w-full"
+                styles={{
+                  control: (base) => ({
+                    ...base,
+                    minHeight: "35px",
+                    height: "35px",
+                  }),
+                  valueContainer: (base) => ({
+                    ...base,
+                    height: "35px",
+                    padding: "0 8px",
+                  }),
+                  input: (base) => ({
+                    ...base,
+                    margin: "0px",
+                  }),
+                }}
               />
             </div>
+            {/* Description */}
+            <div className="mb-3">
+              <label className="block font-medium mb-1">
+                Additional Description
+              </label>
+              <textarea
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                rows={2}
+                className="border border-gray-300 rounded px-3 py-2 w-full"
+              />
+            </div>
+          
             {/* Action Buttons */}
             <div className="flex justify-start gap-4">
               <button
-                onClick={handleGenerate}
+                onClick={async () => {
+                  if (selectedItems.length === 0) {
+                    setModalProps({
+                      type: "warning",
+                      title: "Warning",
+                      message: "Please select at least one item",
+                      onClose: () => setShowModal(false),
+                    });
+                    setShowModal(true);
+                    return;
+                  }
+
+                  try {
+                    await handleSave();
+                    // await handleGenerate();
+                  } catch (error) {
+                    console.error("Error in generate:", error);
+                    setModalProps({
+                      type: "error",
+                      title: "Error",
+                      message: error.message || "Failed to generate RFP",
+                      onClose: () => setShowModal(false),
+                    });
+                    setShowModal(true);
+                  }
+                }}
                 className="bg-blue-600 text-white px-6 py-2 rounded"
               >
                 GENERATE

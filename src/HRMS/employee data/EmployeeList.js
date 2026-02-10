@@ -15,7 +15,7 @@
 //     const fetchEmployees = async () => {
 //       try {
 //         const token = sessionStorage.getItem("token");
-//         const response = await axios.get("https://devapi.softtrails.net/saas/test/users/flagged-catgeory-users", {
+//         const response = await axios.get("https://devdemo.softtrails.net/users/flagged-catgeory-users", {
 //           headers: {
 //             Authorization: `Bearer ${token}`,
 //           },
@@ -100,7 +100,7 @@
 //     try {
 //       const token = sessionStorage.getItem("token");
 //       const response = await axios.put(
-//         "https://devapi.softtrails.net/hrms/test/users/user/update",
+//         "https://devdemo.softtrails.net/users/user/update",
 //         {
 //           user_id: employee.user_id,
 //           user_status: newStatus,
@@ -210,6 +210,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
+import { MAIN_API_BASE } from "../../config/apiBase";
 
 function EmployeeList({ employee }) {
   const [employees, setEmployees] = useState([]);
@@ -223,11 +224,8 @@ function EmployeeList({ employee }) {
     const fetchEmployees = async () => {
       try {
         const token = sessionStorage.getItem("token");
-        const response = await axios.get(
-          "https://devapi.softtrails.net/saas/test/users/flagged-catgeory-users",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+        const response = await axios.get(`${MAIN_API_BASE}/users/flagged-catgeory-users`,
+          { headers: { Authorization: `Bearer ${token}` }, }
         );
 
         const employeeData = response.data.users;
@@ -311,8 +309,7 @@ function EmployeeList({ employee }) {
 
     try {
       const token = sessionStorage.getItem("token");
-      const response = await axios.put(
-        "https://devapi.softtrails.net/hrms/test/users/user/update",
+      const response = await axios.put(`${MAIN_API_BASE}/users/user/update`,
         {
           user_id: employee.user_id,
           user_status: newStatus,
@@ -342,10 +339,7 @@ function EmployeeList({ employee }) {
       {/* Table */}
       <div className="flex-1 overflow-x-auto overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 rounded-lg">
         <table className="min-w-[900px] sm:min-w-full table-auto border-collapse text-sm">
-          <thead
-            className="text-[14px] font-medium bg-white sticky top-0 z-10"
-            style={{ boxShadow: "0 2px 0 black" }}
-          >
+          <thead className="text-[14px] font-medium bg-white sticky top-0 z-10" style={{ boxShadow: "0 2px 0 black" }} >
             <tr>
               <th className="p-4 text-left text-black">S.No</th>
               <th className="p-4 text-left text-black">Employee</th>
@@ -358,50 +352,23 @@ function EmployeeList({ employee }) {
             </tr>
           </thead>
           <tbody>
-            <tr>
-              <td colSpan="8" className="h-3 bg-white"></td>
-            </tr>
+            <tr><td colSpan="8" className="h-3 bg-white"></td></tr>
             {displayedEmployees.map((employee, index) => (
-              <tr
-                key={employee.id || index}
-                className={`${
-                  (index + 1) % 2 === 0 ? "bg-white" : "bg-tableblue"
-                }`}
-              >
-                <td className="px-4 py-3 text-left text-[14px] text-black">
-                  {(currentPage - 1) * rowsPerPage + (index + 1)}
-                </td>
+              <tr key={employee.id || index} className={`${ (index + 1) % 2 === 0 ? "bg-white" : "bg-tableblue" }`} >
+                <td className="px-4 py-3 text-left text-[14px] text-black">{(currentPage - 1) * rowsPerPage + (index + 1)}</td>
                 <td className="px-4 py-3 text-left text-[14px] text-blue-600 underline">
-                  <Link
-                    to={`/employeelayout/${employee.user_id}`}
-                    onClick={() => handleEmployeeClick(employee.user_id)}
-                  >
-                    {employee.first_name} {employee.last_name}
-                  </Link>
+                  <Link to={`/employeelayout/${employee.user_id}`} onClick={() => handleEmployeeClick(employee.user_id)} > {employee.first_name} {employee.last_name} </Link>
                 </td>
-                <td className="px-4 py-3 text-left text-[14px] text-black">
-                  {employee.emp_id}
-                </td>
-                <td className="px-4 py-3 text-left text-[14px] text-black">
-                  {employee.dept_name}
-                </td>
-                <td className="px-4 py-3 text-left text-[14px] text-black break-words">
-                  {employee.email}
-                </td>
+                <td className="px-4 py-3 text-left text-[14px] text-black">{employee.emp_id}</td>
+                <td className="px-4 py-3 text-left text-[14px] text-black">{employee.dept_name}</td>
+                <td className="px-4 py-3 text-left text-[14px] text-black break-words">{employee.email}</td>
                 <td className="px-4 py-3 text-left text-[14px] text-black">
                   {employee.phone_no}
                 </td>
                 <td className="px-4 py-3 text-left text-[14px] text-black">
                   {employee.locality}
                 </td>
-                <td
-                  className={`p-2 font-semibold cursor-pointer ${
-                    statusMap[employee.user_id] === "active"
-                      ? "text-lime-600"
-                      : "text-red-600"
-                  }`}
-                  onClick={() => handleStatusChange(employee)}
-                >
+                <td className={`p-2 font-semibold cursor-pointer ${ statusMap[employee.user_id] === "active" ? "text-lime-600" : "text-red-600" }`} onClick={() => handleStatusChange(employee)} >
                   {statusMap[employee.user_id]}
                 </td>
               </tr>

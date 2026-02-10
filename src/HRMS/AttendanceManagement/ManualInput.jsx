@@ -44,7 +44,7 @@ const AttendanceTable = () => {
                     Swal.fire({ icon: 'error', title: 'Error', text: 'User data not loaded for edit' });
                     return;
                 }
-                res = await axios.put(`https://devapi.softtrails.net/saas/test/attendance/${editId}`, {
+                res = await axios.put(`https://devdemo.softtrails.net/attendance/${editId}`, {
                     employee_name: `${userData.first_name} ${userData.last_name}`,
                     employee_code: userData.emp_id || "NA",
                     date_from: mode === "date" ? date : fromDate,
@@ -57,7 +57,7 @@ const AttendanceTable = () => {
                 });
             } else {
                 // New manual attendance using mark-bulk API
-                res = await axios.post("https://devapi.softtrails.net/saas/test/attendance/mark-bulk", payload, {
+                res = await axios.post("https://devdemo.softtrails.net/attendance/mark-bulk", payload, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
             }
@@ -122,7 +122,7 @@ const AttendanceTable = () => {
             setLoading(true);
             const token = sessionStorage.getItem("token");
             const userId = sessionStorage.getItem("userId");
-            const response = await axios.get(`https://devapi.softtrails.net/saas/test/attendance/${userId}`, {
+            const response = await axios.get(`https://devdemo.softtrails.net/attendance/${userId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -164,7 +164,7 @@ const AttendanceTable = () => {
 
         if (result.isConfirmed) {
             try {
-                const response = await fetch(`https://devapi.softtrails.net/saas/test/attendance/${id}`, {
+                const response = await fetch(`https://devdemo.softtrails.net/attendance/${id}`, {
                     method: 'DELETE',
                     headers: {
                         'Content-Type': 'application/json',

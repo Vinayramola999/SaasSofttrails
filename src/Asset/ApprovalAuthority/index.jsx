@@ -941,6 +941,7 @@ const handleChange = async (e) => {
     const token = sessionStorage.getItem("token");
 
     if (!userId) {
+      console.error("User ID is missing or invalid in sessionStorage.");
       alert("User not logged in or user ID is missing.");
       return;
     }
@@ -948,6 +949,7 @@ const handleChange = async (e) => {
     const parsedUserId = parseInt(userId, 10);
 
     if (isNaN(parsedUserId)) {
+      console.error("Invalid User ID retrieved from sessionStorage.");
       alert("Invalid User ID.");
       return;
     }
@@ -1837,207 +1839,200 @@ const handleSearch = (e) => {
           </div>
         </div>
       )}
-   
-    {/* Modal Section */}
-{isAssetModalOpen && (
-  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-    <div className="bg-white rounded-lg shadow-lg w-11/12 md:w-3/4 lg:w-1/2">
-      
-      {/* Header */}
-      <div className="flex justify-between items-center bg-gray-100 p-4 rounded-t-lg">
-        <h2 className="text-lg font-bold text-gray-800">
-          {editingAssetId ? "Review Asset" : "Add Asset"}
-        </h2>
-
-        <button
-          onClick={() => setIsAssetModalOpen(false)}
-          className="text-red-500"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-6 w-6"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
-      </div>
-
-      {/* FORM */}
-      <form
-        onSubmit={handleSubmit}
-        className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4"
-      >
-
-        {/* Asset Category (Disabled Always) */}
-        <div className="flex flex-col">
-          <label className="mb-1 text-sm font-medium text-gray-700">
-            Asset Category
-          </label>
-          <select
-            name="category"
-            value={selectedEditCategory || selectedCategory}
-            className="p-2 rounded border-gray-300 bg-[#F0F0F0]"
-            disabled
-            readOnly
-            style={{ pointerEvents: "none" }}
-          >
-            <option value="">Select a category</option>
-            {categories.map((category, i) => (
-              <option key={i} value={category.categoriesname}>
-                {category.categoriesname}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Dynamic Fields */}
-        {filteredDynamicFields
-          .filter(
-            (column) =>
-              column.columnName !== "unique_id" &&
-              column.columnName !== "stages" &&
-              column.columnName !== "status" &&
-              column.columnName !== "sub_stages" &&
-              column.columnName !== "toapprove" &&
-              column.columnName !== "created_at" &&
-              column.columnName !== "category_id"
-          )
-          .map((field, index) => {
-            const normalized = field.columnName
-              .toLowerCase()
-              .replace(/[_ ]/g, "");
-
-            let label = field.columnName;
-            if (normalized === "usefullife") label = "Useful Life (in months)";
-            else if (normalized === "scrapvalue") label = "Scrap Value (in Rupees)";
-            else if (normalized === "originalcost")
-              label = "Original Cost (in Rupees)";
-
-            const value = formData[field.columnName];
-
-            // File URL Field
-            if (value && typeof value === "object" && value.url) {
-              const fileName = value.url.split("/").pop();
-              return (
-                <div key={index} className="flex flex-col col-span-2">
-                  <label className="mb-1 text-sm font-medium text-gray-700">
-                    {label}
-                  </label>
-                  <a
-                    href={value.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 underline break-words"
-                  >
-                    {fileName}
-                  </a>
-                </div>
-              );
-            }
-
-            const isRupee =
-              normalized === "scrapvalue" || normalized === "originalcost";
-
-            // Number / Date / Text Fields (READ ONLY)
-            return (
-              <div key={index} className="flex flex-col">
-                <label className="mb-1 text-sm font-medium text-gray-700">
-                  {label}
-                </label>
-
-                {isRupee ? (
-                  // ₹ fields
-                  <div className="flex items-center border border-gray-300 rounded bg-[#F0F0F0]">
-                    <span className="px-3 text-gray-600">₹</span>
-                    <input
-                      type="number"
-                      name={field.columnName}
-                      value={value || ""}
-                      className="p-2 w-full bg-[#F0F0F0] outline-none"
-                      disabled
-                      readOnly
-                      style={{ pointerEvents: "none" }}
-                    />
-                  </div>
-                ) : (
-                  // Normal fields
-                  <input
-                    type={
-                      field.dataType === "number"
-                        ? "number"
-                        : field.dataType === "date" ||
-                          field.columnName.toLowerCase().includes("date")
-                        ? "date"
-                        : "text"
-                    }
-                    name={field.columnName}
-                    value={
-                      field.dataType === "date" ||
-                      field.columnName.toLowerCase().includes("date")
-                        ? formData[field.columnName]
-                          ? new Date(formData[field.columnName])
-                              .toISOString()
-                              .split("T")[0]
-                          : ""
-                        : formData[field.columnName] || ""
-                    }
-                    className="p-2 rounded border border-gray-300 bg-[#F0F0F0]"
-                    disabled
-                    readOnly
-                    style={{ pointerEvents: "none" }}
+      {/* Modal Section */}
+      {isAssetModalOpen && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 z-50">
+          <div className="bg-white rounded-lg shadow-lg w-11/12 md:w-3/4 lg:w-1/2">
+            <div className="flex justify-between items-center bg-gray-100 p-4 rounded-t-lg">
+              <h2 className="text-lg font-bold text-gray-800">
+                {editingAssetId ? "Review Asset" : "Add Asset"}
+              </h2>
+              <button
+                onClick={() => setIsAssetModalOpen(false)}
+                className="text-red-500"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
                   />
-                )}
+                </svg>
+              </button>
+            </div>
 
-                {formErrors[field.columnName] && (
-                  <span className="text-red-600 text-sm">
-                    {formErrors[field.columnName]}
-                  </span>
-                )}
+            <form
+              onSubmit={handleSubmit}
+              className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4"
+            >
+              {/* Asset Category (Disabled) */}
+              <div className="flex flex-col">
+                <label
+                  htmlFor="category"
+                  className="mb-1 text-sm font-medium text-gray-700"
+                >
+                  Asset Category
+                </label>
+                <select
+                  name="category"
+                  value={selectedEditCategory || selectedCategory}
+                  onChange={handleChange}
+                  className="p-2 rounded border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 bg-[#F0F0F0]"
+                  disabled
+                >
+                  <option value="">Select a category</option>
+                  {categories.map((category, i) => (
+                    <option key={i} value={category.categoriesname}>
+                      {category.categoriesname}
+                    </option>
+                  ))}
+                </select>
               </div>
-            );
-          })}
 
-        {/* General Form Error */}
-        {formErrors.general && (
-          <p className="text-red-600 text-sm col-span-2">
-            {formErrors.general}
-          </p>
-        )}
+              {/* Dynamic Fields with Label Customization */}
+              {filteredDynamicFields
+                .filter(
+                  (column) =>
+                    column.columnName !== "unique_id" &&
+                    column.columnName !== "stages" &&
+                    column.columnName !== "status" &&
+                    column.columnName !== "sub_stages" &&
+                    column.columnName !== "toapprove" &&
+                    column.columnName !== "created_at" &&
+                    column.columnName !== "category_id"
+                )
+                .map((field, index) => {
+                  const normalized = field.columnName
+                    .toLowerCase()
+                    .replace(/[_ ]/g, "");
+                  let label = field.columnName;
+                  if (normalized === "usefullife") {
+                    label = "Useful Life (in months)";
+                  } else if (normalized === "scrapvalue") {
+                    label = "Scrap Value (in Rupees)";
+                  } else if (normalized === "originalcost") {
+                    label = "Original Cost (in Rupees)";
+                  }
 
-        {/* Buttons */}
-        <div className="col-span-2 flex justify-end mt-4">
-          <button
-            type="button"
-            onClick={() => handleResubmissions(selectedAssetId)}
-            className="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded mr-2"
-          >
-            Resubmitted
-          </button>
+                  const value = formData[field.columnName];
 
-          <button
-            type="button"
-            onClick={() => {
-              setIsAssetModalOpen(false);
-              setIsModalOpen(true);
-            }}
-            className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded"
-          >
-            Approve
-          </button>
+                  // ✅ Handle object with URL (e.g., file)
+                  if (value && typeof value === "object" && value.url) {
+                    const fileName = value.url.split("/").pop();
+                    return (
+                      <div key={index} className="flex flex-col col-span-2">
+                        <label className="mb-1 text-sm font-medium text-gray-700">
+                          {label}
+                        </label>
+                        <a
+                          href={value.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 underline break-words"
+                        >
+                          {fileName}
+                        </a>
+                      </div>
+                    );
+                  }
+                  // ✅ Special layout with ₹ symbol for rupee fields
+                  const isRupeeField =
+                    normalized === "scrapvalue" ||
+                    normalized === "originalcost";
+                  // Normal input
+                  return (
+                    <div key={index} className="flex flex-col">
+                      <label
+                        htmlFor={field.columnName}
+                        className="mb-1 text-sm font-medium text-gray-700"
+                      >
+                        {label}
+                      </label>
+                      {isRupeeField ? (
+                        <div className="flex items-center border border-gray-300 rounded bg-[#F0F0F0]">
+                          <span className="px-3 text-gray-600">₹</span>
+                          <input
+                            type="number"
+                            name={field.columnName}
+                            value={value || ""}
+                            onChange={handleChange}
+                            placeholder={label}
+                            className="p-2 w-full bg-[#F0F0F0] focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                          />
+                        </div>
+                      ) : (
+                        <input
+                          type={
+                            field.dataType === "number"
+                              ? "number"
+                              : field.dataType === "date" ||
+                                field.columnName.toLowerCase().includes("date")
+                                ? "date"
+                                : "text"
+                          }
+                          name={field.columnName}
+                          value={
+                            field.dataType === "date" ||
+                              field.columnName.toLowerCase().includes("date")
+                              ? formData[field.columnName]
+                                ? new Date(formData[field.columnName])
+                                  .toISOString()
+                                  .split("T")[0]
+                                : ""
+                              : formData[field.columnName] || ""
+                          }
+                          onChange={handleChange}
+                          placeholder={label}
+                          className="p-2 rounded border border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 bg-[#F0F0F0]"
+                        />
+                      )}
+                      {formErrors[field.columnName] && (
+                        <span className="text-red-600 text-sm">
+                          {formErrors[field.columnName]}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+
+              {/* General Form Error */}
+              {formErrors.general && (
+                <p className="text-red-600 text-sm col-span-2">
+                  {formErrors.general}
+                </p>
+              )}
+
+              {/* Action Buttons */}
+              <div className="col-span-2 flex justify-end mt-4">
+                <button
+                  type="button"
+                  onClick={() => handleResubmissions(selectedAssetId)}
+                  className="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded mr-2"
+                >
+                  Resubmitted
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsAssetModalOpen(false);
+                    setIsModalOpen(true);
+                  }}
+                  className="bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded"
+                >
+                  Approve
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-      </form>
-    </div>
-  </div>
-)}
-
+      )}
 
       {/* Edit Category Modal */}
       {isEditCategoryModalOpen && (

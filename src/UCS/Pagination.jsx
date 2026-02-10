@@ -1,10 +1,11 @@
+import React from 'react';
+
 const Pagination = ({ currentPage, totalPages, onPageChange, show = true }) => {
-  if (totalPages <= 1 || !show) {
-    return null;
-  }
+  // अगर कुल पेज 1 या 0 हैं, तो Pagination न दिखाएं
+   if (totalPages <= 1 || !show) return null;
 
   return (
-    <div className="w-full flex justify-center mt-4 overflow-auto">
+    <div className="w-full flex justify-center mt-4">
       <div className="flex gap-2">
         <button
           onClick={() => onPageChange(currentPage - 1)}

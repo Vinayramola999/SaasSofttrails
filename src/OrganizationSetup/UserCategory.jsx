@@ -5,7 +5,11 @@ import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import axios from "axios";
 import AddButton from "../NewComponents/AddButton";
 import { FaPlus } from "react-icons/fa";
+import { MAIN_API_BASE } from "../config/apiBase";
 import DeleteConfirmationModal from "../NewComponents/DeleteComponents";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import excel from "../assests/excel.png";
 
 const UserCategory = () => {
     const [categories, setCategories] = useState([]);
@@ -29,7 +33,6 @@ const UserCategory = () => {
         setCurrentPage(1);
     }, [searchTerm, categories]);
 
-
     const indexOfLast = currentPage * itemsPerPage;
     const indexOfFirst = indexOfLast - itemsPerPage;
     const currentPolicies = filteredCategories.slice(indexOfFirst, indexOfLast);
@@ -43,7 +46,7 @@ const UserCategory = () => {
             status: status.toLowerCase() // "active" or "inactive"
         };
         try {
-            await axios.post("https://devapi.softtrails.net/saas/test/user-category/create", newCategory,
+            await axios.post(`${MAIN_API_BASE}/user-category/create`, newCategory,
                 {
                     headers: {
                         Authorization: `Bearer ${sessionStorage.getItem("token")}`,
@@ -64,7 +67,7 @@ const UserCategory = () => {
 
     const fetchCategories = async () => {
         try {
-            const response = await axios.get("https://devapi.softtrails.net/saas/test/user-category/all",
+            const response = await axios.get(`${MAIN_API_BASE}/user-category/all`,
                 {
                     headers: {
                         Authorization: `Bearer ${sessionStorage.getItem("token")}`,
@@ -87,6 +90,38 @@ const UserCategory = () => {
         fetchCategories();
     }, []);
 
+    const handleDownloadExcel = () => {
+    if (filteredCategories.length === 0) {
+        Swal.fire("No Data", "No categories available to download", "info");
+        return;
+    }
+
+    const excelData = filteredCategories.map((cat, index) => ({
+        "S.No": index + 1,
+        "Category Name": cat.category,
+        "Description": cat.description || "NA",
+        "Status": cat.status === "active" ? "Active" : "Inactive",
+        "Flagged": cat.flagged ? "Yes" : "No",
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, "User Categories");
+
+    const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+    });
+
+    const blob = new Blob([excelBuffer], {
+        type: "application/octet-stream",
+    });
+
+    saveAs(blob, `User_Categories_${Date.now()}.xlsx`);
+};
+
+
     /********************* EDit API***************/
     const [showEditModal, setShowEditModal] = useState(false);
     const [editCategoryName, setEditCategoryName] = useState('');
@@ -99,7 +134,7 @@ const UserCategory = () => {
         e.preventDefault();
         try {
             await axios.put(
-                `https://devapi.softtrails.net/saas/test/user-category/update/${editCategory.category_id}`,
+                `${MAIN_API_BASE}/user-category/update/${editCategory.category_id}`,
                 {
                     category: editCategoryName,
                     description: editDescription,
@@ -136,7 +171,7 @@ const UserCategory = () => {
 
     const confirmDelete = async () => {
         try {
-            await axios.delete(`https://devapi.softtrails.net/saas/test/user-category/delete/${selectedCategoryId}`,
+            await axios.delete(`${MAIN_API_BASE}/user-category/delete/${selectedCategoryId}`,
                 {
                     headers: {
                         Authorization: `Bearer ${sessionStorage.getItem("token")}`,
@@ -172,6 +207,10 @@ const UserCategory = () => {
                         className="w-30 border border-gray-300 rounded-lg p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
                     />
                 </div>
+                {/* Excel Download Button */}
+                <button onClick={handleDownloadExcel} className="text-green-500 flex-shrink-0 sm:w-auto w-full text-center">
+                    <img src={excel} alt="logo" className="w-8 h-8 mx-auto" />
+                </button>
             </div>
 
             {/* Table */}
@@ -190,7 +229,8 @@ const UserCategory = () => {
                         </thead>
                         <tbody>
                             <tr><td colSpan="5" className="h-3 bg-white"></td></tr>
-                            {categories.map((category, index) => (
+                            {/* {categories.map((category, index) => ( */}
+                                {currentPolicies.map((category, index) => (
                                 <tr key={index} className={`${index % 2 === 0 ? 'bg-tableblue' : 'bg-white'}`}>
                                     <td className="px-5 py-4 text-left text-[14px] text-black">
                                         {(currentPage - 1) * itemsPerPage + index + 1}
