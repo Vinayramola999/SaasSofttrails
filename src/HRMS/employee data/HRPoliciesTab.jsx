@@ -137,11 +137,31 @@ const HRPoliciesTab = () => {
                 {/* Pagination */}
                 {totalPages > 1 && (
                     <div className="sticky bottom-0 flex flex-wrap justify-center items-center gap-2 p-3">
-                        <button onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-sm disabled:bg-gray-100 disabled:text-gray-400" > &lt; </button>
-                        <span className="px-3 py-1 rounded bg-blue-600 text-white text-sm"> {currentPage} </span>
+                        <button
+                            onClick={() => setCurrentPage(currentPage - 1)}
+                            disabled={currentPage === 1}
+                            className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-sm disabled:bg-gray-100 disabled:text-gray-400"
+                        >
+                            &lt;
+                        </button>
+
+                        <span className="px-3 py-1 rounded bg-blue-600 text-white text-sm">
+                            {currentPage}
+                        </span>
+
                         <span className="text-sm font-medium">of</span>
-                        <span className="px-3 py-1 rounded border border-blue-500 text-blue-600 text-sm"> {totalPages} </span>
-                        <button onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === totalPages} className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-sm disabled:bg-gray-100 disabled:text-gray-400" > &gt; </button>
+
+                        <span className="px-3 py-1 rounded border border-blue-500 text-blue-600 text-sm">
+                            {totalPages}
+                        </span>
+
+                        <button
+                            onClick={() => setCurrentPage(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                            className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-sm disabled:bg-gray-100 disabled:text-gray-400"
+                        >
+                            &gt;
+                        </button>
                     </div>
                 )}
             </div>

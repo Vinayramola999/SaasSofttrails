@@ -6,8 +6,6 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Login from "./Pages/Login";
 import Cards from "./Cards/Cards";
 import HRMS from "./Cards/HRMS";
-import AssetManagement from "./Cards/AssetManagement";
-import ProductAssembly from "./Cards/ProductAssembly";
 import ProfilePart from "./Cards/ProfilePart";
 import Verify from "./Pages/Verify";
 import Password from "./Pages/Password";
@@ -95,8 +93,6 @@ function App({ employeeId, userId }) {
     { path: "change-password", element: <ChangePassword /> },
     { path: "/cards", element: <Cards /> },
     { path: "/hrms", element: <HRMS /> },
-    { path: "/AssetManagement", element: <AssetManagement /> },
-    { path: "/ProductAssembly", element: <ProductAssembly /> },
     //1...... Employee Data
     { path: "employeedata", element: <EmployeeData /> },
     { path: "/SubmitApprovalTab", element: <SubmitApprovalTab /> },
