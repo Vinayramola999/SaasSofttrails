@@ -28,7 +28,7 @@ const RevisionLetterTable = () => {
             const userId = sessionStorage.getItem("userId");
 
             const response = await fetch(
-                `https://devdemo.softtrails.net/documents/employee-documents/user/${userId}`,
+                `https://globalparameters.softtrails.net/documents/employee-documents/user/${userId}`,
                 {
                     method: "GET",
                     headers: {

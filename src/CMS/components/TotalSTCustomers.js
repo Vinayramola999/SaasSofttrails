@@ -7,7 +7,7 @@ export default function TotalSTCustomers() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("https://devdemo.softtrails.net/customers//stats")
+    fetch("https://globalparameters.softtrails.net/customers//stats")
       .then((res) => res.json())
       .then((json) => {
         // API returns { data: { softrailsCustomers: '2', newSoftrailsCustomers: { ... } } }

@@ -32,7 +32,7 @@
 
 //   try {
 //     const response = await axios.post(
-//       'https://devapi.softtrails.net/saas/test/users/mail-verify',
+//       'https://globalparameters.softtrails.net/saas/test/users/mail-verify',
 //       { email: email.toLowerCase(), code }
 //     );
 
@@ -82,7 +82,7 @@
 //     try {
 //       const schema_name = sessionStorage.getItem('schema_name');
 //       const response = await axios.post(
-//         'https://devapi.softtrails.net/saas/test/users/login',
+//         'https://globalparameters.softtrails.net/saas/test/users/login',
 //         {
 //           email: email.toLowerCase(),
 //           password,

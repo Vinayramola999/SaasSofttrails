@@ -48,7 +48,7 @@ const SalarySlip = () => {
 
         try {
             const response = await fetch(
-                "https://devdemo.softtrails.net/documents/employee-documents",
+                "https://globalparameters.softtrails.net/documents/employee-documents",
                 {
                     method: "POST",
                     headers: {
@@ -123,7 +123,7 @@ const SalarySlip = () => {
             try {
                 const Token = sessionStorage.getItem('token');
                 const response = await axios.get(
-                    "https://devdemo.softtrails.net/users/getusers",
+                    "https://globalparameters.softtrails.net/users/getusers",
                     { headers: { Authorization: `Bearer ${Token}` } }
                 );
                 setEmployees(response.data.users);
@@ -137,7 +137,7 @@ const SalarySlip = () => {
     const fetchHRDocuments = async () => {
         try {
             const response = await fetch(
-                "https://devdemo.softtrails.net/documents/employee-documents",
+                "https://globalparameters.softtrails.net/documents/employee-documents",
                 {
                     method: "GET",
                     headers: {
@@ -168,7 +168,7 @@ const SalarySlip = () => {
         const Token = sessionStorage.getItem("token");
 
         try {
-            const res = await fetch("https://devdemo.softtrails.net/documents/categories?source=Finance Department", {
+            const res = await fetch("https://globalparameters.softtrails.net/documents/categories?source=Finance Department", {
                 headers: {
                     "Accept": "application/json",
                     Authorization: `Bearer ${Token}`,
@@ -201,7 +201,7 @@ const SalarySlip = () => {
 
         try {
             const response = await fetch(
-                "https://devdemo.softtrails.net/documents/categories",
+                "https://globalparameters.softtrails.net/documents/categories",
                 {
                     method: "POST",
                     headers: {
@@ -253,7 +253,7 @@ const SalarySlip = () => {
         setDeleteError("");
         try {
             const response = await fetch(
-                `https://devdemo.softtrails.net/documents/employee-documents/${deleteId}`,
+                `https://globalparameters.softtrails.net/documents/employee-documents/${deleteId}`,
                 {
                     method: "DELETE",
                     headers: {
@@ -362,7 +362,7 @@ const SalarySlip = () => {
         if (!confirm.isConfirmed) return;
 
         try {
-            const res = await fetch(`https://devdemo.softtrails.net/documents/categories/${id}`, {
+            const res = await fetch(`https://globalparameters.softtrails.net/documents/categories/${id}`, {
                 method: "DELETE",
                 headers: {
                     Authorization: `Bearer ${Token}`

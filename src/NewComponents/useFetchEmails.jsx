@@ -9,7 +9,7 @@
 //     const fetchEmails = async () => {
 //       try {
 //         const response = await axios.get(
-//           "https://devdemo.softtrails.net/users/email_users",
+//           "https://globalparameters.softtrails.net/users/email_users",
 //           {
 //             headers: {
 //               Authorization: `Bearer ${sessionStorage.getItem("token")}`,
@@ -46,7 +46,7 @@ const useFetchEmails = () => {
     const fetchEmails = async () => {
       try {
         const response = await axios.get(
-          "https://devdemo.softtrails.net/users/getusers",
+          "https://globalparameters.softtrails.net/users/getusers",
           {
             headers: {
               Authorization: `Bearer ${sessionStorage.getItem("token")}`,

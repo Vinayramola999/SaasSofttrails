@@ -21,7 +21,7 @@ const UpdateAccess = () => {
     if (userId) {
       try {
         const accessResponse = await axios.get(
-          `https://devdemo.softtrails.net/access/access/${userId}`,
+          `https://globalparameters.softtrails.net/access/access/${userId}`,
           {
             headers: {
               Authorization: `Bearer ${sessionStorage.getItem("token")}`,
@@ -59,7 +59,7 @@ const UpdateAccess = () => {
     const fetchRoles = async () => {
       try {
         const response = await axios.get(
-          "https://devdemo.softtrails.net/role",
+          "https://globalparameters.softtrails.net/role",
           {
             headers: {
               Authorization: `Bearer ${sessionStorage.getItem("token")}`,
@@ -110,7 +110,7 @@ const UpdateAccess = () => {
     };
     try {
       const response = await axios.put(
-        "https://devdemo.softtrails.net/access/update_access",
+        "https://globalparameters.softtrails.net/access/update_access",
         payload,
         {
           headers: {
@@ -176,7 +176,7 @@ const UpdateAccess = () => {
     const token = sessionStorage.getItem("token"); // get token from sessionStorage
     if (!token) return;
 
-    fetch("https://devdemo.softtrails.net/role", {
+    fetch("https://globalparameters.softtrails.net/role", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -196,7 +196,7 @@ const UpdateAccess = () => {
     const token = sessionStorage.getItem("token"); // get token from sessionStorage
     if (!token) return;
 
-    fetch("https://devdemo.softtrails.net/users", {
+    fetch("https://globalparameters.softtrails.net/users", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -277,7 +277,7 @@ const UpdateAccess = () => {
 
       // Fetch users assigned to the role
       const res = await fetch(
-        `https://devdemo.softtrails.net/access/role-users?role=${roleName}`,
+        `https://globalparameters.softtrails.net/access/role-users?role=${roleName}`,
         {
           headers,
         }
@@ -287,7 +287,7 @@ const UpdateAccess = () => {
 
       // Fetch all users
       const userRes = await fetch(
-        `https://devdemo.softtrails.net/users`,
+        `https://globalparameters.softtrails.net/users`,
         {
           headers,
         }

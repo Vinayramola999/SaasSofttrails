@@ -27,7 +27,7 @@ const UpdateAccess = () => {
     if (userId) {
       try {
         const response = await axios.get(
-          `https://devdemo.softtrails.net/access/access/${userId}`,
+          `https://globalparameters.softtrails.net/access/access/${userId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -89,7 +89,7 @@ const UpdateAccess = () => {
     if (isEditUserChecked) selectedApiAccess.push("EditUM");
     try {
       const response = await axios.put(
-        "https://devdemo.softtrails.net/access/update_access",
+        "https://globalparameters.softtrails.net/access/update_access",
         {
           user_id: selectedEmail,
           module: selectedModule,

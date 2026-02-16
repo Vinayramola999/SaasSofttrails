@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 
-const DMS_HOST = "https://devdemo.softtrails.net";
+const DMS_HOST = "https://globalparameters.softtrails.net";
 const GUIDE_OPTIONS = ["User Guide", "Data Sheet"];
 
 export default function ProductGuideModal({

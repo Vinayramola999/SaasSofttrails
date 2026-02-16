@@ -23,7 +23,7 @@ const LeaveManagement1 = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [fieldErrors, setFieldErrors] = useState({}); // track inline required errors
   const navigate = useNavigate(); // Initialize useNavigate
-  const apiUrl = "https://devdemo.softtrails.net/ucs/intra/";
+  const apiUrl = "https://globalparameters.softtrails.net/ucs/intra/";
 
   console.log("API Base URL:", apiUrl);
 

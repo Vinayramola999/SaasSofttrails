@@ -55,7 +55,7 @@ export default function CustomersDetails() {
         params.limit = itemsPerPage;
 
         const response = await axios.get(
-          "https://devdemo.softtrails.net/customers/",
+          "https://globalparameters.softtrails.net/customers/",
           {
             params,
           }
@@ -179,7 +179,7 @@ export default function CustomersDetails() {
       params.limit = 10000; // get all data
 
       const response = await axios.get(
-        "https://devdemo.softtrails.net/customers/",
+        "https://globalparameters.softtrails.net/customers/",
         { params }
       );
 

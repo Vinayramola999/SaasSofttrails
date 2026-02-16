@@ -24,7 +24,7 @@ const UpdateGoalModal = ({ isOpen, onClose, goalData, onUpdated }) => {
     useEffect(() => {
         const fetchDepartments = async () => {
             try {
-                const res = await axios.get("https://devdemo.softtrails.net/departments", {
+                const res = await axios.get("https://globalparameters.softtrails.net/departments", {
                     headers: { Authorization: `Bearer ${token}` },
                 });
 
@@ -62,7 +62,7 @@ const UpdateGoalModal = ({ isOpen, onClose, goalData, onUpdated }) => {
         setLoading(true);
         try {
             await axios.put(
-                `https://devdemo.softtrails.net/pms/goals/${goalData.id}`,
+                `https://globalparameters.softtrails.net/pms/goals/${goalData.id}`,
                 {
                     goal,
                     description,

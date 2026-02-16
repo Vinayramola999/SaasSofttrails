@@ -20,7 +20,7 @@ const LeaveManagement = () => {
   const [selectedLog, setSelectedLog] = useState(null); // State to store clicked log
 
   useEffect(() => {
-    fetch("https://devdemo.softtrails.net/users", {
+    fetch("https://globalparameters.softtrails.net/users", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -38,7 +38,7 @@ const LeaveManagement = () => {
   }, []);
 
   useEffect(() => {
-    fetch("https://devdemo.softtrails.net/logs/get-logs", {
+    fetch("https://globalparameters.softtrails.net/logs/get-logs", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -81,7 +81,7 @@ const LeaveManagement = () => {
         try {
           console.log("Fetching data for userId:", userId);
           const response = await axios.get(
-            `https://devdemo.softtrails.net/users/id_user/${userId}`,
+            `https://globalparameters.softtrails.net/users/id_user/${userId}`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -116,7 +116,7 @@ const LeaveManagement = () => {
       }
       try {
         const response = await axios.post(
-          "https://devdemo.softtrails.net/users/verify-token",
+          "https://globalparameters.softtrails.net/users/verify-token",
           { token }
         );
         console.log("Token is valid:", response.data);
@@ -147,7 +147,7 @@ const LeaveManagement = () => {
         }
         // Make the API call
         const response = await axios.get(
-          `https://devdemo.softtrails.net/access/access/${userId}`,
+          `https://globalparameters.softtrails.net/access/access/${userId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

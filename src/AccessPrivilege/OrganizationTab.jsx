@@ -29,7 +29,7 @@ const OrganizationTab = () => {
     if (userId) {
       try {
         const response = await axios.get(
-          `https://devdemo.softtrails.net/access/access/${userId}`,
+          `https://globalparameters.softtrails.net/access/access/${userId}`,
           {
             headers: {
               Authorization: `Bearer ${sessionStorage.getItem("token")}`,
@@ -126,7 +126,7 @@ const OrganizationTab = () => {
     if (isUserCategoryChecked) selectedApiAccess.push("UserCategory");
     try {
       const response = await axios.put(
-        "https://devdemo.softtrails.net/access/update_access",
+        "https://globalparameters.softtrails.net/access/update_access",
         {
           user_id: selectedEmail,
           module: selectedModule,

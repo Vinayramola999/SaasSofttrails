@@ -300,7 +300,7 @@ const Devapi = () => {
       {/* Right Side JSON Input Box */}
       <div className="bg-black text-white rounded-lg p-4 w-full md:w-1/2 text-sm flex flex-col">
         <p className="mb-4">
-          <strong>POST</strong> https://devapi.softtrails.net/saas/ucs/test/ucs/send
+          <strong>POST</strong> https://globalparameters.softtrails.net/saas/ucs/test/ucs/send
 
         </p>
         <p className="mb-2 text-pink-400">Request JSON Body:</p>

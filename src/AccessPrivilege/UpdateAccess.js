@@ -20,7 +20,7 @@ const UpdateAccess = () => {
       try {
         // Fetch API access
         const response = await axios.get(
-          `https://devdemo.softtrails.net/access/access/${userId}`,
+          `https://globalparameters.softtrails.net/access/access/${userId}`,
           {
             headers: {
               Authorization: `Bearer ${sessionStorage.getItem("token")}`,
@@ -65,7 +65,7 @@ const UpdateAccess = () => {
       if (!hasAmsAccess) {
         try {
           const response = await axios.get(
-            "https://devdemo.softtrails.net/access",
+            "https://globalparameters.softtrails.net/access",
             {
               headers: {
                 Authorization: `Bearer ${sessionStorage.getItem("token")}`,
@@ -91,7 +91,7 @@ const UpdateAccess = () => {
     if (!isAlreadySelected) {
       try {
         const response = await axios.get(
-          "https://devdemo.softtrails.net/access",
+          "https://globalparameters.softtrails.net/access",
           {
             params: {
               user_id: selectedEmail,
@@ -141,7 +141,7 @@ const UpdateAccess = () => {
 
     try {
       const response = await axios.put(
-        "https://devdemo.softtrails.net/access/update_access",
+        "https://globalparameters.softtrails.net/access/update_access",
         {
           user_id: selectedEmail,
           module: selectedModule,
@@ -307,7 +307,7 @@ export default UpdateAccess;
 //         setSelectedEmail(userId);
 //         if (userId) {
 //             try {
-//                 const response = await axios.get(`https://devdemo.softtrails.net/access/access/${userId}`,
+//                 const response = await axios.get(`https://globalparameters.softtrails.net/access/access/${userId}`,
 //                     { headers: { Authorization: `Bearer ${sessionStorage.getItem("token")}`, }, }
 //                 );
 //                 const filteredAccess = response.data.filter(
@@ -361,7 +361,7 @@ export default UpdateAccess;
 //         if (isDMSChecked) selectedApiAccess.push("doc_management");
 //         try {
 //             const response = await axios.put(
-//                 "https://devdemo.softtrails.net/access/update_access",
+//                 "https://globalparameters.softtrails.net/access/update_access",
 //                 {
 //                     user_id: selectedEmail,
 //                     module: selectedModule,
@@ -443,7 +443,7 @@ export default UpdateAccess;
 //       if (!hasAmsAccess) {
 //         try {
 //           const response = await axios.get(
-//             "https://devdemo.softtrails.net/access",
+//             "https://globalparameters.softtrails.net/access",
 //             {
 //               headers: {
 //                 Authorization: `Bearer ${sessionStorage.getItem("token")}`,
@@ -469,7 +469,7 @@ export default UpdateAccess;
 //     if (!isAlreadySelected) {
 //       try {
 //         const response = await axios.get(
-//           "https://devdemo.softtrails.net/access",
+//           "https://globalparameters.softtrails.net/access",
 //           {
 //             params: {
 //               user_id: selectedEmail,

@@ -38,7 +38,7 @@ const AccessPrivilege1 = () => {
       const fetchUserData = async () => {
         try {
           const response = await axios.get(
-            `https://devdemo.softtrails.net/users/id_user/${userId}`,
+            `https://globalparameters.softtrails.net/users/id_user/${userId}`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -67,7 +67,7 @@ const AccessPrivilege1 = () => {
           console.error("userId or token is missing");
           return;
         }
-        const response = await axios.get(`https://devdemo.softtrails.net/access/access/${userId}`,{ headers: { Authorization: `Bearer ${token}`, }, });
+        const response = await axios.get(`https://globalparameters.softtrails.net/access/access/${userId}`,{ headers: { Authorization: `Bearer ${token}`, }, });
         const userAccess = response.data;
         const hasCRMAccess = userAccess.some((access) => access.api_name === "CRM");
         const hasHRMSAccess = userAccess.some((access) => access.api_name === "HRMS");

@@ -7,9 +7,9 @@ import { FaTimes } from "react-icons/fa";
 import Select from "react-select";
 // API URLs
 const API_URLS = {
-  modules: "https://devdemo.softtrails.net/ucs/intra/api/modules",
+  modules: "https://globalparameters.softtrails.net/ucs/intra/api/modules",
   tableNames:
-    "https://devdemo.softtrails.net/ucs/intra/api/modules/table-names",
+    "https://globalparameters.softtrails.net/ucs/intra/api/modules/table-names",
 };
 
 // Reusable Component for Select-or-Input functionality.
@@ -239,7 +239,7 @@ const UserAddition = () => {
   // ✅ Update API Call
   const handleSaveUpdate = async (updatedData) => {
     const { id } = updatedData;
-    const url = `https://devdemo.softtrails.net/ucs/intra/api/modules/${id}`;
+    const url = `https://globalparameters.softtrails.net/ucs/intra/api/modules/${id}`;
 
     try {
       const token = sessionStorage.getItem("token");
@@ -422,7 +422,7 @@ const UserAddition = () => {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         };
-        const url = `https://devdemo.softtrails.net/ucs/intra/api/modules/${id}`;
+        const url = `https://globalparameters.softtrails.net/ucs/intra/api/modules/${id}`;
         await axios.delete(url, { headers });
 
         Swal.fire("Deleted!", "The module has been deleted.", "success");

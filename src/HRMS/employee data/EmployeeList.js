@@ -15,7 +15,7 @@
 //     const fetchEmployees = async () => {
 //       try {
 //         const token = sessionStorage.getItem("token");
-//         const response = await axios.get("https://devdemo.softtrails.net/users/flagged-catgeory-users", {
+//         const response = await axios.get("https://globalparameters.softtrails.net/users/flagged-catgeory-users", {
 //           headers: {
 //             Authorization: `Bearer ${token}`,
 //           },
@@ -100,7 +100,7 @@
 //     try {
 //       const token = sessionStorage.getItem("token");
 //       const response = await axios.put(
-//         "https://devdemo.softtrails.net/users/user/update",
+//         "https://globalparameters.softtrails.net/users/user/update",
 //         {
 //           user_id: employee.user_id,
 //           user_status: newStatus,

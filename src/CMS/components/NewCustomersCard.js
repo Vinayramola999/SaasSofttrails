@@ -16,7 +16,7 @@ export default function NewCustomersCard() {
   const dropdownRef = useRef(null);
 
   useEffect(() => {
-    fetch("https://devdemo.softtrails.net/customers//stats")
+    fetch("https://globalparameters.softtrails.net/customers//stats")
       .then((res) => res.json())
       .then((json) => {
         // API response contains { data: { newCustomers: { ... }, ... } }

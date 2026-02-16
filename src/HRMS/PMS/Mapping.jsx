@@ -28,14 +28,14 @@ const MappingComponent = () => {
     const [currentPage, setCurrentPage] = useState(1);
 
     // useEffect(() => {
-    //     axios.get("https://devdemo.softtrails.net/pms/goals").then(res => setGoals(res.data));
-    //     axios.get("https://devdemo.softtrails.net/departments").then(res => setDepartments(res.data));
-    //     axios.get("https://devdemo.softtrails.net/pms/kra").then(res => setKras(res.data));
+    //     axios.get("https://globalparameters.softtrails.net/pms/goals").then(res => setGoals(res.data));
+    //     axios.get("https://globalparameters.softtrails.net/departments").then(res => setDepartments(res.data));
+    //     axios.get("https://globalparameters.softtrails.net/pms/kra").then(res => setKras(res.data));
     //     fetchMappings();
     // }, []);
 
     // const fetchMappings = () => {
-    //     axios.get("https://devdemo.softtrails.net/pms/goal-kra-dept-mapping")
+    //     axios.get("https://globalparameters.softtrails.net/pms/goal-kra-dept-mapping")
     //         .then(res => setMappings(res.data))
     //         .catch(err => console.error("Failed to fetch mappings", err));
     // };
@@ -53,7 +53,7 @@ const MappingComponent = () => {
     //         Authorization: `Bearer ${token}`,
     //     };
     //     axios.post(
-    //         "https://devdemo.softtrails.net/pms/goal-kra-dept-mapping",
+    //         "https://globalparameters.softtrails.net/pms/goal-kra-dept-mapping",
     //         {
     //             goal_id: parseInt(selectedGoal),
     //             department_id: parseInt(selectedDept),
@@ -86,17 +86,17 @@ const MappingComponent = () => {
         const headers = { Authorization: `Bearer ${token}` };
 
         axios
-            .get("https://devdemo.softtrails.net/pms/goals", { headers })
+            .get("https://globalparameters.softtrails.net/pms/goals", { headers })
             .then(res => setGoals(res.data))
             .catch(err => console.error("Failed to fetch goals", err));
 
         axios
-            .get("https://devdemo.softtrails.net/departments", { headers })
+            .get("https://globalparameters.softtrails.net/departments", { headers })
             .then(res => setDepartments(res.data))
             .catch(err => console.error("Failed to fetch departments", err));
 
         axios
-            .get("https://devdemo.softtrails.net/pms/kra", { headers })
+            .get("https://globalparameters.softtrails.net/pms/kra", { headers })
             .then(res => setKras(res.data))
             .catch(err => console.error("Failed to fetch kras", err));
 
@@ -106,7 +106,7 @@ const MappingComponent = () => {
     const fetchMappings = () => {
         const token = sessionStorage.getItem("token");
         axios
-            .get("https://devdemo.softtrails.net/pms/goal-kra-dept-mapping", {
+            .get("https://globalparameters.softtrails.net/pms/goal-kra-dept-mapping", {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -129,7 +129,7 @@ const MappingComponent = () => {
 
         axios
             .post(
-                "https://devdemo.softtrails.net/pms/goal-kra-dept-mapping",
+                "https://globalparameters.softtrails.net/pms/goal-kra-dept-mapping",
                 {
                     goal_id: parseInt(selectedGoal),
                     department_id: parseInt(selectedDept),
@@ -412,7 +412,7 @@ const MappingComponent = () => {
                                     try {
                                         const token = sessionStorage.getItem("token");
                                         await axios.put(
-                                            `https://devdemo.softtrails.net/pms/goal-kra-dept-mapping/${editingMapping.id}`,
+                                            `https://globalparameters.softtrails.net/pms/goal-kra-dept-mapping/${editingMapping.id}`,
                                             {
                                                 goal_id: parseInt(editGoalId),
                                                 department_id: parseInt(editDeptId),

@@ -34,9 +34,9 @@
 //   const handleSubmit = async () => {
 //     let url =
 //       selectedOption === 'email'
-//         ? 'https://devdemo.softtrails.net/ucs/intra/api/email/save'
-//         : 'https://devdemo.softtrails.net/ucs/intra/api/sms/save';
-// // https://devapi.softtrails.net/saas/ucs/test
+//         ? 'https://globalparameters.softtrails.net/ucs/intra/api/email/save'
+//         : 'https://globalparameters.softtrails.net/ucs/intra/api/sms/save';
+// // https://globalparameters.softtrails.net/saas/ucs/test
 //     let data =
 //       selectedOption === 'email'
 //         ? {

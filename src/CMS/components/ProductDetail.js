@@ -365,7 +365,7 @@ export default function ProductDetail() {
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
     const docRes = await fetch(
-      "https://devdemo.softtrails.net/dmsapi/upload-documents",
+      "https://globalparameters.softtrails.net/dmsapi/upload-documents",
       { method: "POST", headers, body: formData }
     );
 

@@ -19,9 +19,9 @@ const EmployeeDocuments = () => {
   const token = sessionStorage.getItem("token");
   const userId = sessionStorage.getItem("userId");
 
-  const API_GET_DOCS = `https://devdemo.softtrails.net/documents/employee-documents/user/${userId}?source=my_doc`;
-  const API_GET_CATEGORIES = `https://devdemo.softtrails.net/documents/categories?source=emp_doc`;
-  const API_POST_DOC = `https://devdemo.softtrails.net/documents/employee-documents`;
+  const API_GET_DOCS = `https://globalparameters.softtrails.net/documents/employee-documents/user/${userId}?source=my_doc`;
+  const API_GET_CATEGORIES = `https://globalparameters.softtrails.net/documents/categories?source=emp_doc`;
+  const API_POST_DOC = `https://globalparameters.softtrails.net/documents/employee-documents`;
 
   const fetchCategories = async () => {
     try {

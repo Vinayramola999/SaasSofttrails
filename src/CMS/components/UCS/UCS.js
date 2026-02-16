@@ -15,7 +15,7 @@ const UnifiedService = () => {
       // verify-token endpoint uses slightly different base
       // verifyToken: apiUrl.replace(/ucs\/test\/?$/, "test/") + "users/verify-token",
       verifyToken:
-        "https://devdemo.softtrails.net/users/verify-token",
+        "https://globalparameters.softtrails.net/users/verify-token",
     },
     templates: {
       viewAll: `${apiUrl}ucs/viewAllTemplates`,

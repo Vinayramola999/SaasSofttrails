@@ -5,7 +5,7 @@ export default function TotalCustomersCard() {
   const [totalCustomers, setTotalCustomers] = useState(null);
 
   useEffect(() => {
-    fetch("https://devdemo.softtrails.net/customers//")
+    fetch("https://globalparameters.softtrails.net/customers//")
       .then((res) => res.json())
       .then((data) => {
         // Access totalCount from the nested data structure

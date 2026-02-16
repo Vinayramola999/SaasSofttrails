@@ -195,7 +195,7 @@ const Customer = () => {
     }
 
     try {
-      const response = await axios.post(`https://devdemo.softtrails.net/users/verify-token`, { token });
+      const response = await axios.post(`https://globalparameters.softtrails.net/users/verify-token`, { token });
       console.log("Token is valid:", response.data);
     } catch (error) {
       console.error("Token verification failed:", error.response?.data || error.message);

@@ -14,7 +14,7 @@ const VerifyToken = (redirectOnSuccess, redirectOnFail = "/") => {
     }
 
     axios
-      .post("https://devdemo.softtrails.net/users/verify-token", {
+      .post("https://globalparameters.softtrails.net/users/verify-token", {
         token,
       })
       .then(() => {

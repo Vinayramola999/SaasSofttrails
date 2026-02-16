@@ -30,13 +30,13 @@ const HRPoliciesTab = () => {
 
             try {
                 const [policyRes, categoryRes] = await Promise.all([
-                    fetch("https://devdemo.softtrails.net/hr-policy/policies", {
+                    fetch("https://globalparameters.softtrails.net/hr-policy/policies", {
                         headers: {
                             Authorization: `Bearer ${token}`,
                             "Content-Type": "application/json",
                         },
                     }),
-                    fetch("https://devdemo.softtrails.net/hr-policy/categories", {
+                    fetch("https://globalparameters.softtrails.net/hr-policy/categories", {
                         headers: {
                             Authorization: `Bearer ${token}`,
                             "Content-Type": "application/json",

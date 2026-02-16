@@ -17,7 +17,7 @@ const DmsApproval = () => {
     }
     try {
       const response = await axios.post(
-        "https://devdemo.softtrails.net/users/verify-token",
+        "https://globalparameters.softtrails.net/users/verify-token",
         {
           token: token,
         }
@@ -40,7 +40,7 @@ const DmsApproval = () => {
         try {
           console.log("Fetching data for userId:", userId);
           const response = await axios.get(
-            `https://devdemo.softtrails.net/users/id_user/${userId}`,
+            `https://globalparameters.softtrails.net/users/id_user/${userId}`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,

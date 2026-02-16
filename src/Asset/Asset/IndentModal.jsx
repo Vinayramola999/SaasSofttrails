@@ -48,7 +48,7 @@ const IndentModal = ({ asset, onClose }) => {
   useEffect(() => {
     axios
       .get(
-        "https://devapi.softtrails.net/saas/uniworkflow/workflow/get-modules/module?module_name=Purchase%20Management&sub_module_name=Indenting",
+        "https://globalparameters.softtrails.net/saas/uniworkflow/workflow/get-modules/module?module_name=Purchase%20Management&sub_module_name=Indenting",
         { headers: { Authorization: `Bearer ${token}` } }
       )
       .then((res) => {
@@ -66,7 +66,7 @@ const IndentModal = ({ asset, onClose }) => {
   useEffect(() => {
     axios
       .get(
-        `https://devapi.softtrails.net/saas/purchase/test/purchase/budget/department/${user_id}`,
+        `https://globalparameters.softtrails.net/saas/purchase/test/purchase/budget/department/${user_id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
       .then((res) => {
@@ -106,7 +106,7 @@ const IndentModal = ({ asset, onClose }) => {
 
     try {
       await axios.post(
-        "https://devapi.softtrails.net/saas/purchase/test/purchase/indenting",
+        "https://globalparameters.softtrails.net/saas/purchase/test/purchase/indenting",
         payload,
         {
           headers: {

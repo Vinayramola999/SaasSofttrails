@@ -235,7 +235,7 @@ function OurProducts({ onOpenGuide }) {
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
       const docRes = await fetch(
-        "https://devdemo.softtrails.net/dmsapi/upload-documents",
+        "https://globalparameters.softtrails.net/dmsapi/upload-documents",
         {
           method: "POST",
           headers,
@@ -270,7 +270,7 @@ function OurProducts({ onOpenGuide }) {
       // Step 1: Delete existing icon if exists
       if (form.icon_id) {
         await fetch(
-          `https://devdemo.softtrails.net/dmsapi/documents/${form.icon_id}`,
+          `https://globalparameters.softtrails.net/dmsapi/documents/${form.icon_id}`,
           {
             method: "DELETE",
             headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -318,7 +318,7 @@ function OurProducts({ onOpenGuide }) {
       );
 
       const docRes = await fetch(
-        "https://devdemo.softtrails.net/dmsapi/upload-documents",
+        "https://globalparameters.softtrails.net/dmsapi/upload-documents",
         {
           method: "POST",
           headers: token ? { Authorization: `Bearer ${token}` } : {},

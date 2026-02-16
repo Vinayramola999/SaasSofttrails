@@ -3,7 +3,7 @@ import DeleteConfirmModal from "../../NewComponents/DeleteConfirmModal";
 import { DeleteIcon } from "../../NewComponents/ReactIcons";
 import Pagination from "../../NewComponents/Pagination";
 import AddButton from '../../NewComponents/AddButton';
-import {DMS_API_BASE} from '../../config/apiBase';
+import { DMS_API_BASE } from '../../config/apiBase';
 import folder from "../../assests/folder.png";
 import { FaPlus } from "react-icons/fa";
 import Select from "react-select";
@@ -42,7 +42,7 @@ const RevisionLetter = () => {
             doc_url: documentUrl
         };
         try {
-            const response = await fetch("https://devdemo.softtrails.net/documents/employee-documents",
+            const response = await fetch("https://globalparameters.softtrails.net/documents/employee-documents",
                 {
                     method: "POST",
                     headers: {
@@ -108,7 +108,7 @@ const RevisionLetter = () => {
         const fetchEmployees = async () => {
             try {
                 const Token = sessionStorage.getItem('token');
-                const response = await axios.get("https://devdemo.softtrails.net/users/getusers",
+                const response = await axios.get("https://globalparameters.softtrails.net/users/getusers",
                     { headers: { Authorization: `Bearer ${Token}` } }
                 );
                 setEmployees(response.data.users);
@@ -121,7 +121,7 @@ const RevisionLetter = () => {
 
     const fetchHRDocuments = async () => {
         try {
-            const response = await fetch("https://devdemo.softtrails.net/documents/employee-documents",
+            const response = await fetch("https://globalparameters.softtrails.net/documents/employee-documents",
                 {
                     method: "GET",
                     headers: {
@@ -157,7 +157,7 @@ const RevisionLetter = () => {
         const Token = sessionStorage.getItem("token");
 
         try {
-            const res = await fetch("https://devdemo.softtrails.net/documents/categories?source=HR Department", {
+            const res = await fetch("https://globalparameters.softtrails.net/documents/categories?source=HR Department", {
                 headers: {
                     "Accept": "application/json",
                     Authorization: `Bearer ${Token}`,
@@ -183,7 +183,7 @@ const RevisionLetter = () => {
         const Token = sessionStorage.getItem("token");
         try {
             const response = await fetch(
-                "https://devdemo.softtrails.net/documents/categories",
+                "https://globalparameters.softtrails.net/documents/categories",
                 {
                     method: "POST",
                     headers: {
@@ -235,7 +235,7 @@ const RevisionLetter = () => {
         setDeleteError("");
         try {
             const response = await fetch(
-                `https://devdemo.softtrails.net/documents/employee-documents/${deleteId}`,
+                `https://globalparameters.softtrails.net/documents/employee-documents/${deleteId}`,
                 {
                     method: "DELETE",
                     headers: {
@@ -343,7 +343,7 @@ const RevisionLetter = () => {
         if (!confirm.isConfirmed) return;
 
         try {
-            const res = await fetch(`https://devdemo.softtrails.net/documents/categories/${id}`, {
+            const res = await fetch(`https://globalparameters.softtrails.net/documents/categories/${id}`, {
                 method: "DELETE",
                 headers: {
                     Authorization: `Bearer ${Token}`

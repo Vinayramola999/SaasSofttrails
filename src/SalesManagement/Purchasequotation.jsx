@@ -26,7 +26,7 @@ export default function QuotationList() {
         }
         const res = await axios.get(
           `${baseUrlp}/sales/salesIndenting/AllQuotation`,
-          // `https://devapi.softtrails.net/saas/purchase/test/purchase/sales/salesIndenting/AllQuotation`,
+          // `https://globalparameters.softtrails.net/saas/purchase/test/purchase/sales/salesIndenting/AllQuotation`,
           // `${baseUrl}/salesmanagement/indent/salesIndenting/AllQuotation`,
           {
             headers: { Authorization: `Bearer ${token}` },
@@ -68,7 +68,7 @@ export default function QuotationList() {
 
   return (
     <div className="flex flex-col h-[63vh] rounded-md">
-        {!selectedQuotation && (
+      {!selectedQuotation && (
         <div className="flex gap-2 items-center">
           {/* Search Bar */}
           <div className="relative">
@@ -136,33 +136,35 @@ export default function QuotationList() {
                 { key: 'sno', label: 'S. No.', render: (_, idx) => `${indexOfFirst + idx + 1}.`, cellClass: 'font-medium text-gray-700' },
                 { key: 'quotation_date', label: 'Quotation date', render: (q) => new Date(q.quotation_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) },
                 { key: 'quotation_id', label: 'Quotation No.', render: (q) => q.quotation_id },
-                { 
-                  key: 'vendor_name', 
-                  label: 'Quotation from', 
+                {
+                  key: 'vendor_name',
+                  label: 'Quotation from',
                   render: (q) => {
                     const name = q.vendor_name || '-';
                     const isExpanded = expandedRow === `vendor_${q.quotation_id}`;
                     return (
-                              <div className="text-center whitespace-normal break-words max-w-[150px] mx-auto">
-                              {isExpanded ? name : (name.length > 20 ? `${name.slice(0, 20)}...` : name)}
-                              {name.length > 20 && (
-                                <button
-                                  className="ml-2 text-blue-600 font-medium hover:text-blue-800"
-                                  onClick={() => setExpandedRow(isExpanded ? null : `vendor_${q.quotation_id}`)}
-                                >
-                                  {isExpanded ? 'Show less' : 'Read more'}
-                                </button>
-                              )}
-                            </div>
+                      <div className="text-center whitespace-normal break-words max-w-[150px] mx-auto">
+                        {isExpanded ? name : (name.length > 20 ? `${name.slice(0, 20)}...` : name)}
+                        {name.length > 20 && (
+                          <button
+                            className="ml-2 text-blue-600 font-medium hover:text-blue-800"
+                            onClick={() => setExpandedRow(isExpanded ? null : `vendor_${q.quotation_id}`)}
+                          >
+                            {isExpanded ? 'Show less' : 'Read more'}
+                          </button>
+                        )}
+                      </div>
                     );
                   },
                   cellClass: 'text-center whitespace-normal',
                 },
                 { key: 'grand_total', label: 'Amount', render: (q) => `₹${q.grand_total}` },
-                { key: 'status', label: 'Status', render: (q) => {
-                  const statusColor = q.status === 'Verified' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
-                  return <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor}`}>{q.status || '-'}</span>;
-                }},
+                {
+                  key: 'status', label: 'Status', render: (q) => {
+                    const statusColor = q.status === 'Verified' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
+                    return <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColor}`}>{q.status || '-'}</span>;
+                  }
+                },
               ]}
               data={currentRows}
               indexOffset={indexOfFirst}
@@ -206,7 +208,7 @@ export default function QuotationList() {
           </div>
 
           <div className="flex items-center justify-between bg-gray px-4 py-3 border-b">
-            </div>
+          </div>
 
           <div className="bg-white border rounded p-8 shadow">
             <h2 className="text-2xl font-bold mb-6">Quotation</h2>
@@ -239,24 +241,24 @@ export default function QuotationList() {
 
             {/* single item */}
             <div className="max-h-[400px] overflow-y-auto">
-            {Array.isArray(selectedQuotation.items) && selectedQuotation.items.length > 0 ? (
-              selectedQuotation.items.map((item, idx) => (
-                <div key={item.quotation_group_id || idx} className="grid grid-cols-5 gap-4 border-b px-4 py-3 text-sm">
-                  <div>
-                    <span className="font-medium">{item.asset_name}</span>
-                    <p className="text-gray-500 text-xs">{item.description}</p>
+              {Array.isArray(selectedQuotation.items) && selectedQuotation.items.length > 0 ? (
+                selectedQuotation.items.map((item, idx) => (
+                  <div key={item.quotation_group_id || idx} className="grid grid-cols-5 gap-4 border-b px-4 py-3 text-sm">
+                    <div>
+                      <span className="font-medium">{item.asset_name}</span>
+                      <p className="text-gray-500 text-xs">{item.description}</p>
+                    </div>
+                    <div>{item.quantity}</div>
+                    <div>₹{item.unit_price}</div>
+                    <div>{item.tax_percentage}%</div>
+                    <div>₹{item.total_amount}</div>
                   </div>
-                  <div>{item.quantity}</div>
-                  <div>₹{item.unit_price}</div>
-                  <div>{item.tax_percentage}%</div>
-                  <div>₹{item.total_amount}</div>
+                ))
+              ) : (
+                <div className="grid grid-cols-5 gap-4 border-b px-4 py-3 text-sm text-center text-gray-400">
+                  <div colSpan={5}>No items found</div>
                 </div>
-              ))
-            ) : (
-              <div className="grid grid-cols-5 gap-4 border-b px-4 py-3 text-sm text-center text-gray-400">
-                <div colSpan={5}>No items found</div>
-              </div>
-            )}
+              )}
             </div>
 
             {/* Bottom Summary */}

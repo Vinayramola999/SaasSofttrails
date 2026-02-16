@@ -31,7 +31,7 @@ const GoalManager = () => {
     useEffect(() => {
         const fetchDepartments = async () => {
             try {
-                const response = await axios.get("https://devdemo.softtrails.net/departments", {
+                const response = await axios.get("https://globalparameters.softtrails.net/departments", {
                     headers: { Authorization: `Bearer ${token}` },
                 });
                 const activeDepartments = response.data
@@ -52,7 +52,7 @@ const GoalManager = () => {
     const fetchGoals = async () => {
         setLoading(true);
         try {
-            const response = await axios.get("https://devdemo.softtrails.net/pms/goals", {
+            const response = await axios.get("https://globalparameters.softtrails.net/pms/goals", {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setGoals(response.data);
@@ -85,7 +85,7 @@ const GoalManager = () => {
         };
 
         try {
-            const response = await axios.post("https://devdemo.softtrails.net/pms/goals", payload, {
+            const response = await axios.post("https://globalparameters.softtrails.net/pms/goals", payload, {
                 headers: { Authorization: `Bearer ${token}` },
             });
 
@@ -300,7 +300,7 @@ const GoalManager = () => {
                     setIsDeleting(true);
                     try {
                         await axios.delete(
-                            `https://devdemo.softtrails.net/pms/goals/${goalToDelete?.id}`,
+                            `https://globalparameters.softtrails.net/pms/goals/${goalToDelete?.id}`,
                             {
                                 headers: {
                                     Authorization: `Bearer ${token}`,

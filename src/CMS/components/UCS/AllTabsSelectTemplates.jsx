@@ -38,7 +38,7 @@ const Organization = () => {
       const fetchUserData = async () => {
         try {
           const response = await axios.get(
-            `https://devdemo.softtrails.net/ucs/intra/users/id_user/${userId}`,
+            `https://globalparameters.softtrails.net/ucs/intra/users/id_user/${userId}`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -64,7 +64,7 @@ const Organization = () => {
     }
     try {
       await axios.post(
-        "https://devdemo.softtrails.net/ucs/intra/verify-token",
+        "https://globalparameters.softtrails.net/ucs/intra/verify-token",
         { token }
       );
       navigate("/AllTabs");

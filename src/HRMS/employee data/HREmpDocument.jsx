@@ -39,7 +39,7 @@ const HREmpDocument = () => {
         const Token = sessionStorage.getItem("token");
         try {
             const res = await fetch(
-                "https://devdemo.softtrails.net/documents/categories?source=emp_doc",
+                "https://globalparameters.softtrails.net/documents/categories?source=emp_doc",
                 {
                     headers: {
                         Accept: "application/json",
@@ -70,7 +70,7 @@ const HREmpDocument = () => {
         const Token = sessionStorage.getItem("token");
         try {
             const response = await fetch(
-                "https://devdemo.softtrails.net/documents/categories",
+                "https://globalparameters.softtrails.net/documents/categories",
                 {
                     method: "POST",
                     headers: {
@@ -110,7 +110,7 @@ const HREmpDocument = () => {
 
         try {
             const res = await fetch(
-                `https://devdemo.softtrails.net/documents/categories/${deleteId}`,
+                `https://globalparameters.softtrails.net/documents/categories/${deleteId}`,
                 {
                     method: "DELETE",
                     headers: { Authorization: `Bearer ${Token}` },

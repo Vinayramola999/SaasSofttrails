@@ -43,7 +43,7 @@ const Organization = () => {
       const fetchUserData = async () => {
         try {
           const response = await axios.get(
-            `https://devdemo.softtrails.net/users/id_user/${userId}`,
+            `https://globalparameters.softtrails.net/users/id_user/${userId}`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -69,7 +69,7 @@ const Organization = () => {
     }
     try {
       await axios.post(
-        "https://devdemo.softtrails.net/users/verify-token",
+        "https://globalparameters.softtrails.net/users/verify-token",
         { token }
       );
       // stay on the current product addon route (avoid navigating to a non-existent '/AllTabs')

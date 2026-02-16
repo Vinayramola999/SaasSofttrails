@@ -88,7 +88,7 @@ const RaiseRequest = ({ deptName }) => {
     setBudget("");
     setDescription("");
 
-      setProducts([]);  
+    setProducts([]);
 
   };
 
@@ -278,7 +278,7 @@ const RaiseRequest = ({ deptName }) => {
       // Fetch both APIs, but handle errors separately
       Promise.allSettled([
         axios.get(
-          // https://devapi.softtrails.net/saas/java/test/api/categories
+          // https://globalparameters.softtrails.net/saas/java/test/api/categories
           `${API.PRO_API}/categories/${formattedRequestFor}`,
           { headers: { Authorization: `Bearer ${token}` } }
         ),
@@ -382,8 +382,8 @@ const RaiseRequest = ({ deptName }) => {
               ? Array.isArray(purchaseResult.value.data)
                 ? purchaseResult.value.data
                 : Array.isArray(purchaseResult.value.data?.data)
-                ? purchaseResult.value.data.data
-                : []
+                  ? purchaseResult.value.data.data
+                  : []
               : [];
 
           const columnArray =
@@ -391,8 +391,8 @@ const RaiseRequest = ({ deptName }) => {
               ? Array.isArray(columnResult.value.data)
                 ? columnResult.value.data
                 : Array.isArray(columnResult.value.data?.data)
-                ? columnResult.value.data.data
-                : []
+                  ? columnResult.value.data.data
+                  : []
               : [];
 
           // If one API failed but the other returned data, use the available data
@@ -512,7 +512,7 @@ const RaiseRequest = ({ deptName }) => {
   //     .catch((err) => console.error("Error fetching budgets:", err));
   // }, [token]);
 
-    useEffect(() => {
+  useEffect(() => {
     const userId = sessionStorage.getItem("userId");
     if (!userId) return;
 
@@ -525,11 +525,11 @@ const RaiseRequest = ({ deptName }) => {
         // API returns { budgets: [...] }
         const budgets = Array.isArray(res.data.budgets)
           ? res.data.budgets.map((b) => ({
-              id: b.id,
-              name: b.name,
-              workflow_id: b.workflow_id || null,
-              workflow_name: b.workflow_name,
-            }))
+            id: b.id,
+            name: b.name,
+            workflow_id: b.workflow_id || null,
+            workflow_name: b.workflow_name,
+          }))
           : [];
         console.log("Parsed budgets:", budgets);
         setBudgetOptions(budgets);
@@ -582,7 +582,7 @@ const RaiseRequest = ({ deptName }) => {
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-3 gap-6 mb-6">
               <div className="w-full">
-                    <label className="block text-sm font-semibold mb-1">
+                <label className="block text-sm font-semibold mb-1">
                   Request For
                 </label>
 
@@ -943,7 +943,7 @@ const RaiseRequest = ({ deptName }) => {
                           />
                         )}
                       />
-                        <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-gray-500 mt-1">
                         ℹ️ The selected budget will be applied to all items in this request.
                       </p>
                     </div>
@@ -989,7 +989,7 @@ const RaiseRequest = ({ deptName }) => {
                           />
                         )}
                       />
-                     
+
                     </div>
                   )}
                 </div>
@@ -1050,7 +1050,7 @@ const RaiseRequest = ({ deptName }) => {
                                   )?.workflow_name
                                 ) || "-"}
                               </td> */}
-                                                          <td className="p-2">
+                              <td className="p-2">
                                 {formatDisplay(
                                   budgetOptions.find((b) => b.id === it.budget)
                                     ?.name
@@ -1103,11 +1103,10 @@ const RaiseRequest = ({ deptName }) => {
                     type="submit"
                     disabled={products.length === 0}
                     className={`px-6 py-2 rounded-lg w-1/4 text-white 
-      ${
-        products.length === 0
-          ? "bg-gray-400 cursor-not-allowed"
-          : "bg-custome-blue"
-      }`}
+      ${products.length === 0
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-custome-blue"
+                      }`}
                   >
                     Submit
                   </button>

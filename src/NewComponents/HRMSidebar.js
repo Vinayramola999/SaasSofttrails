@@ -135,7 +135,7 @@ const Sidebar = ({ isOpen, onClose }) => {
       }
 
       const response = await axios.get(
-        `https://devdemo.softtrails.net/access/access/${userId}`,
+        `https://globalparameters.softtrails.net/access/access/${userId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

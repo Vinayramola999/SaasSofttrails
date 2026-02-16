@@ -16,7 +16,7 @@ export default function SoftTrailsCustomersCard() {
   const dropdownRef = useRef(null);
 
   useEffect(() => {
-    fetch("https://devdemo.softtrails.net/customers//stats")
+    fetch("https://globalparameters.softtrails.net/customers//stats")
       .then((res) => res.json())
       .then((json) => {
         // We want SoftTrails-specific metrics

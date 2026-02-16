@@ -68,7 +68,7 @@ const CardsImagePart = () => {
         const cardTitles = allServices.map((service) => service.key); // extract all keys
 
         const res = await axios.post(
-          "https://devdemo.softtrails.net/ucs/intra/access/verify-access",
+          "https://globalparameters.softtrails.net/ucs/intra/access/verify-access",
           {
             user_id: parseInt(userId),
             pages: cardTitles,

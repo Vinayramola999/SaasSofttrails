@@ -296,7 +296,7 @@ export default AllBalances;
 //   // ---------------- Fetch Leave Data ----------------
 //   const fetchLeaveData = async () => {
 //     try {
-//       const response = await fetch("https://devdemo.softtrails.net/leave/leave-balances", {
+//       const response = await fetch("https://globalparameters.softtrails.net/leave/leave-balances", {
 //         method: "GET",
 //         headers: { Authorization: `Bearer ${token}` },
 //       });
@@ -364,7 +364,7 @@ export default AllBalances;
 
 //     try {
 //       const res = await axios.put(
-//         `https://devdemo.softtrails.net/leave/leave-balances-update/${selectedLeave.id}`,
+//         `https://globalparameters.softtrails.net/leave/leave-balances-update/${selectedLeave.id}`,
 //         {
 //           balance: updatedBalance,
 //           previous_balance: updatedPreviousBalance,
@@ -388,7 +388,7 @@ export default AllBalances;
 //   // ---------------- Fetch Manager Info ----------------
 //   const fetchManagerDetails = async (manager_id, user_id) => {
 //     try {
-//       const res = await axios.get("https://devdemo.softtrails.net/users/getusers", {
+//       const res = await axios.get("https://globalparameters.softtrails.net/users/getusers", {
 //         headers: { Authorization: `Bearer ${token}` },
 //       });
 //       if (res.data && res.data.users) {
@@ -446,7 +446,7 @@ export default AllBalances;
 
 //     try {
 //       await axios.post(
-//         "https://devapi.softtrails.net/saas/test/ucs/send",
+//         "https://globalparameters.softtrails.net/saas/test/ucs/send",
 //         finalPayload,
 //         {
 //           headers: { Authorization: `Bearer ${token}` },

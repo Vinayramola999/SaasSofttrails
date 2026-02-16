@@ -79,7 +79,7 @@ export default function ProductIndividualpage() {
       }
     ]));
 
-    const docRes = await fetch("https://devdemo.softtrails.net/node/intrane/dmsapi/upload-documents", {
+    const docRes = await fetch("https://globalparameters.softtrails.net/node/intrane/dmsapi/upload-documents", {
       method: "POST",
       body: formData
     });

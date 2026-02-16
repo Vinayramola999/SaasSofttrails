@@ -21,7 +21,7 @@
 //       try {
 //         // Fetch API access
 //         const response = await axios.get(
-//           `https://devdemo.softtrails.net/access/access/${userId}`,
+//           `https://globalparameters.softtrails.net/access/access/${userId}`,
 //           {
 //             headers: {
 //               Authorization: `Bearer ${sessionStorage.getItem("token")}`,
@@ -85,7 +85,7 @@
 //     if (isDocumentChecked) selectedApiAccess.push("doc_management");
 //     try {
 //       const response = await axios.put(
-//         "https://devdemo.softtrails.net/access/update_access",
+//         "https://globalparameters.softtrails.net/access/update_access",
 //         {
 //           user_id: selectedEmail,
 //           module: selectedModule,
@@ -267,7 +267,7 @@ const DMSAccess = () => {
         if (userId) {
             try {
                 // Fetch API access
-                const response = await axios.get(`https://devdemo.softtrails.net/access/access/${userId}`,
+                const response = await axios.get(`https://globalparameters.softtrails.net/access/access/${userId}`,
                     { headers: { Authorization: `Bearer ${sessionStorage.getItem("token")}`, }, }
                 );
 
@@ -325,7 +325,7 @@ const DMSAccess = () => {
         if (isDMSChecked) selectedApiAccess.push("doc_management");
         try {
             const response = await axios.put(
-                "https://devdemo.softtrails.net/access/update_access",
+                "https://globalparameters.softtrails.net/access/update_access",
                 {
                     user_id: selectedEmail,
                     module: selectedModule,

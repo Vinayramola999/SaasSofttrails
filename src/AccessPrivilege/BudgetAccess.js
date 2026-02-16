@@ -21,7 +21,7 @@
 //       try {
 //         // Fetch API access
 //         const response = await axios.get(
-//           `https://devdemo.softtrails.net/access/access/${userId}`,
+//           `https://globalparameters.softtrails.net/access/access/${userId}`,
 //           {
 //             headers: {
 //               Authorization: `Bearer ${sessionStorage.getItem("token")}`,
@@ -83,7 +83,7 @@
 //     if (isBudgetChecked) selectedApiAccess.push("Budget");
 //     try {
 //       const response = await axios.put(
-//         "https://devdemo.softtrails.net/access/update_access",
+//         "https://globalparameters.softtrails.net/access/update_access",
 //         {
 //           user_id: selectedEmail,
 //           module: selectedModule,
@@ -268,7 +268,7 @@ const BudgetAccess = () => {
         if (userId) {
             try {
                 // Fetch API access
-                const response = await axios.get(`https://devdemo.softtrails.net/access/access/${userId}`,
+                const response = await axios.get(`https://globalparameters.softtrails.net/access/access/${userId}`,
                     { headers: { Authorization: `Bearer ${sessionStorage.getItem("token")}`, }, }
                 );
 
@@ -326,7 +326,7 @@ const BudgetAccess = () => {
         if (isBudgetChecked) selectedApiAccess.push("Budget");
         try {
             const response = await axios.put(
-                "https://devdemo.softtrails.net/access/update_access",
+                "https://globalparameters.softtrails.net/access/update_access",
                 {
                     user_id: selectedEmail,
                     module: selectedModule,

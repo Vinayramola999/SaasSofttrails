@@ -24,14 +24,14 @@ const KRAComponent = () => {
     // // Fetch all goals
     // useEffect(() => {
     //     axios
-    //         .get("https://devdemo.softtrails.net/pms/goals")
+    //         .get("https://globalparameters.softtrails.net/pms/goals")
     //         .then((res) => setGoalList(res.data))
     //         .catch((err) => console.error("Error fetching goals:", err));
     // }, []);
 
     // // Fetch all KRAs
     // const fetchKRAs = () => {
-    //     axios.get("https://devdemo.softtrails.net/pms/kra")
+    //     axios.get("https://globalparameters.softtrails.net/pms/kra")
     //         .then((res) => setKraList(res.data))
     //         .catch((err) => console.error("Error fetching KRAs:", err));
     // };
@@ -42,7 +42,7 @@ const KRAComponent = () => {
     // const handleSubmit = async () => {
     //     if (kra && goalId) {
     //         try {
-    //             const response = await axios.post("https://devdemo.softtrails.net/pms/kra", {
+    //             const response = await axios.post("https://globalparameters.softtrails.net/pms/kra", {
     //                 kra_name: kra,
     //                 goal_id: parseInt(goalId),
     //             });
@@ -71,7 +71,7 @@ const KRAComponent = () => {
     useEffect(() => {
         const token = sessionStorage.getItem("token");
         axios
-            .get("https://devdemo.softtrails.net/pms/goals", {
+            .get("https://globalparameters.softtrails.net/pms/goals", {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -84,7 +84,7 @@ const KRAComponent = () => {
     const fetchKRAs = () => {
         const token = sessionStorage.getItem("token");
         axios
-            .get("https://devdemo.softtrails.net/pms/kra", {
+            .get("https://globalparameters.softtrails.net/pms/kra", {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -101,7 +101,7 @@ const KRAComponent = () => {
             try {
                 const token = sessionStorage.getItem("token");
                 const response = await axios.post(
-                    "https://devdemo.softtrails.net/pms/kra",
+                    "https://globalparameters.softtrails.net/pms/kra",
                     {
                         kra_name: kra,
                         goal_id: parseInt(goalId),
@@ -163,7 +163,7 @@ const KRAComponent = () => {
         try {
             const token = sessionStorage.getItem("token");
             await axios.delete(
-                `https://devdemo.softtrails.net/pms/kra/${kraToDelete.id}`,
+                `https://globalparameters.softtrails.net/pms/kra/${kraToDelete.id}`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -337,7 +337,7 @@ const KRAComponent = () => {
                                 onClick={async () => {
                                     try {
                                         const token = sessionStorage.getItem("token");
-                                        await axios.put(`https://devdemo.softtrails.net/pms/kra/${selectedKRA.id}`,
+                                        await axios.put(`https://globalparameters.softtrails.net/pms/kra/${selectedKRA.id}`,
                                             {
                                                 kra_name: updatedKRA,
                                                 goal_id: parseInt(updatedGoalId),

@@ -20,7 +20,7 @@ export default function AttendanceTable() {
   useEffect(() => {
     const fetchManagerAttendance = async () => {
       try {
-        const res = await axios.get(`https://devdemo.softtrails.net/attendance/manager/attendance/${managerId}`);
+        const res = await axios.get(`https://globalparameters.softtrails.net/attendance/manager/attendance/${managerId}`);
         const data = res.data.attendance;
 
         const formattedData = data.map((item) => ({
@@ -110,7 +110,7 @@ export default function AttendanceTable() {
         return;
       }
 
-      await axios.post("https://devdemo.softtrails.net/attendance/manager-approval", {
+      await axios.post("https://globalparameters.softtrails.net/attendance/manager-approval", {
         manager_id: managerId,
         ids, // always array
         stage,

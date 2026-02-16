@@ -146,7 +146,7 @@ const Grn = () => {
       setLoading(true);
       const token = sessionStorage.getItem("token");
       const res = await axios.get(
-        `https://devdemo.softtrails.net/purchase/grn/one_grn/${item.grn_id}`,
+        `https://globalparameters.softtrails.net/purchase/grn/one_grn/${item.grn_id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

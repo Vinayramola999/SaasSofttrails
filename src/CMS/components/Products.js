@@ -9,7 +9,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { AiFillFilePdf } from "react-icons/ai";
 
 const PATH_PREFIX = "/products/";
-const DMS_HOST = "https://devdemo.softtrails.net";
+const DMS_HOST = "https://globalparameters.softtrails.net";
 
 export default function Products() {
   const [activeTab, setActiveTab] = useState(1);
