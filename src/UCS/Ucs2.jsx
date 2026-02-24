@@ -15,7 +15,7 @@ const LeaveManagement1 = () => {
   // Function to fetch all module data from the API
   const getAllModules = async () => {
     try {
-      const url = "https://ucsdemo.softtrails.net/api/modules";
+      const url = "https://globalparameters.softtrails.net/api/modules";
       const token = sessionStorage.getItem("token");
       const config = {
         headers: { Authorization: `Bearer ${token}` },
