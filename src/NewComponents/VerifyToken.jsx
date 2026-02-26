@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { MAIN_API_BASE } from "../config/apiBase";
 
 const VerifyToken = (redirectOnSuccess, redirectOnFail = "/") => {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ const VerifyToken = (redirectOnSuccess, redirectOnFail = "/") => {
     }
 
     axios
-      .post("https://globalparameters.softtrails.net/users/verify-token", {
+      .post(`${MAIN_API_BASE}/users/verify-token`, {
         token,
       })
       .then(() => {
