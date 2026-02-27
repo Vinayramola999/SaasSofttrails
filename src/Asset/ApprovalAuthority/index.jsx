@@ -13,7 +13,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import MessageModal from "../ApprovalAuthority/MessageModal";
 import Select from "react-select";
-import { DMS_BASE,JAVA_BASE, ASSET_NODE_BASE, UCS_BASE ,MAIN_BASE } from "../../config/apiBase"
+import { DMS_BASE, JAVA_BASE, ASSET_NODE_BASE, UCS_BASE, MAIN_BASE } from "../../config/apiBase"
 const RequestTable = ({
   type,
   requests,
@@ -56,14 +56,14 @@ const RequestTable = ({
   const [isEditing, setIsEditing] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState(null); // for Add flow
   const [isCategoryPublished, setIsCategoryPublished] = useState(false);
-const [isPaginating, setIsPaginating] = useState(false);
-// 🧭 Pagination + Search Management States
-const [limit, setLimit] = useState(25); // items per page
-const [currentPage, setCurrentPage] = useState(1);
-const [totalPages, setTotalPages] = useState(1);
-const [totalRecords, setTotalRecords] = useState(0);
+  const [isPaginating, setIsPaginating] = useState(false);
+  // 🧭 Pagination + Search Management States
+  const [limit, setLimit] = useState(25); // items per page
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalRecords, setTotalRecords] = useState(0);
 
-const [debounceTimer, setDebounceTimer] = useState(null);
+  const [debounceTimer, setDebounceTimer] = useState(null);
   const requestData =
     {
       Asset: requests.assetRequests,
@@ -111,7 +111,7 @@ const [debounceTimer, setDebounceTimer] = useState(null);
     }
   }, [selectedCategory]);
 
- 
+
   useEffect(() => {
     if (selectedCategory === "All Assets") {
       fetchAllPendingAssets();
@@ -131,69 +131,69 @@ const [debounceTimer, setDebounceTimer] = useState(null);
     }
   }, [editDetails?.request?.categoryId, isEditCategoryModalOpen]);
 
- const fetchTableData = async (
-  categoryName = selectedCategory,
-  offsetOrPage = 1,
-  limitValue = limit,
-  search = ""
-) => {
-  try {
-    const token = sessionStorage.getItem("token");
-    if (!token) {
-      console.error("Token missing. Please log in again.");
-      return;
-    }
-
-    const safePage = offsetOrPage < 1 ? 1 : offsetOrPage; // ✅ Fix page floor
-    const offset = (safePage - 1) * limitValue;
-
-    const params = {
-      offset,
-      limit: limitValue,
-      search,
-      status: "Repository",
-      stages: "AwaitingApproval",
-      type:"Movable",
-    };
-
-    const response = await axios.get(
-      `${ASSET_NODE_BASE}getColumnTypesAndData/${categoryName}`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-        params,
+  const fetchTableData = async (
+    categoryName = selectedCategory,
+    offsetOrPage = 1,
+    limitValue = limit,
+    search = ""
+  ) => {
+    try {
+      const token = sessionStorage.getItem("token");
+      if (!token) {
+        console.error("Token missing. Please log in again.");
+        return;
       }
-    );
 
-    const { data = [], columns = [], pagination = {} } = response.data;
-    setFilteredData(data);
-    setTableData(data);
-    setDynamicFields(columns);
+      const safePage = offsetOrPage < 1 ? 1 : offsetOrPage; // ✅ Fix page floor
+      const offset = (safePage - 1) * limitValue;
 
-    const total = pagination.total || data.length;
-    setTotalRecords(total);
-    setLimit(pagination.limit || limitValue);
-    setCurrentPage(
-      pagination.offset >= 0
-        ? Math.floor(pagination.offset / (pagination.limit || limitValue)) + 1
-        : safePage
-    ); // ✅ Prevent 0 or negative
-    setTotalPages(Math.ceil(total / (pagination.limit || limitValue)));
-  } catch (error) {
-    console.error("Error fetching table data:", error.message);
-  }
-};
-const handleChange = async (e) => {
-  const value = e.target.value || e?.target?.value || e?.value;
-  setSelectedCategory(value);
-  setCurrentPage(1);
-  setSearchTerm("");
+      const params = {
+        offset,
+        limit: limitValue,
+        search,
+        status: "Repository",
+        stages: "AwaitingApproval",
+        type: "Movable",
+      };
 
-  if (value === "All Assets") {
-    fetchAllPendingAssets(1, limit);
-  } else {
-    fetchTableData(value, 1, limit);
-  }
-};
+      const response = await axios.get(
+        `${ASSET_NODE_BASE}getColumnTypesAndData/${categoryName}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          params,
+        }
+      );
+
+      const { data = [], columns = [], pagination = {} } = response.data;
+      setFilteredData(data);
+      setTableData(data);
+      setDynamicFields(columns);
+
+      const total = pagination.total || data.length;
+      setTotalRecords(total);
+      setLimit(pagination.limit || limitValue);
+      setCurrentPage(
+        pagination.offset >= 0
+          ? Math.floor(pagination.offset / (pagination.limit || limitValue)) + 1
+          : safePage
+      ); // ✅ Prevent 0 or negative
+      setTotalPages(Math.ceil(total / (pagination.limit || limitValue)));
+    } catch (error) {
+      console.error("Error fetching table data:", error.message);
+    }
+  };
+  const handleChange = async (e) => {
+    const value = e.target.value || e?.target?.value || e?.value;
+    setSelectedCategory(value);
+    setCurrentPage(1);
+    setSearchTerm("");
+
+    if (value === "All Assets") {
+      fetchAllPendingAssets(1, limit);
+    } else {
+      fetchTableData(value, 1, limit);
+    }
+  };
 
 
   // const handleCategoryUpdate = (type, request) => {
@@ -368,8 +368,8 @@ const handleChange = async (e) => {
       const token = sessionStorage.getItem("token");
 
       const response = await axios.post(
-       `${ASSET_NODE_BASE}assettable`,
-        
+        `${ASSET_NODE_BASE}assettable`,
+
         publishData,
         {
           headers: {
@@ -512,7 +512,7 @@ const handleChange = async (e) => {
     try {
       // 🔁 1. Update lifecycle
       const lifecycleResponse = await fetch(
-       `${ASSET_NODE_BASE}lifecycle/update-asset-status/${unique_id}`,
+        `${ASSET_NODE_BASE}lifecycle/update-asset-status/${unique_id}`,
         {
           method: "PUT",
           headers: commonHeaders,
@@ -539,7 +539,7 @@ const handleChange = async (e) => {
       };
 
       const assetStatusResponse = await fetch(
-       `${ASSET_NODE_BASE}assets/update-asset-status/${unique_id}`,
+        `${ASSET_NODE_BASE}assets/update-asset-status/${unique_id}`,
         {
           method: "PUT",
           headers: commonHeaders,
@@ -573,7 +573,7 @@ const handleChange = async (e) => {
         };
 
         const historyResponse = await fetch(
-         `${JAVA_BASE}api/assethistory/insert-history`,
+          `${JAVA_BASE}api/assethistory/insert-history`,
           {
             method: "POST",
             headers: commonHeaders,
@@ -613,7 +613,7 @@ const handleChange = async (e) => {
         const qrCodeData = contentType?.includes("application/json")
           ? await qrCodeResponse.json()
           : await qrCodeResponse.text();
- const isLastItemOnPage = filteredData.length === 1 && currentPage > 1;
+        const isLastItemOnPage = filteredData.length === 1 && currentPage > 1;
         if (!qrCodeResponse.ok || qrCodeData?.error) {
           throw new Error(
             qrCodeData?.message ||
@@ -1021,7 +1021,7 @@ const handleChange = async (e) => {
             body: JSON.stringify(historyPayload),
           }
         );
- const isLastItemOnPage = filteredData.length === 1 && currentPage > 1;
+        const isLastItemOnPage = filteredData.length === 1 && currentPage > 1;
         const historyData = await historyResponse.json();
         if (!historyResponse.ok || historyData.error) {
           throw new Error(
@@ -1123,120 +1123,121 @@ const handleChange = async (e) => {
     // }
   };
   // Edit asset function
-const fetchAllPendingAssets = async (page = 1, limitValue = limit, search = "") => {
-  try {
-    const safePage = page < 1 ? 1 : page; // ✅ Fix page floor
-    const token = sessionStorage.getItem("token");
-
-    const response = await axios.get(
-      `${ASSET_NODE_BASE}getPendingAssetsByTypess`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-        params: {
-          type: "Movable",
-          stages: "AwaitingApproval",
-          status:"Repository",
-          page: safePage,
-          limit: limitValue,
-          search,
-        },
-      }
-    );
-
-    const { records = [] } = response.data;
-    if (!records.length) {
-      setFilteredData([]);
-      setTotalRecords(0);
-      setTotalPages(1);
-      setCurrentPage(1); // ✅ Always reset to 1
-      return;
-    }
-
-    const flatData = [];
-    const catMap = {};
-
-    records.forEach((record) => {
-      const categoryName = record.category;
-      const assets = record.data || [];
-
-      if (assets.length > 0) catMap[categoryName] = assets[0].category_id;
-      assets.forEach((asset) => flatData.push({ ...asset, category: categoryName }));
-    });
-
-    setCategoryMap(catMap);
-    setFilteredData(flatData);
-    setTableData(flatData);
-
-    const pagination = records[0].pagination || {};
-    const total = pagination.total || flatData.length;
-
-    setTotalRecords(total);
-    setLimit(pagination.limit || limitValue);
-    setCurrentPage(pagination.page && pagination.page > 0 ? pagination.page : safePage); // ✅ Fix
-    setTotalPages(Math.ceil(total / (pagination.limit || limitValue)));
-  } catch (err) {
-    console.error("Error fetching pending assets:", err.message);
-  }
-};
-
-
-
-const handleEdit = async (unique_id) => {
-  // ✅ Fix: tableData is now an array, not an object
-  const assetList = Array.isArray(tableData) ? tableData : tableData.data || [];
-
-  if (!Array.isArray(assetList) || assetList.length === 0) {
-    console.error("Asset data not available.");
-    return;
-  }
-
-  const asset = assetList.find((row) => row.unique_id === unique_id);
-  if (!asset) {
-    console.error("Asset not found.");
-    return;
-  }
-
-  // ✅ Set modal states
-  setSelectedAssetId(unique_id);
-  setFormData(asset);
-  setEditingAssetId(unique_id);
-  setIsAssetModalOpen(true);
-  setSelectedAsset({
-    assetId: asset.unique_id,
-    assetname: asset["Asset Name"] || "",
-  });
-
-  // ✅ If category is available, fetch its fields
-  if (asset.category) {
-    console.log("Editing Asset:", asset);
-    console.log("Asset Category:", asset.category);
-
-    setSelectedEditCategory(asset.category);
-    setSelectedEditCategoryId(asset.category_id);
-
+  const fetchAllPendingAssets = async (page = 1, limitValue = limit, search = "") => {
     try {
+      const safePage = page < 1 ? 1 : page; // ✅ Fix page floor
       const token = sessionStorage.getItem("token");
-      const res = await axios.get(
-        `${ASSET_NODE_BASE}getColumnTypesAndData/${asset.category}`,
+
+      const response = await axios.get(
+        `${ASSET_NODE_BASE}getPendingAssetsByTypess`,
         {
-           params: { status: "Repository",
-          type:"Movable"
-         },
-          headers: {
-            Authorization: `Bearer ${token}`,
+          headers: { Authorization: `Bearer ${token}` },
+          params: {
+            type: "Movable",
+            stages: "AwaitingApproval",
+            status: "Repository",
+            page: safePage,
+            limit: limitValue,
+            search,
           },
         }
       );
 
-      const fields = res.data.columns || [];
-      setDynamicFields(fields);
+      const { records = [] } = response.data;
+      if (!records.length) {
+        setFilteredData([]);
+        setTotalRecords(0);
+        setTotalPages(1);
+        setCurrentPage(1); // ✅ Always reset to 1
+        return;
+      }
+
+      const flatData = [];
+      const catMap = {};
+
+      records.forEach((record) => {
+        const categoryName = record.category;
+        const assets = record.data || [];
+
+        if (assets.length > 0) catMap[categoryName] = assets[0].category_id;
+        assets.forEach((asset) => flatData.push({ ...asset, category: categoryName }));
+      });
+
+      setCategoryMap(catMap);
+      setFilteredData(flatData);
+      setTableData(flatData);
+
+      const pagination = records[0].pagination || {};
+      const total = pagination.total || flatData.length;
+
+      setTotalRecords(total);
+      setLimit(pagination.limit || limitValue);
+      setCurrentPage(pagination.page && pagination.page > 0 ? pagination.page : safePage); // ✅ Fix
+      setTotalPages(Math.ceil(total / (pagination.limit || limitValue)));
     } catch (err) {
-      console.error("Error fetching fields for form:", err.message);
+      console.error("Error fetching pending assets:", err.message);
     }
-  } else {
-    console.warn("Category missing for selected asset:", asset);
-  }
-};
+  };
+
+
+
+  const handleEdit = async (unique_id) => {
+    // ✅ Fix: tableData is now an array, not an object
+    const assetList = Array.isArray(tableData) ? tableData : tableData.data || [];
+
+    if (!Array.isArray(assetList) || assetList.length === 0) {
+      console.error("Asset data not available.");
+      return;
+    }
+
+    const asset = assetList.find((row) => row.unique_id === unique_id);
+    if (!asset) {
+      console.error("Asset not found.");
+      return;
+    }
+
+    // ✅ Set modal states
+    setSelectedAssetId(unique_id);
+    setFormData(asset);
+    setEditingAssetId(unique_id);
+    setIsAssetModalOpen(true);
+    setSelectedAsset({
+      assetId: asset.unique_id,
+      assetname: asset["Asset Name"] || "",
+    });
+
+    // ✅ If category is available, fetch its fields
+    if (asset.category) {
+      console.log("Editing Asset:", asset);
+      console.log("Asset Category:", asset.category);
+
+      setSelectedEditCategory(asset.category);
+      setSelectedEditCategoryId(asset.category_id);
+
+      try {
+        const token = sessionStorage.getItem("token");
+        const res = await axios.get(
+          `${ASSET_NODE_BASE}getColumnTypesAndData/${asset.category}`,
+          {
+            params: {
+              status: "Repository",
+              type: "Movable"
+            },
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const fields = res.data.columns || [];
+        setDynamicFields(fields);
+      } catch (err) {
+        console.error("Error fetching fields for form:", err.message);
+      }
+    } else {
+      console.warn("Category missing for selected asset:", asset);
+    }
+  };
 
 
 
@@ -1327,74 +1328,74 @@ const handleEdit = async (unique_id) => {
     })),
   ];
 
-const handlePageChange = async (newPage) => {
-  if (isPaginating) return;
-  setIsPaginating(true);
+  const handlePageChange = async (newPage) => {
+    if (isPaginating) return;
+    setIsPaginating(true);
 
-  if (selectedCategory === "All Assets") {
-    await fetchAllPendingAssets(newPage, limit, searchTerm);
-  } else {
-    await fetchTableData(selectedCategory, newPage, limit, searchTerm);
-  }
-
-  setTimeout(() => setIsPaginating(false), 300);
-};
-// 🧭 Debounced + Hybrid Search Handler
-const handleSearch = (e) => {
-  const value = e.target.value;
-  setSearchTerm(value);
-
-  // 🧩 Case 1: Material → backend-based search (debounced)
-  if (type === "Asset") {
-    if (debounceTimer) clearTimeout(debounceTimer);
-
-    const newTimer = setTimeout(() => {
-      if (selectedCategory === "All Assets") {
-        fetchAllPendingAssets(1, limit, value.trim());
-      } else {
-        fetchTableData(selectedCategory, 1, limit, value.trim());
-      }
-    }, 700); // debounce delay
-
-    setDebounceTimer(newTimer);
-  }
-
-  // 🧩 Case 2: Other types → frontend filtering only
-  else {
-    if (Array.isArray(tableData) && tableData.length > 0) {
-      const filtered = tableData.filter((item) =>
-        Object.values(item).some(
-          (val) =>
-            val &&
-            val.toString().toLowerCase().includes(value.toLowerCase())
-        )
-      );
-      setFilteredData(filtered);
-    } else if (tableData?.data?.length > 0) {
-      const filtered = tableData.data.filter((item) =>
-        Object.values(item).some(
-          (val) =>
-            val &&
-            val.toString().toLowerCase().includes(value.toLowerCase())
-        )
-      );
-      setFilteredData(filtered);
+    if (selectedCategory === "All Assets") {
+      await fetchAllPendingAssets(newPage, limit, searchTerm);
+    } else {
+      await fetchTableData(selectedCategory, newPage, limit, searchTerm);
     }
-  }
-};
+
+    setTimeout(() => setIsPaginating(false), 300);
+  };
+  // 🧭 Debounced + Hybrid Search Handler
+  const handleSearch = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+
+    // 🧩 Case 1: Material → backend-based search (debounced)
+    if (type === "Asset") {
+      if (debounceTimer) clearTimeout(debounceTimer);
+
+      const newTimer = setTimeout(() => {
+        if (selectedCategory === "All Assets") {
+          fetchAllPendingAssets(1, limit, value.trim());
+        } else {
+          fetchTableData(selectedCategory, 1, limit, value.trim());
+        }
+      }, 700); // debounce delay
+
+      setDebounceTimer(newTimer);
+    }
+
+    // 🧩 Case 2: Other types → frontend filtering only
+    else {
+      if (Array.isArray(tableData) && tableData.length > 0) {
+        const filtered = tableData.filter((item) =>
+          Object.values(item).some(
+            (val) =>
+              val &&
+              val.toString().toLowerCase().includes(value.toLowerCase())
+          )
+        );
+        setFilteredData(filtered);
+      } else if (tableData?.data?.length > 0) {
+        const filtered = tableData.data.filter((item) =>
+          Object.values(item).some(
+            (val) =>
+              val &&
+              val.toString().toLowerCase().includes(value.toLowerCase())
+          )
+        );
+        setFilteredData(filtered);
+      }
+    }
+  };
 
   return (
     <div className="bg-white rounded-lg p-4 shadow-md mt-4 w-full h-full">
       <div className="flex flex-col md:flex-row mb-4 space-y-2 md:space-y-0 md:space-x-2 flex-wrap items-center">
         {/* Left side: Search input and Select */}
         <div className="flex items-center space-x-2 w-full md:w-auto md:flex-shrink-0 justify-start">
-           <input
-    type="text"
-    placeholder={`Search ${type}...`}
-    className="border border-gray-300 rounded p-2 w-[250px] max-w-full"
-    value={searchTerm}
-    onChange={handleSearch}
-  />
+          <input
+            type="text"
+            placeholder={`Search ${type}...`}
+            className="border border-gray-300 rounded p-2 w-[250px] max-w-full"
+            value={searchTerm}
+            onChange={handleSearch}
+          />
 
           {type === "Asset" && (
             <div className="w-[250px]">
@@ -1786,35 +1787,35 @@ const handleSearch = (e) => {
           </div>
         </div>
       )}
-   {type === "Asset" && totalPages > 1 && (
-  <div className="sticky bottom-0 bg-white flex flex-wrap justify-center items-center gap-2 p-3 border-t border-gray-300">
-    <button
-      onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
-      disabled={currentPage === 1 || isPaginating}
-      className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-sm disabled:bg-gray-100 disabled:text-gray-400"
-    >
-      &lt;
-    </button>
+      {type === "Asset" && totalPages > 1 && (
+        <div className="sticky bottom-0 bg-white flex flex-wrap justify-center items-center gap-2 p-3 border-t border-gray-300">
+          <button
+            onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
+            disabled={currentPage === 1 || isPaginating}
+            className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-sm disabled:bg-gray-100 disabled:text-gray-400"
+          >
+            &lt;
+          </button>
 
-    <span className="px-3 py-1 rounded bg-blue-600 text-white text-sm">
-      {currentPage}
-    </span>
+          <span className="px-3 py-1 rounded bg-blue-600 text-white text-sm">
+            {currentPage}
+          </span>
 
-    <span className="text-sm font-medium">of</span>
+          <span className="text-sm font-medium">of</span>
 
-    <span className="px-3 py-1 rounded border border-blue-500 text-blue-600 text-sm">
-      {totalPages}
-    </span>
+          <span className="px-3 py-1 rounded border border-blue-500 text-blue-600 text-sm">
+            {totalPages}
+          </span>
 
-    <button
-      onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
-      disabled={currentPage === totalPages || isPaginating}
-      className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-sm disabled:bg-gray-100 disabled:text-gray-400"
-    >
-      &gt;
-    </button>
-  </div>
-)}
+          <button
+            onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
+            disabled={currentPage === totalPages || isPaginating}
+            className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-sm disabled:bg-gray-100 disabled:text-gray-400"
+          >
+            &gt;
+          </button>
+        </div>
+      )}
       {/* Modal for confirming approval */}
       {isModalOpen && (
         <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 z-50">
@@ -2336,7 +2337,7 @@ const ApprovalAuthority = () => {
       const fetchUserData = async () => {
         try {
           const response = await axios.get(
-           `${MAIN_BASE}users/id_user/${userId}`,
+            `${MAIN_BASE}users/id_user/${userId}`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
@@ -2716,7 +2717,7 @@ const ApprovalAuthority = () => {
 
   //           // ✅ Get Module Details
   //           const moduleResponse = await axios.get(
-  //             "https://ucsdemo.softtrails.net/api/modules"
+  //             "https://globalparameters.softtrails.net/api/modules"
   //           );
 
   //           let targetModule = moduleResponse.data.find(
@@ -2750,7 +2751,7 @@ const ApprovalAuthority = () => {
 
   //             try {
   //               const notifyResponse = await axios.post(
-  //                 "https://ucsdemo.softtrails.net/ucs/send",
+  //                 "https://globalparameters.softtrails.net/ucs/send",
   //                 notificationPayload,
   //                 {
   //                   headers: {
@@ -2840,255 +2841,255 @@ const ApprovalAuthority = () => {
 
   // 🔧 Error Message Helper
 
- const updateCategoryStatus = async (
-  categoryId,
-  status,
-  receiverId,
-  description,
-  categoriesname,
-  categories
-) => {
-  if (!categoryId || !status) {
-    console.error("categoryId or status is missing.");
-    setMessage("Category ID or Status is missing.");
-    setMessageType("error");
-    return;
-  }
-
-  const userId = parseInt(sessionStorage.getItem("userId"), 10);
-  const token = sessionStorage.getItem("token"); // ✅ get token
-
-  const updateStage = async (categoryId, stageValue) => {
-    const stagePayload = {
-      category_id: categoryId,
-      value: stageValue,
-      submodule: "Movable",
-      action: "CategoryApproval"
-    };
-
-    try {
-      const stageResponse = await axios.put(
-        `${ASSET_NODE_BASE}assets/stages/${categoryId}`,
-        stagePayload,
-        {
-          headers: { Authorization: `Bearer ${token}` }, // Add token
-        }
-      );
-
-      if (stageResponse.status === 200) {
-        console.log(`Stage updated to ${stageValue}.`);
-      }
-    } catch (error) {
-      console.error(`Error updating stage to ${stageValue}:`, error);
-      setMessage(extractErrorMessage(error));
+  const updateCategoryStatus = async (
+    categoryId,
+    status,
+    receiverId,
+    description,
+    categoriesname,
+    categories
+  ) => {
+    if (!categoryId || !status) {
+      console.error("categoryId or status is missing.");
+      setMessage("Category ID or Status is missing.");
       setMessageType("error");
+      return;
     }
-  };
 
-  try {
-    if (status === "Resubmitted") {
-      const resubmissionPayload = {
+    const userId = parseInt(sessionStorage.getItem("userId"), 10);
+    const token = sessionStorage.getItem("token"); // ✅ get token
+
+    const updateStage = async (categoryId, stageValue) => {
+      const stagePayload = {
         category_id: categoryId,
-        user_id: userId,
-        new_status: "Draft",
-        new_stages: "Resubmitted",
-        action: "CategoryApproval",
-        submodule: "Movable"
-      };
-
-      const resubmissionResponse = await axios.put(
-        `${ASSET_NODE_BASE}assets/update-category-status`,
-        resubmissionPayload,
-        {
-          headers: { Authorization: `Bearer ${token}` }, // Add token
-        }
-      );
-
-      if (resubmissionResponse.status === 200) {
-        setMessage(
-          "Category successfully resubmitted and status set to Draft."
-        );
-        setMessageType("success");
-        fetchCategoryRequests();
-        await updateStage(categoryId, "Resubmitted");
-      }
-    } else if (status === "Active") {
-      let categoryName = "Unknown";
-
-      if (Array.isArray(categories) && categories.length > 0) {
-        const categoryObj = categories.find(
-          (cat) => Number(cat.categoryId) === Number(categoryId)
-        );
-        categoryName = categoryObj?.categoriesname || "Unknown";
-      } else if (categoriesname) {
-        categoryName = categoriesname;
-      }
-
-      const activePayload = {
-        category_id: categoryId,
-        user_id: userId,
-        new_status: "Active",
-        value: "Approved",
-        action: "CategoryApproval",
-        category_name: categoryName,
-        submodule : "Movable"
+        value: stageValue,
+        submodule: "Movable",
+        action: "CategoryApproval"
       };
 
       try {
-        const activeResponse = await axios.put(
-          `${ASSET_NODE_BASE}assets/update-category-status`,
-          activePayload,
+        const stageResponse = await axios.put(
+          `${ASSET_NODE_BASE}assets/stages/${categoryId}`,
+          stagePayload,
           {
             headers: { Authorization: `Bearer ${token}` }, // Add token
           }
         );
 
-        if (activeResponse.status === 200) {
-          setMessage("Asset Category Status Successfully Updated.");
-          setMessageType("success");
-          setShowPublishPrompt(true);
-          fetchCategoryRequests();
-          await updateStage(categoryId, "Approved");
+        if (stageResponse.status === 200) {
+          console.log(`Stage updated to ${stageValue}.`);
+        }
+      } catch (error) {
+        console.error(`Error updating stage to ${stageValue}:`, error);
+        setMessage(extractErrorMessage(error));
+        setMessageType("error");
+      }
+    };
 
-          const userResponse = await axios.get(
-         `${JAVA_BASE}workflow/users-by-category/${categoryId}`,
+    try {
+      if (status === "Resubmitted") {
+        const resubmissionPayload = {
+          category_id: categoryId,
+          user_id: userId,
+          new_status: "Draft",
+          new_stages: "Resubmitted",
+          action: "CategoryApproval",
+          submodule: "Movable"
+        };
+
+        const resubmissionResponse = await axios.put(
+          `${ASSET_NODE_BASE}assets/update-category-status`,
+          resubmissionPayload,
+          {
+            headers: { Authorization: `Bearer ${token}` }, // Add token
+          }
+        );
+
+        if (resubmissionResponse.status === 200) {
+          setMessage(
+            "Category successfully resubmitted and status set to Draft."
+          );
+          setMessageType("success");
+          fetchCategoryRequests();
+          await updateStage(categoryId, "Resubmitted");
+        }
+      } else if (status === "Active") {
+        let categoryName = "Unknown";
+
+        if (Array.isArray(categories) && categories.length > 0) {
+          const categoryObj = categories.find(
+            (cat) => Number(cat.categoryId) === Number(categoryId)
+          );
+          categoryName = categoryObj?.categoriesname || "Unknown";
+        } else if (categoriesname) {
+          categoryName = categoriesname;
+        }
+
+        const activePayload = {
+          category_id: categoryId,
+          user_id: userId,
+          new_status: "Active",
+          value: "Approved",
+          action: "CategoryApproval",
+          category_name: categoryName,
+          submodule: "Movable"
+        };
+
+        try {
+          const activeResponse = await axios.put(
+            `${ASSET_NODE_BASE}assets/update-category-status`,
+            activePayload,
             {
               headers: { Authorization: `Bearer ${token}` }, // Add token
             }
           );
 
-          const assetAdditionUsers = userResponse.data.filter(
-            (user) =>
-              Array.isArray(user.action) &&
-              user.action.some(
-                (action) => action.trim().toLowerCase() === "assetaddition"
-              )
-          );
+          if (activeResponse.status === 200) {
+            setMessage("Asset Category Status Successfully Updated.");
+            setMessageType("success");
+            setShowPublishPrompt(true);
+            fetchCategoryRequests();
+            await updateStage(categoryId, "Approved");
 
-          if (assetAdditionUsers.length === 0) {
-            console.warn("No users with AssetAddition action.");
-          }
+            const userResponse = await axios.get(
+              `${JAVA_BASE}workflow/users-by-category/${categoryId}`,
+              {
+                headers: { Authorization: `Bearer ${token}` }, // Add token
+              }
+            );
 
-          const moduleResponse = await axios.get(
-            `${UCS_BASE}/modules`,
-            {
-              headers: { Authorization: `Bearer ${token}` }, // Add token if required
+            const assetAdditionUsers = userResponse.data.filter(
+              (user) =>
+                Array.isArray(user.action) &&
+                user.action.some(
+                  (action) => action.trim().toLowerCase() === "assetaddition"
+                )
+            );
+
+            if (assetAdditionUsers.length === 0) {
+              console.warn("No users with AssetAddition action.");
             }
-          );
 
-          let targetModule = moduleResponse.data.find(
-            (mod) =>
-              mod.subName === "Approval" && mod.moduleName === "EAM-CFD"
-          );
+            const moduleResponse = await axios.get(
+              `${UCS_BASE}/modules`,
+              {
+                headers: { Authorization: `Bearer ${token}` }, // Add token if required
+              }
+            );
 
-          if (!targetModule) {
-            console.warn("Module not found. Using fallback.");
-            targetModule = {
-              id: "41f02bc2-4eec-4c43-ac2b-c88cd74b357a",
-              name: "Category",
-              subName: "Approval/Submission/Rejection",
-              moduleName: "EAM-CFD",
-            };
-          }
+            let targetModule = moduleResponse.data.find(
+              (mod) =>
+                mod.subName === "Approval" && mod.moduleName === "EAM-CFD"
+            );
 
-          for (const user of assetAdditionUsers) {
-            const notificationPayload = {
-              name: `${user.first_name} ${user.last_name || ""}`.trim(),
-              email: user.email,
-              phone_no: user.phone_no,
-              categoryName,
-              categoryId,
-              status: "Active",
-              subName: targetModule.subName,
-              moduleName: targetModule.moduleName,
-              moduleId: targetModule.id,
-            };
+            if (!targetModule) {
+              console.warn("Module not found. Using fallback.");
+              targetModule = {
+                id: "41f02bc2-4eec-4c43-ac2b-c88cd74b357a",
+                name: "Category",
+                subName: "Approval/Submission/Rejection",
+                moduleName: "EAM-CFD",
+              };
+            }
 
-            try {
-              const notifyResponse = await axios.post(
-                `${UCS_BASE}ucs/send`,
-                notificationPayload,
-                {
-                  headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`, // Add token
-                  },
-                }
-              );
-              console.log(`✅ UCS sent to ${user.email}:`, notifyResponse.data);
-            } catch (notifyError) {
-              console.error(
-                `❌ Failed to notify ${user.email}:`,
-                notifyError.response?.data || notifyError.message
-              );
+            for (const user of assetAdditionUsers) {
+              const notificationPayload = {
+                name: `${user.first_name} ${user.last_name || ""}`.trim(),
+                email: user.email,
+                phone_no: user.phone_no,
+                categoryName,
+                categoryId,
+                status: "Active",
+                subName: targetModule.subName,
+                moduleName: targetModule.moduleName,
+                moduleId: targetModule.id,
+              };
+
+              try {
+                const notifyResponse = await axios.post(
+                  `${UCS_BASE}ucs/send`,
+                  notificationPayload,
+                  {
+                    headers: {
+                      "Content-Type": "application/json",
+                      Authorization: `Bearer ${token}`, // Add token
+                    },
+                  }
+                );
+                console.log(`✅ UCS sent to ${user.email}:`, notifyResponse.data);
+              } catch (notifyError) {
+                console.error(
+                  `❌ Failed to notify ${user.email}:`,
+                  notifyError.response?.data || notifyError.message
+                );
+              }
             }
           }
+        } catch (err) {
+          console.error("❌ Error in Active block:", err.message);
         }
-      } catch (err) {
-        console.error("❌ Error in Active block:", err.message);
-      }
-    } else if (status === "Inactive") {
-      const inactivePayload = {
-        category_id: categoryId,
-        user_id: userId,
-        new_status: "Inactive",
-        value: "Hidden",
-        action: "CategoryApproval",
-        submodule: "Movable"
-      };
+      } else if (status === "Inactive") {
+        const inactivePayload = {
+          category_id: categoryId,
+          user_id: userId,
+          new_status: "Inactive",
+          value: "Hidden",
+          action: "CategoryApproval",
+          submodule: "Movable"
+        };
 
-      const inactiveResponse = await axios.put(
-        `${ASSET_NODE_BASE}assets/update-category-status`,
-        inactivePayload,
-        {
-          headers: { Authorization: `Bearer ${token}` }, // Add token
-        }
-      );
-
-      if (inactiveResponse.status === 200) {
-        setMessage(
-          "Category status updated to Inactive and stage set to Hidden."
+        const inactiveResponse = await axios.put(
+          `${ASSET_NODE_BASE}assets/update-category-status`,
+          inactivePayload,
+          {
+            headers: { Authorization: `Bearer ${token}` }, // Add token
+          }
         );
-        setMessageType("success");
-        fetchCategoryRequests();
-        await updateStage(categoryId, "Hidden");
-      }
-    } else {
-      const statusUpdatePayload = {
-        category_id: categoryId,
-        user_id: userId,
-        new_status: status,
-        action: "CategoryApproval",
-        submodule: "Movable"
-      };
 
-      const statusResponse = await axios.put(
-        `${ASSET_NODE_BASE}assets/update-category-status`,
-        statusUpdatePayload,
-        {
-          headers: { Authorization: `Bearer ${token}` }, // Add token
+        if (inactiveResponse.status === 200) {
+          setMessage(
+            "Category status updated to Inactive and stage set to Hidden."
+          );
+          setMessageType("success");
+          fetchCategoryRequests();
+          await updateStage(categoryId, "Hidden");
         }
-      );
+      } else {
+        const statusUpdatePayload = {
+          category_id: categoryId,
+          user_id: userId,
+          new_status: status,
+          action: "CategoryApproval",
+          submodule: "Movable"
+        };
 
-      if (statusResponse.status === 200) {
-        setMessage(`Category status updated to ${status}.`);
-        setMessageType("success");
-        fetchCategoryRequests();
-        await updateStage(categoryId, status);
+        const statusResponse = await axios.put(
+          `${ASSET_NODE_BASE}assets/update-category-status`,
+          statusUpdatePayload,
+          {
+            headers: { Authorization: `Bearer ${token}` }, // Add token
+          }
+        );
+
+        if (statusResponse.status === 200) {
+          setMessage(`Category status updated to ${status}.`);
+          setMessageType("success");
+          fetchCategoryRequests();
+          await updateStage(categoryId, status);
+        }
       }
+    } catch (error) {
+      console.error("Error updating category status:", error);
+      setMessage(extractErrorMessage(error));
+      setMessageType("error");
     }
-  } catch (error) {
-    console.error("Error updating category status:", error);
-    setMessage(extractErrorMessage(error));
-    setMessageType("error");
-  }
-};
+  };
 
 
   const getCurrentCategoryStatus = async (categoryId) => {
     try {
       const response = await axios.get(
-       `${JAVA_BASE}api/categories/id/${categoryId}`
+        `${JAVA_BASE}api/categories/id/${categoryId}`
       );
       return response.data.status;
     } catch (error) {
@@ -3116,8 +3117,8 @@ const ApprovalAuthority = () => {
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`relative text-sm font-bold py-2 px-6 transition-all duration-500 ease-out rounded-full ${activeTab === tab
-                  ? "bg-blue-600 text-white scale-105 shadow-md"
-                  : "bg-gray-200 text-gray-600"
+                ? "bg-blue-600 text-white scale-105 shadow-md"
+                : "bg-gray-200 text-gray-600"
                 }`}
             >
               {tab} Requests

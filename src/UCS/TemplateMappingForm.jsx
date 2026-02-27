@@ -40,7 +40,7 @@ const TemplateMappingForm = ({ activeTab, allModules, subTabs, moduleTableNames 
   const getColumnNamesByTableName = async () => {
     console.warn('REST:', moduleTableNames);
     const queryParams = moduleTableNames.map((tableName) => `tableName=${tableName}`).join("&");
-    const url = `https://ucsdemo.softtrails.net/api/modules/columns?${queryParams}`;
+    const url = `https://globalparameters.softtrails.net/api/modules/columns?${queryParams}`;
     const token = getToken();
     const response = await axios.get(url, {
       headers: { Authorization: `Bearer ${token}` }
@@ -74,7 +74,7 @@ const TemplateMappingForm = ({ activeTab, allModules, subTabs, moduleTableNames 
         const role = notificationType === "email" ? "Email" : "SMS";
         const token = getToken();
 
-        const url = `https://ucsdemo.softtrails.net/ucs/getVariables?templateId=${templateId}&Role=${role}`;
+        const url = `https://globalparameters.softtrails.net/ucs/getVariables?templateId=${templateId}&Role=${role}`;
         const res = await axios.get(url, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -112,7 +112,7 @@ const TemplateMappingForm = ({ activeTab, allModules, subTabs, moduleTableNames 
       const token = getToken();
       console.warn('REST:', moduleTableNames);
       const queryParams = moduleTableNames.map((tableName) => `tableName=${tableName}`).join("&");
-      const columnsUrl = `https://ucsdemo.softtrails.net/api/modules/columns?${queryParams}`;
+      const columnsUrl = `https://globalparameters.softtrails.net/api/modules/columns?${queryParams}`;
       const templatesRes = await axios.get(columnsUrl, { headers: { Authorization: `Bearer ${token}` } })
       setColumns(templatesRes.data);
     } catch (error) {
@@ -124,7 +124,7 @@ const TemplateMappingForm = ({ activeTab, allModules, subTabs, moduleTableNames 
   const getAllSms = async () => {
     try {
       const token = getToken();
-      const tableDataUrl = "https://ucsdemo.softtrails.net/ucs/all";
+      const tableDataUrl = "https://globalparameters.softtrails.net/ucs/all";
       const tableDataRes = await axios.get(tableDataUrl, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -212,8 +212,8 @@ const TemplateMappingForm = ({ activeTab, allModules, subTabs, moduleTableNames 
     try {
       const token = getToken();
       const servicesUrl = notificationType === "email"
-        ? "https://ucsdemo.softtrails.net/api/email/all"
-        : "https://ucsdemo.softtrails.net/api/sms/all";
+        ? "https://globalparameters.softtrails.net/api/email/all"
+        : "https://globalparameters.softtrails.net/api/sms/all";
       const servicesRes = await axios.get(servicesUrl, { headers: { Authorization: `Bearer ${token}` } })
       setCurrentServices(servicesRes.data);
     } catch (error) {
@@ -231,8 +231,8 @@ const TemplateMappingForm = ({ activeTab, allModules, subTabs, moduleTableNames 
       try {
         const templatesUrl =
           notificationType === "email"
-            ? "https://ucsdemo.softtrails.net/api/templates/getByRole/Email"
-            : "https://ucsdemo.softtrails.net/api/templates/getByRole/Sms";
+            ? "https://globalparameters.softtrails.net/api/templates/getByRole/Email"
+            : "https://globalparameters.softtrails.net/api/templates/getByRole/Sms";
 
         const res = await axios.get(templatesUrl, {
           headers: { Authorization: `Bearer ${token}` },
@@ -283,7 +283,7 @@ const TemplateMappingForm = ({ activeTab, allModules, subTabs, moduleTableNames 
 
     try {
       const token = getToken();
-      const url = "https://ucsdemo.softtrails.net/ucs/mappedVariables";
+      const url = "https://globalparameters.softtrails.net/ucs/mappedVariables";
 
       const type = notificationType === "email" ? "Email" : "SMS";
       const moduleInfo = allModules.find((m) => m.subModuleName === activeTab);
@@ -310,7 +310,7 @@ const TemplateMappingForm = ({ activeTab, allModules, subTabs, moduleTableNames 
       };
 
       if (type === "Email") {
-        payload.Email = initialConfig.selectedTemplateId;
+        payload.email = initialConfig.selectedTemplateId;
         payload.emailService = initialConfig.selectedService;
       } else {
         payload.SMS = initialConfig.selectedTemplateId;

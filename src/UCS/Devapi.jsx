@@ -53,7 +53,7 @@ const Devapi = () => {
     const fetchModules = async () => {
       try {
         const token = localStorage.getItem('token'); // Get token from localStorage
-        const response = await fetch('https://ucsdemo.softtrails.net/api/modules', {
+        const response = await fetch('https://globalparameters.softtrails.net/api/modules', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -101,7 +101,7 @@ const Devapi = () => {
       try {
         // Use the selectedMessageType to build the API URL
         const token = localStorage.getItem('token'); // Get token from localStorage
-        const response = await fetch(`https://ucsdemo.softtrails.net/api/templates/getByRole/${selectedMessageType.toLowerCase()}`, {
+        const response = await fetch(`https://globalparameters.softtrails.net/api/templates/getByRole/${selectedMessageType.toLowerCase()}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'

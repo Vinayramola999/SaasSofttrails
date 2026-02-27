@@ -29,8 +29,8 @@ const Organization = () => {
         { id: "UCS3", label: "Gateway Setup" },
         { id: "UCS", label: "Add Template" },
         { id: "UCS2", label: "Select Template" },
-        { id: "UA", label: "Add Modules" },
-        { id: "DA", label: "Dev API" }
+        // { id: "UA", label: "Add Modules" },
+        // { id: "DA", label: "Dev API" }
     ];
 
     const handleHome = () => {
@@ -136,39 +136,7 @@ const Organization = () => {
                             
                             {activeTab === "UCS" && <UCS />}
                             {activeTab === "UCS2" && <UCS2 />}
-                            {activeTab === "UA" && <div><UserAddition /></div>}
                             
-                            {/* Dev API Tab with its child tabs */}
-                            {activeTab === "DA" && (
-                                <div>
-                                    {/* Dev API Child Tabs */}
-                                    <div className="flex gap-2 my-4">
-                                        <button
-                                            onClick={() => setChildActiveTab("MyAPI")}
-                                            className={`px-4 py-2 rounded-full ${childActiveTab === "MyAPI" ? "bg-blue-600 text-white" : "bg-gray-200 text-black"}`}
-                                        >
-                                            My API
-                                        </button>
-                                        <button
-                                            onClick={() => setChildActiveTab("MessageLogs")}
-                                            className={`px-4 py-2 rounded-full ${childActiveTab === "MessageLogs" ? "bg-blue-600 text-white" : "bg-gray-200 text-black"}`}
-                                        >
-                                            Message Logs
-                                        </button>
-                                    </div>
-
-                                    {/* Dev API Child Tab Content */}
-                                    <div>
-                                        {childActiveTab === "MyAPI" && <Devapi />}
-                                        {childActiveTab === "MessageLogs" && (
-                                            <div>
-                                                <h2 className="text-xl font-semibold mb-4">Message Logs</h2>
-                                                <p>This is the Message Logs tab content. Add your UI or API data here.</p>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
                         </div>
                     </div>
                 </div>

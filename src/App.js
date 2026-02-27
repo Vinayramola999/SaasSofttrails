@@ -22,6 +22,7 @@ import HRCorner from "./HRMS/HRDatabase/HRCorner";
 import AMSTab from "./HRMS/AttendanceManagement/AMSTab";
 import PMSTab from "./HRMS/PMS/PMSTab";
 // Asset Management
+import AssetManagement from "./Cards/AssetManagement";
 import Reports from "./Asset/Reports/DashTabs";
 import Tabs from "./Asset/Asset/Tabs";
 import Approvaltabs from "./Asset/ApprovalAuthority/Approvaltabs";
@@ -91,6 +92,7 @@ function App({ employeeId, userId }) {
     { path: "/new-password", element: <NewPassword /> },
     { path: "profile-part", element: <ProfilePart /> },
     { path: "change-password", element: <ChangePassword /> },
+    { path: "/AssetManagement", element: <AssetManagement /> },
     { path: "/cards", element: <Cards /> },
     { path: "/hrms", element: <HRMS /> },
     //1...... Employee Data
