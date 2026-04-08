@@ -1,4 +1,4 @@
-const API_BASE = process.env.REACT_APP_API_BASE_URL;
+const API_BASE = process.env.REACT_APP_DMS_BASE_URL;
 
 export async function fetchServices(token) {
   const response = await fetch(`${API_BASE}/service`, {
