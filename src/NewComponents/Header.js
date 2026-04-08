@@ -460,6 +460,9 @@ const Header = ({ onHamburgerClick }) => {
       case "/UploadEmpDocsTab":
         return "Upload Employee Documents";
       default:
+          if (location.pathname.includes("/HospitalManagement")) {
+          return "Hospital Management";
+        }
         return "Employee Data";
     }
   };

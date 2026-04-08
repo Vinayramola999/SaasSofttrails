@@ -159,7 +159,7 @@ export default function SetupWorkflow() {
           },
         }
       );
-      if (response) {
+      if (response && response.data && Array.isArray(response.data.data)) {
         setModule(response.data.data);
         console.log("Modules fetched:", response.data.data);
       } else {

@@ -60,12 +60,8 @@ const InventryIndenting = () => {
   const columns = [
     { header: "S. No.", accessor: "sno" },
     { header: "Indent ID", accessor: "id" },
-    { header: "Request for", accessor: "request_for" },
-    { header: "Category", accessor: "category" },
-    { header: "Request Material", accessor: "asset_name" },
-    { header: "Quantity", accessor: "quantity" },
+    { header: "RFP ID", accessor: "rfp_id" },
     { header: "Approval Date", accessor: "approval_date" },
-    { header: "Status", accessor: "status" },
   ];
   const [formData, setFormData] = useState({
     title: "",
@@ -121,7 +117,7 @@ const InventryIndenting = () => {
     }
   }, [showRFP]);
 
-  const fetchRequests = async () => {
+const fetchRequests = async () => {
     try {
       const headers = {
         Authorization: `Bearer ${token}`,
@@ -347,60 +343,60 @@ const InventryIndenting = () => {
           if (indentResponse.data) {
             const items =
               Array.isArray(indentResponse.data.products) &&
-                indentResponse.data.products.length > 0
+              indentResponse.data.products.length > 0
                 ? indentResponse.data.products.map((p) => ({
-                  product_name: p.product_name || p.asset_name || "",
-                  asset_name: p.asset_name || p.product_name || "",
-                  request_for:
-                    p.request_for || indentResponse.data.request_for || "",
-                  category: p.category || indentResponse.data.category || "",
-                  quantity: p.quantity || 0,
-                  uom: p.uom || p.unit || "",
-                  unit: p.uom || p.unit || "",
-                  workflow:
-                    p.workflow || indentResponse.data.workflow_id || "",
-                  budget:
-                    p.budget ||
-                    p.budget_id ||
-                    indentResponse.data.budget_id ||
-                    "",
-                  description:
-                    p.description ||
-                    p.remarks ||
-                    indentResponse.data.remarks ||
-                    "",
-                  id: p.id || null,
-                }))
-                : [
-                  {
-                    product_name:
-                      indentResponse.data.product_name ||
-                      indentResponse.data.asset_name ||
-                      "",
-                    asset_name: indentResponse.data.asset_name || "",
-                    request_for: indentResponse.data.request_for || "",
-                    category: indentResponse.data.category || "",
-                    quantity: indentResponse.data.quantity || 0,
-                    uom:
-                      indentResponse.data.uom ||
-                      indentResponse.data.unit ||
-                      "",
-                    unit:
-                      indentResponse.data.uom ||
-                      indentResponse.data.unit ||
-                      "",
-                    workflow: indentResponse.data.workflow_id || "",
+                    product_name: p.product_name || p.asset_name || "",
+                    asset_name: p.asset_name || p.product_name || "",
+                    request_for:
+                      p.request_for || indentResponse.data.request_for || "",
+                    category: p.category || indentResponse.data.category || "",
+                    quantity: p.quantity || 0,
+                    uom: p.uom || p.unit || "",
+                    unit: p.uom || p.unit || "",
+                    workflow:
+                      p.workflow || indentResponse.data.workflow_id || "",
                     budget:
-                      indentResponse.data.budget ||
+                      p.budget ||
+                      p.budget_id ||
                       indentResponse.data.budget_id ||
                       "",
                     description:
-                      indentResponse.data.description ||
+                      p.description ||
+                      p.remarks ||
                       indentResponse.data.remarks ||
                       "",
-                    id: indentResponse.data.id || null,
-                  },
-                ];
+                    id: p.id || null,
+                  }))
+                : [
+                    {
+                      product_name:
+                        indentResponse.data.product_name ||
+                        indentResponse.data.asset_name ||
+                        "",
+                      asset_name: indentResponse.data.asset_name || "",
+                      request_for: indentResponse.data.request_for || "",
+                      category: indentResponse.data.category || "",
+                      quantity: indentResponse.data.quantity || 0,
+                      uom:
+                        indentResponse.data.uom ||
+                        indentResponse.data.unit ||
+                        "",
+                      unit:
+                        indentResponse.data.uom ||
+                        indentResponse.data.unit ||
+                        "",
+                      workflow: indentResponse.data.workflow_id || "",
+                      budget:
+                        indentResponse.data.budget ||
+                        indentResponse.data.budget_id ||
+                        "",
+                      description:
+                        indentResponse.data.description ||
+                        indentResponse.data.remarks ||
+                        "",
+                      id: indentResponse.data.id || null,
+                    },
+                  ];
 
             setProductItems(items);
           }
@@ -537,16 +533,16 @@ const InventryIndenting = () => {
         // Always treat as PDF
         const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
         const pdfUrl = window.URL.createObjectURL(pdfBlob);
-
+        
         console.log("✅ PDF Blob created, opening in new tab:", pdfUrl);
-
+        
         // Open PDF in new tab
         const newWindow = window.open(pdfUrl, "_blank");
-
+        
         if (!newWindow) {
           throw new Error("Failed to open new tab. Check if pop-ups are allowed.");
         }
-
+        
         // Add filename to the window for reference
         if (newWindow) {
           newWindow.document.title = `RFP-${rfpId}.pdf`;
@@ -580,7 +576,7 @@ const InventryIndenting = () => {
       });
       const res = await axios.get(
         API.DMS_MAPPING_CHECK ||
-        "https://globalparameters.softtrails.net/saas/mapping/check",
+          "https://devapi.softtrails.net/saas/mapping/check",
         {
           params: { service_name, doctype, doc_name },
           headers: { Authorization: `Bearer ${token}` },
@@ -594,7 +590,7 @@ const InventryIndenting = () => {
     }
   };
 
-  const handleSave = async () => {
+ const handleSave = async () => {
     try {
       setLoading(true); // Start loader
       const userId = sessionStorage.getItem("userId");
@@ -613,7 +609,7 @@ const InventryIndenting = () => {
         return; // stop further processing until End Date is provided
       }
 
-
+    
       const uploadToDMS = async (file, docType, folderName, docName) => {
         console.log(`📤 Uploading to DMS:`, { docType, fileName: file.name, docName });
         const publish_id = await getDmsPublishId(
@@ -640,7 +636,7 @@ const InventryIndenting = () => {
 
         const uploadRes = await axios.post(
           API.DMS_UPLOAD ||
-          "https://globalparameters.softtrails.net/saas/dmsapi/upload-documents",
+            "https://devapi.softtrails.net/saas/dmsapi/upload-documents",
           formData,
           {
             headers: {
@@ -669,7 +665,7 @@ const InventryIndenting = () => {
           reader.onerror = () => reject(reader.error);
           reader.readAsDataURL(formData.logo);
         });
-
+        
         // Also upload ORGANIZATION_LOGO to DMS for backup
         logoUrl = await uploadToDMS(
           formData.logo,
@@ -691,9 +687,9 @@ const InventryIndenting = () => {
       // === 3. Generate RFP PDF using generateRfpPdf (which already returns a File object) ===
       // Use currentIndentId which was set in handleGenerateRFPClick
       const indentId = currentIndentId || selectedRequest?.id || selectedRequest?.indent_id || selectedRequest?.indentId;
-      console.log("📋 handleSave - Generating PDF with:", {
-        currentIndentId,
-        indentId,
+      console.log("📋 handleSave - Generating PDF with:", { 
+        currentIndentId, 
+        indentId, 
         rfpId,
         rfpIdState: rfpId,
         hasLogoBase64: !!logoBase64  // NEW: Show Base64 is available
@@ -726,6 +722,11 @@ const InventryIndenting = () => {
         );
       }
 
+      // Build required_doc as comma-separated string of selected documents
+      const requiredDocObj = Array.isArray(formData.requiredDocument) 
+        ? formData.requiredDocument.join(", ") 
+        : "";
+
       const rfpPayload = {
         rfp_id: rfpId || undefined,
         user_id: Number(userId),
@@ -739,13 +740,10 @@ const InventryIndenting = () => {
           description: formData.description || "",
           notes: formData.notes || "",
         },
-        required_doc: Array.isArray(formData.requiredDocument)
+        required_doc_count: Array.isArray(formData.requiredDocument)
           ? formData.requiredDocument.length
-          : formData.requiredDocument || 0,
-        required_doc_name: Array.isArray(formData.requiredDocument)
-          ? formData.requiredDocument.join(", ")
-          : formData.requiredDocument || "",
-        additional_doc_link: additionalDocUrl || "",
+          : 0,
+        required_doc: requiredDocObj,
         rfp_file_link: generatedRfpUrl || "",
       };
 
@@ -907,15 +905,11 @@ const InventryIndenting = () => {
 
   const exportData = filteredRequests.map((item, idx) => ({
     sno: idx + 1,
-    id: item.id,
-    request_for: item.request_for,
-    category: item.category,
-    asset_name: item.asset_name,
-    quantity: item.quantity,
+    id: item.indent_id || item.id,
+    rfp_id: item.rfp_id || "-",
     approval_date: item.updated_at
       ? new Date(item.updated_at).toLocaleDateString("en-GB")
-      : "",
-    status: item.status,
+      : "-",
   }));
 
   useEffect(() => {
@@ -943,7 +937,7 @@ const InventryIndenting = () => {
     loadBudgets();
   }, [token]);
 
-  const getBudgetDisplayName = (budgetVal) => {
+    const getBudgetDisplayName = (budgetVal) => {
     if (budgetVal === null || budgetVal === undefined) return "";
     const found = budgetOptions.find(
       (b) =>
@@ -1118,22 +1112,22 @@ const InventryIndenting = () => {
                 </thead>
                 <tbody>
                   {(Array.isArray(selectedRequest.products) &&
-                    selectedRequest.products.length > 0
+                  selectedRequest.products.length > 0
                     ? selectedRequest.products
                     : [
-                      {
-                        request_for:
-                          selectedRequest.request_for || "Item Name",
-                        category: selectedRequest.category || "Category Name",
-                        asset_name:
-                          selectedRequest.asset_name || "Asset Name",
-                        quantity: selectedRequest.quantity || "08",
-                        uom: selectedRequest.uom || "-",
-                        // workflow: selectedRequest.workflow || "Workflow name",
-                        budget: selectedRequest.budget || "NA",
-                        description: "Description Example xyz",
-                      },
-                    ]
+                        {
+                          request_for:
+                            selectedRequest.request_for || "Item Name",
+                          category: selectedRequest.category || "Category Name",
+                          asset_name:
+                            selectedRequest.asset_name || "Asset Name",
+                          quantity: selectedRequest.quantity || "08",
+                          uom: selectedRequest.uom || "-",
+                          // workflow: selectedRequest.workflow || "Workflow name",
+                          budget: selectedRequest.budget || "NA",
+                          description: "Description Example xyz",
+                        },
+                      ]
                   ).map((item, index) => (
                     <tr
                       key={index}
@@ -1153,8 +1147,8 @@ const InventryIndenting = () => {
                       <td className="p-3 align-top">{item.quantity}</td>
                       <td className="p-3 align-top">{item.uom}</td>
 
-                      <td className="p-3 align-top">
-                        {getBudgetDisplayName(item.budget ?? item.budget_id ?? selectedRequest.budget)}
+                       <td className="p-3 align-top">
+                     {getBudgetDisplayName(item.budget ?? item.budget_id ?? selectedRequest.budget)}
                       </td>
                     </tr>
                   ))}
@@ -1271,10 +1265,11 @@ const InventryIndenting = () => {
                     />
                     <div className="flex items-center justify-between border border-gray-300 rounded px-3 py-2 w-full text-sm text-gray-700 bg-white">
                       <span
-                        className={`truncate w-full ${formData.logoUrl
+                        className={`truncate w-full ${
+                          formData.logoUrl
                             ? "text-blue-600 cursor-pointer underline"
                             : ""
-                          }`}
+                        }`}
                         onClick={() => {
                           if (formData.logoUrl)
                             window.open(formData.logoUrl, "_blank");
@@ -1372,9 +1367,9 @@ const InventryIndenting = () => {
                           {item.uom || item.unit || "-"}
                         </td>
                         {/* <td className="p-3 border-b">{item.workflow || "-"}</td> */}
-                        <td className="p-3 align-top">
-                          {getBudgetDisplayName(item.budget ?? item.budget_id ?? selectedRequest.budget)}
-                        </td>
+                         <td className="p-3 align-top">
+                      {getBudgetDisplayName(item.budget ?? item.budget_id ?? selectedRequest.budget)}
+                      </td>
                         <td className="p-3 border-b">
                           {item.description || "-"}
                         </td>
@@ -1414,7 +1409,7 @@ const InventryIndenting = () => {
                 </p>
               )}
             </div>
-            <div className="mb-3">
+              <div className="mb-3">
               <label className="block font-medium mb-1">
                 Required Documents
               </label>
@@ -1468,7 +1463,7 @@ const InventryIndenting = () => {
                 className="border border-gray-300 rounded px-3 py-2 w-full"
               />
             </div>
-
+          
             {/* Action Buttons */}
             <div className="flex justify-start gap-4">
               <button

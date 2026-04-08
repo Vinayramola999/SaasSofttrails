@@ -3,7 +3,6 @@ import Select from "react-select";
 import axios from "axios";
 import API from "../config/api";
 import ManageActionModal from "./components/ManageActionModal";
-//import ProfileDropdown from "../../ProfileDropdown";
 import PopupModal from "./PopupModal";
 
 const SetupWorkflow = () => {
@@ -43,7 +42,7 @@ const SetupWorkflow = () => {
       try {
         const token = sessionStorage.getItem("token");
         if (!token) return;
-        const { data } = await axios.get(`${API.COLUMN_TYPES_API}/role`, { headers: { Authorization: `Bearer ${token}` } });
+        const { data } = await axios.get(`${API.API_BASE}/role`, { headers: { Authorization: `Bearer ${token}` } });
         setRoles(data || []);
         setRoleOptions(
           (data || []).map((role) => ({ value: role.role, label: role.role }))
@@ -115,7 +114,7 @@ const SetupWorkflow = () => {
   }, [selectedWorkflow, actionsUpdated]);
 
   // Submit
-  const handleSubmit = async () => {
+ const handleSubmit = async () => {
     if (!selectedWorkflow || !selectedAction) {
       setErrorMsg("Please select workflow, action, and groups");
       setShowError(true);
@@ -133,18 +132,18 @@ const SetupWorkflow = () => {
       },
     ];
 
-    try {
-      const token = sessionStorage.getItem("token");
+  try {
+  const token = sessionStorage.getItem("token");
 
-      await axios.put(`${API.WORKFLOW_API}/group`, payload, { headers: { Authorization: `Bearer ${token}` } });
+  await axios.put(`${API.WORKFLOW_API}/group`, payload, { headers: { Authorization: `Bearer ${token}` } });
 
-      setShowSuccess(true);
-      resetForm();
-    } catch (err) {
-      console.error(err);
-      setErrorMsg("Save failed");
-      setShowError(true);
-    }
+  setShowSuccess(true);
+  resetForm();
+} catch (err) {
+  console.error(err);
+  setErrorMsg("Save failed");
+  setShowError(true);
+}
 
   };
 
@@ -239,16 +238,16 @@ const SetupWorkflow = () => {
               />
             )}
 
-
-            <ApprovalGroup
-              label="Indent Approver"
-              roleOptions={roleOptions}
-              groups={groups}
-              setGroups={setGroups}
-              bypass={bypassApprover}
-              setBypass={setBypassApprover}
-            />
-
+           
+              <ApprovalGroup
+                label="Indent Approver"
+                roleOptions={roleOptions}
+                groups={groups}
+                setGroups={setGroups}
+                bypass={bypassApprover}
+                setBypass={setBypassApprover}
+              />
+            
 
             {/* Buttons */}
             <div className="flex gap-4 mt-6">
@@ -274,7 +273,7 @@ const SetupWorkflow = () => {
           </div>
         </div>
       </div>
-      <ManageActionModal
+        <ManageActionModal
         open={isActionModalOpen}
         onClose={() => setIsActionModalOpen(false)}
         onActionsUpdated={() => setActionsUpdated((p) => !p)}
@@ -346,7 +345,7 @@ const ApprovalGroup = ({
       Bypass
     </label>
   </div>
-
+  
 );
 
 export default SetupWorkflow;
