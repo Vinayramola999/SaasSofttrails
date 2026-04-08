@@ -198,7 +198,7 @@ const VendorManagement = () => {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        setSuppliers(response.data);
+        setSuppliers(Array.isArray(response.data) ? response.data : []);
       })
       .catch((error) => {
         console.error("Error fetching supplier data:", error);

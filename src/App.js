@@ -82,7 +82,7 @@ import ProductDetail from "./CMS/components/ProductDetail";
 import Lic from "./CMS/components/Lic";
 import DMSProductAddOn from "./CMS/components/DMSProductAddOn";
 import AllTabss from "./CMS/components/UCS/AllTabs";
-
+import HMSApp from "./HospitalManagement/HMSApp";
 function App({ employeeId, userId }) {
   const appRouter = createBrowserRouter([
     //***********************With no HEader *************** */
@@ -181,6 +181,9 @@ function App({ employeeId, userId }) {
         ////..........UCS............
             { path: "/AllTabs", element: <AllTabs /> },
         { path: "/UCS3", element: <UCS3 /> },
+        //..........Hospital Management..........
+        { path: "/HospitalManagement/*", element: <HMSApp /> },
+
 
       ],
     },
