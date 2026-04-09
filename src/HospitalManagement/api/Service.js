@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = 'https://globalparameters.softtrails.net/api';
+const BASE_URL = 'https://globalparameters.softtrails.net/hospital/api';
 
 const api = axios.create({
   baseURL: BASE_URL,
