@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = 'http://hospital.softtrails.net/api';
+const BASE_URL = 'https://globalparameters.softtrails.net/api';
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -113,7 +113,7 @@ export const getDmsPublishId = async (service_name, doctype, doc_name) => {
     throw new Error("Missing required query parameters: service_name, doctype, doc_name");
   }
 
-  const url = `http://13.204.15.86:3002/mapping/check`;
+  const url = `https://globalparameters.softtrails.net/mapping/check`;
 const token= sessionStorage.getItem("token");
   try {
     const response = await axios.get(url, {
@@ -169,7 +169,7 @@ export const uploadDocument = async (
     ref,
     custom_folder
   });
-  const url = "http://13.204.15.86:3002/dmsapi/upload-documents";
+  const url = "https://globalparameters.softtrails.net/dmsapi/upload-documents";
   const formData = new FormData();
   formData.append("documents", file);
   formData.append("ref", ref);
@@ -695,7 +695,7 @@ export const getaddManageListItem = async (id) => {
 export const getManageListItems = async (chargeTypeId) => {
   try {
     // The API to return all manage-list items (no chargeType filter)
-    const url = `http://65.1.86.178:9000/api/manage-list`;
+    const url = `https://globalparameters.softtrails.net/api/manage-list`;
     const token = sessionStorage.getItem("token");
     const response = await axios.get(url, { 
       timeout: 10000,
@@ -1229,7 +1229,7 @@ export const getDiscounts = async () => {
 // GET: Fetch discounts from explicit external service URL (used by UI where required)
 export const getDiscountsExternal = async () => {
   try {
-    const url = "http://65.1.86.178:9000/api/discounts";
+    const url = "https://globalparameters.softtrails.net/api/discounts";
     const token = sessionStorage.getItem("token");
     const response = await axios.get(url, { 
       timeout: 10000,
