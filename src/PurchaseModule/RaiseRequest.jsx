@@ -279,7 +279,7 @@ const RaiseRequest = ({ deptName }) => {
       Promise.allSettled([
         axios.get(
           // https://devapi.softtrails.net/saas/java/test/api/categories
-          `${API.PRO_API}/api/categories/${formattedRequestFor}`,
+          `${API.PRO_API}/categories/${formattedRequestFor}`,
           { headers: { Authorization: `Bearer ${token}` } }
         ),
         axios.get(`${API.PURCHASE_API}/assets?request_for=${requestFor}`, {
