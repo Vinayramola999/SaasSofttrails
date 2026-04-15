@@ -623,27 +623,29 @@ Update?          </div>
         )}
 
         <div className="flex-1 overflow-auto  p-4 rounded-lg shadow bg-white">
-        {filteredBudgets.length === 0 ? (
-          <div className="flex items-center justify-center h-full min-h-[300px]">
-            <p className="text-center text-red-600 font-semibold">No data in range</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto min-h-[400px]">
-            <table className="min-w-full text-sm text-center border-collapse">
-              <thead className="bg-gray-200 text-xs uppercase ">
+        <div className="overflow-x-auto min-h-[400px]">
+          <table className="min-w-full text-sm text-center border-collapse">
+            <thead className="bg-gray-200 text-xs uppercase ">
+              <tr>
+                <th className="p-2">S. No.</th>
+                <th className="p-2">Budget</th>
+                <th className="p-2">Department</th>
+                <th className="p-2">Amount</th>
+                <th className="p-2">Start Date</th>
+                <th className="p-2">End Date</th>
+                <th className="p-2">Created On</th>
+                <th className="p-2">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredBudgets.length === 0 ? (
                 <tr>
-                  <th className="p-2">S. No.</th>
-                  <th className="p-2">Budget</th>
-                  <th className="p-2">Department</th>
-                  <th className="p-2">Amount</th>
-                  <th className="p-2">Start Date</th>
-                  <th className="p-2">End Date</th>
-                  <th className="p-2">Created On</th>
-                  <th className="p-2">Action</th>
+                  <td colSpan="8" className="p-6 text-center text-gray-500 font-semibold">
+                    No data found
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {filteredBudgets.map((budget, index) => (
+              ) : (
+                filteredBudgets.map((budget, index) => (
                   <tr key={budget.id} className="odd:bg-blue-50">
                     <td className="p-2">{index + 1}</td>
                     <td className="text-custome-blue p-2 cursor-pointer">{budget.budget_name}</td>
@@ -659,11 +661,11 @@ Update?          </div>
                       <FaTrash className="text-red-500 cursor-pointer" onClick={() => handleDeleteClick(budget)} />
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
       
           

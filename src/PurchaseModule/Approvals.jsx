@@ -152,7 +152,7 @@ const Approvals = () => {
       .get(`${API.PURCHASE_API}/indenting`, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      .then((response) => setData(Array.isArray(response.data) ? response.data : []))
+      .then((response) => setData(response.data))
       .catch((error) => console.error(error));
   }, [token]);
 

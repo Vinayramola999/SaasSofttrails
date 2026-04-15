@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Select from "react-select";
 import axios from "axios";
+import { useLocation } from "react-router-dom";
 import API from "../config/api";
 import Quotation from "./rfpTabs/Quotation";
 import ShortlistedQuotation from "./rfpTabs/ShortlistedQuotation";
@@ -13,6 +14,7 @@ import Grn from "./GRN/Grn";
 const PurchaseProcess = ({ onClose, selectedContacts }) => {
   const getToken = () => sessionStorage.getItem("token");
   const token = getToken();
+  const location = useLocation();
   const [indentId, setIndentId] = useState("");
   const [requestFor, setRequestFor] = useState("");
   const [category, setCategory] = useState("");
@@ -36,6 +38,13 @@ const PurchaseProcess = ({ onClose, selectedContacts }) => {
     message: "",
   });
   const [indentItems, setIndentItems] = useState([]); // items for selected RFP
+
+  // Handle navigation state for setting activeTab
+  useEffect(() => {
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab);
+    }
+  }, [location.state]);
 
   const sortedData = [...data].sort((a, b) =>
     a.contact_person.localeCompare(b.contact_person),
@@ -464,7 +473,7 @@ const PurchaseProcess = ({ onClose, selectedContacts }) => {
       ]
     : filteredData;
   const [currentPage, setCurrentPage] = useState(1);
-  const rowsPerPage = 10; // or any number you want
+  const rowsPerPage = 5; // or any number you want
   const totalPages = Math.ceil(displayData.length / rowsPerPage);
 
   const paginatedData = displayData.slice(

@@ -198,7 +198,7 @@ const VendorManagement = () => {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then((response) => {
-        setSuppliers(Array.isArray(response.data) ? response.data : []);
+        setSuppliers(response.data);
       })
       .catch((error) => {
         console.error("Error fetching supplier data:", error);
@@ -382,21 +382,32 @@ const VendorManagement = () => {
   useEffect(() => {
     if (selectedVendor) {
       setWorkflowId(selectedVendor.workflow_id || "");
-      // setSelectedCountry(selectedVendor.country || "");
-      // setSelectedState(selectedVendor.state || "");
-      // setSelectedCity(selectedVendor.city || "");
+      
+      // Find country ISO code by country name
+      const countryObj = countries.find(
+        (c) => c.name === selectedVendor.country
+      );
+      const countryIso = countryObj ? countryObj.isoCode : "";
+      setSelectedCountry(countryIso);
 
-      // Optionally, you may need to trigger loading of states and cities based on country/state
-      if (selectedVendor.country) {
-        const countryStates = State.getStatesOfCountry(selectedVendor.country);
+      // Load states for the country
+      if (countryIso) {
+        const countryStates = State.getStatesOfCountry(countryIso);
         setStates(countryStates);
-      }
-      if (selectedVendor.state) {
-        const stateCities = City.getCitiesOfState(
-          selectedVendor.country,
-          selectedVendor.state
+
+        // Find state ISO code by state name
+        const stateObj = countryStates.find(
+          (s) => s.name === selectedVendor.state
         );
-        setCities(stateCities);
+        const stateIso = stateObj ? stateObj.isoCode : "";
+        setSelectedState(stateIso);
+
+        // Load cities for the state
+        if (stateIso) {
+          const stateCities = City.getCitiesOfState(countryIso, stateIso);
+          setCities(stateCities);
+          setSelectedCity(selectedVendor.city || "");
+        }
       }
 
       setVendorData({
@@ -412,9 +423,10 @@ const VendorManagement = () => {
         gst: selectedVendor.gst_number || "",
         pan: selectedVendor.pan_no || "",
         tan: selectedVendor.tan_number || "",
+        status: selectedVendor.status || "",
       });
     }
-  }, [selectedVendor]);
+  }, [selectedVendor, countries]);
 
   const fetchContactDetails = async () => {
     if (selectedVendor?.supplier_id) {
@@ -1961,6 +1973,36 @@ const VendorManagement = () => {
                     className="border w-full p-2 rounded-lg"
                   />
                 </div>
+
+                <div className="col-span-3">
+                  <label className="block mb-2">Status*</label>
+                  <div className="flex gap-6 items-center">
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="vendor-status"
+                        value="active"
+                        checked={vendorData.status === "active"}
+                        onChange={() =>
+                          setVendorData({ ...vendorData, status: "active" })
+                        }
+                      />
+                      <span>Active</span>
+                    </label>
+                    <label className="flex items-center gap-2">
+                      <input
+                        type="radio"
+                        name="vendor-status"
+                        value="inactive"
+                        checked={vendorData.status === "inactive"}
+                        onChange={() =>
+                          setVendorData({ ...vendorData, status: "inactive" })
+                        }
+                      />
+                      <span>Inactive</span>
+                    </label>
+                  </div>
+                </div>
               </form>
 
               <div className="flex gap-4 mt-6">
@@ -1984,7 +2026,7 @@ const VendorManagement = () => {
                           tan_number: vendorData.tan,
                           workflow_id: workflowId,
                           current_stage: selectedVendor.current_stage,
-                          status: selectedVendor.status,
+                          status: vendorData.status,
                         },
                         { headers: { Authorization: `Bearer ${token}` } }
                       )

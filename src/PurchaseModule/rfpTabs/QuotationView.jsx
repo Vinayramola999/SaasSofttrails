@@ -139,7 +139,7 @@ const QuotationView = () => {
     return (
       <div className="p-6">
         <div className="mb-4">Quotation not found.</div>
-        <button className="border px-4 py-2" onClick={() => navigate(-1)}>
+        <button className="border px-4 py-2" onClick={() => navigate('/PurchaseProcess', { state: { activeTab: 'Quotation' } })}>
           Back
         </button>
       </div>
@@ -309,7 +309,7 @@ const QuotationView = () => {
       <div className="bg-white rounded-xl p-4 mb-4 flex items-center justify-between shadow">
         <div className="flex items-center ">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate('/PurchaseProcess', { state: { activeTab: 'Quotation' } })}
             className="text-2xl p-2 rounded-full hover:bg-gray-100"
             aria-label="Back"
           >
@@ -427,9 +427,9 @@ const QuotationView = () => {
         <div className="mt-6 flex justify-end">
           <div className="w-full md:w-1/3 lg:w-1/4 p-4">
             <div className="border rounded p-4">
-              <div className="flex justify-between text-sm text-gray-600">
+              <div className="flex justify-between text-sm text-gray-600 gap-2">
                 <div>Amount</div>
-                <div>
+                <div className="text-right break-words">
                   ₹
                   {amount.toLocaleString(undefined, {
                     minimumFractionDigits: 2,
@@ -437,9 +437,9 @@ const QuotationView = () => {
                   })}
                 </div>
               </div>
-              <div className="flex justify-between text-sm text-gray-600 mt-2">
+              <div className="flex justify-between text-sm text-gray-600 mt-2 gap-2">
                 <div>Taxable amount</div>
-                <div>
+                <div className="text-right break-words">
                   ₹
                   {(amount - taxTotal).toLocaleString(undefined, {
                     minimumFractionDigits: 2,
@@ -450,14 +450,14 @@ const QuotationView = () => {
 
               <hr className="my-3" />
 
-              <div className="flex justify-between items-end">
+              <div className="flex justify-between items-end gap-2">
                 <div className="text-sm text-gray-700">
                   <div className="font-medium">Total(INR)</div>
                   {/* <div className="text-xs text-gray-500 mt-1">Total (in words)</div>
                   <div className="text-sm mt-1">{totalInWords}</div> */}
                 </div>
 
-                <div className="text-2xl font-bold">
+                <div className="text-xl font-bold text-right break-words">
                   ₹
                   {totalWithTax.toLocaleString(undefined, {
                     minimumFractionDigits: 2,

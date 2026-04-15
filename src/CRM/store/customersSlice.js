@@ -1,7 +1,7 @@
 // src/CRM/store/customersSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-import API_BASE_URL from "../config/api";
+import { CRM_ENDPOINTS } from "../config/api";
 
 // ✅ Helper to get token from session storage
 const token = () => sessionStorage.getItem("token");
@@ -10,7 +10,7 @@ const token = () => sessionStorage.getItem("token");
 
 // Fetch all customers
 export const fetchCustomers = createAsyncThunk("customers/fetchAll", async () => {
-  const res = await axios.get(`${API_BASE_URL}/customers`, {
+  const res = await axios.get(CRM_ENDPOINTS.CUSTOMERS, {
     headers: { Authorization: `Bearer ${token()}` },
   });
   return res.data;
@@ -18,7 +18,7 @@ export const fetchCustomers = createAsyncThunk("customers/fetchAll", async () =>
 
 // Add new customer
 export const addCustomer = createAsyncThunk("customers/add", async (payload) => {
-  const res = await axios.post(`${API_BASE_URL}/customers`, payload, {
+  const res = await axios.post(CRM_ENDPOINTS.CUSTOMERS, payload, {
     headers: { Authorization: `Bearer ${token()}` },
   });
   return res.data;
@@ -28,7 +28,7 @@ export const addCustomer = createAsyncThunk("customers/add", async (payload) => 
 export const editCustomer = createAsyncThunk(
   "customers/edit",
   async ({ id, payload }) => {
-    const res = await axios.put(`${API_BASE_URL}/customers/${id}`, payload, {
+    const res = await axios.put(CRM_ENDPOINTS.CUSTOMER(id), payload, {
       headers: { Authorization: `Bearer ${token()}` },
     });
     return res.data;
@@ -37,7 +37,7 @@ export const editCustomer = createAsyncThunk(
 
 // Delete customer
 export const deleteCustomer = createAsyncThunk("customers/delete", async (id) => {
-  await axios.delete(`${API_BASE_URL}/customers/${id}`, {
+  await axios.delete(CRM_ENDPOINTS.CUSTOMER(id), {
     headers: { Authorization: `Bearer ${token()}` },
   });
   return id;
@@ -50,7 +50,7 @@ export const flagCustomer = createAsyncThunk(
     try {
       const token = sessionStorage.getItem("token");
       const res = await fetch(
-        `${API_BASE_URL}/customers/flag/${customerId}`,
+        CRM_ENDPOINTS.CUSTOMER_FLAG(customerId),
         {
           method: "POST",
           headers: {
@@ -75,7 +75,7 @@ export const updateCustomerVerifyStatus = createAsyncThunk(
     try {
       const token = sessionStorage.getItem("token");
       const res = await fetch(
-        `${API_BASE_URL}/customers/${customerId}/verify`,
+        CRM_ENDPOINTS.CUSTOMER_VERIFY(customerId),
         {
           method: "POST",
           headers: {

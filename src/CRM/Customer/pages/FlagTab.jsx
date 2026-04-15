@@ -10,7 +10,7 @@ import "jspdf-autotable";
 import pdfIcon from '../../../assests/folder.png';
 import excel from '../../../assests/excel.png';
 import { saveAs } from "file-saver";
-import API_BASE_URL from "../../config/api";
+import { CRM_ENDPOINTS } from "../../config/api";
 function FlagTab() {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -44,7 +44,7 @@ function FlagTab() {
 
     try {
       const response = await axios.get(
-        `${API_BASE_URL}/customers/flagged`,
+        CRM_ENDPOINTS.CUSTOMER_FLAGGED,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 

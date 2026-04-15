@@ -1,7 +1,7 @@
 // src/CRM/store/contactsSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-import API_BASE_URL from "../config/api";
+import { CRM_ENDPOINTS } from "../config/api";
 const token = () => sessionStorage.getItem("token");
 
 // Fetch contacts by customerId
@@ -9,7 +9,7 @@ export const fetchContacts = createAsyncThunk(
   "contacts/fetchContacts",
   async (customerId, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/contacts/${customerId}`, {
+      const res = await axios.get(`${CRM_ENDPOINTS.CONTACTS}?customer_id=${customerId}`, {
         headers: { Authorization: `Bearer ${token()}` },
       });
       return res.data;
@@ -25,8 +25,8 @@ export const addContact = createAsyncThunk(
   async ({ customerId, payload }, { rejectWithValue }) => {
     try {
       const res = await axios.post(
-        `${API_BASE_URL}/contacts/${customerId}`,
-        payload,
+        CRM_ENDPOINTS.CONTACTS,
+        { ...payload, customer_id: customerId },
         { headers: { Authorization: `Bearer ${token()}` } }
       );
       return res.data;
@@ -42,7 +42,7 @@ export const editContact = createAsyncThunk(
   async ({ contactId, payload }, { rejectWithValue }) => {
     try {
       const res = await axios.put(
-        `${API_BASE_URL}/contacts/${contactId}`,
+        CRM_ENDPOINTS.CONTACT(contactId),
         payload,
         { headers: { Authorization: `Bearer ${token()}` } }
       );
@@ -58,7 +58,7 @@ export const deleteContact = createAsyncThunk(
   "contacts/deleteContact",
   async (contactId, { rejectWithValue }) => {
     try {
-      await axios.delete(`${API_BASE_URL}/contacts/${contactId}`, {
+      await axios.delete(CRM_ENDPOINTS.CONTACT(contactId), {
         headers: { Authorization: `Bearer ${token()}` },
       });
       return contactId;

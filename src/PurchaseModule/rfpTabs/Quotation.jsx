@@ -33,6 +33,8 @@ const Quotation = () => {
   });
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [history, setHistory] = useState([]);
+  const [showFinalStatusModal, setShowFinalStatusModal] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState("");
   const navigate = useNavigate();
   const columns = [
     { header: "S. No.", accessor: "sno" },
@@ -62,8 +64,36 @@ const Quotation = () => {
         setShowPopupModal(true);
         return;
       }
-      const historyData = response.data?.data || [];
-      setHistory(historyData);
+      // Handle nested structure from API response and group by version
+      const historyObject = response.data?.history || {};
+      const groupedByVersion = {};
+      
+      // Group all items by their version
+      Object.entries(historyObject).forEach(([itemName, versions]) => {
+        if (Array.isArray(versions)) {
+          versions.forEach((version) => {
+            const versionKey = version.version || "1.0";
+            if (!groupedByVersion[versionKey]) {
+              groupedByVersion[versionKey] = {
+                version: versionKey,
+                items: [],
+                created_at: version.created_at,
+              };
+            }
+            groupedByVersion[versionKey].items.push({
+              ...version,
+              item_name: itemName,
+            });
+          });
+        }
+      });
+      
+      // Convert to array and sort by created_at (newest first)
+      const sortedHistory = Object.values(groupedByVersion).sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at)
+      );
+      
+      setHistory(sortedHistory);
       setShowHistoryModal(true);
     } catch (error) {
       console.error("Error fetching quotation history:", error);
@@ -85,7 +115,7 @@ const Quotation = () => {
     const fetchRfps = async () => {
       try {
         const res = await axios.get(
-          `${process.env.REACT_APP_PURCHASE_API}/supplier_quotation/rfp_ids/quotation`, //https://devdemo.softtrails.net/purchase/supplier_quotation/rfp_ids/quotation
+          `${process.env.REACT_APP_PURCHASE_API}/supplier_quotation/rfp_ids/quotation`, 
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -261,6 +291,27 @@ const Quotation = () => {
       alert("Failed to update status");
     }
   };
+  const getFileIcon = (fileName) => {
+    if (!fileName) return "mdi:file-document";
+    
+    const ext = fileName.split('.').pop().toLowerCase();
+    const iconMap = {
+      pdf: { icon: "mdi:file-pdf", color: "#d32f2f" },
+      doc: { icon: "mdi:file-word", color: "#2b5797" },
+      docx: { icon: "mdi:file-word", color: "#2b5797" },
+      xls: { icon: "mdi:file-excel", color: "#217346" },
+      xlsx: { icon: "mdi:file-excel", color: "#217346" },
+      ppt: { icon: "mdi:file-powerpoint", color: "#d24726" },
+      pptx: { icon: "mdi:file-powerpoint", color: "#d24726" },
+      jpg: { icon: "mdi:file-image", color: "#1976d2" },
+      jpeg: { icon: "mdi:file-image", color: "#1976d2" },
+      png: { icon: "mdi:file-image", color: "#1976d2" },
+      zip: { icon: "mdi:file-zip", color: "#f57c00" },
+    };
+    
+    return iconMap[ext] || { icon: "mdi:file-document", color: "#666" };
+  };
+
   const exportData = filteredQuotations.map((row, idx) => ({
     sno: idx + 1,
     quotation_date: row.quotation_date
@@ -434,6 +485,9 @@ const Quotation = () => {
 
                         if (row.status === "Commercially Qualified") {
                           setShowCommercialModal(true);
+                        } else if (row.status === "Final" || row.status === "Closed") {
+                          setShowFinalStatusModal(true);
+                          setRejectionReason("");
                         } else {
                           setShowDocModal(true);
 
@@ -473,50 +527,215 @@ const Quotation = () => {
           </tbody>
         </table>
         {showHistoryModal && (
-          <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-40 flex justify-center items-center">
-            <div className="bg-white p-6 rounded-lg w-1/2 max-h-[80vh] overflow-y-auto">
-              <h2 className="text-xl font-semibold mb-4">Quotation History</h2>
-              <ul className="space-y-2">
-                {history.length > 0 ? (
-                  history.map((item, idx) => (
-                    <li key={idx} className="border p-2 rounded shadow">
-                      <p>
-                        <strong>Version:</strong> {item.version}
+          <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-40 flex justify-center items-center z-[1200]">
+            <div className="bg-white p-8 rounded-lg w-3/4 max-w-3xl max-h-[85vh] overflow-y-auto shadow-2xl">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold text-gray-800">Negotiation History</h2>
+                <button
+                  onClick={() => setShowHistoryModal(false)}
+                  className="text-gray-500 hover:text-red-600 text-2xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+
+              {history.length > 0 ? (
+                <div className="space-y-6">
+                  {history.map((round, roundIdx) => {
+                    const date = new Date(round.created_at);
+                    const dateStr = date.toLocaleDateString("en-IN", {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    });
+                    const timeStr = date.toLocaleTimeString("en-IN", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    });
+                    
+                    // Calculate total for this round
+                    const totalForRound = round.items.reduce(
+                      (sum, item) => sum + parseFloat(item.total_with_tax || item.total_amount || 0),
+                      0
+                    );
+                    
+                    const isLatest = roundIdx === 0;
+
+                    return (
+                      <div key={roundIdx} className="relative">
+                        {/* Timeline connector */}
+                        {roundIdx < history.length - 1 && (
+                          <div className="absolute left-6 top-20 w-1 h-16 bg-gradient-to-b from-blue-400 to-gray-300"></div>
+                        )}
+
+                        {/* Main card */}
+                        <div className="flex gap-4">
+                          {/* Timeline dot */}
+                          <div className="flex flex-col items-center pt-2">
+                            <div
+                              className={`w-4 h-4 rounded-full border-2 ${
+                                isLatest
+                                  ? "bg-blue-600 border-blue-600 shadow-lg"
+                                  : "bg-gray-300 border-gray-400"
+                              }`}
+                            ></div>
+                          </div>
+
+                          {/* Content */}
+                          <div className="flex-1 bg-blue-50 rounded-lg p-5 border border-blue-200">
+                            {/* Header - Negotiation Round */}
+                            <div className="flex justify-between items-start mb-4 pb-3 border-b border-blue-200">
+                              <div>
+                                <h3 className="font-bold text-lg text-gray-900">
+                                  Negotiation Round {round.version}
+                                </h3>
+                                <p className="text-sm text-gray-600 mt-1">
+                                  {dateStr} at {timeStr}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <span className="inline-block bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-semibold">
+                                  Status: Negotiated
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Items in this round */}
+                            <div className="space-y-4 mb-4">
+                              {round.items.map((item, itemIdx) => (
+                                <div key={itemIdx} className="bg-white rounded p-3 border-l-4 border-blue-500">
+                                  <div className="flex justify-between items-start mb-2">
+                                    <h4 className="font-semibold text-gray-800">{item.item_name}</h4>
+                                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">
+                                      Qty: {item.quantity}
+                                    </span>
+                                  </div>
+                                  
+                                  <div className="grid grid-cols-3 gap-3 text-sm">
+                                    <div>
+                                      <p className="text-xs text-gray-600">Unit Price</p>
+                                      <p className="font-semibold text-gray-900">
+                                        ₹{parseFloat(item.unit_price).toLocaleString("en-IN", {
+                                          minimumFractionDigits: 2,
+                                        })}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <p className="text-xs text-gray-600">Tax ({item.tax_percentage}%)</p>
+                                      <p className="font-semibold text-gray-900">
+                                        ₹{parseFloat(item.tax_amount).toLocaleString("en-IN", {
+                                          minimumFractionDigits: 2,
+                                        })}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <p className="text-xs text-gray-600">Item Total</p>
+                                      <p className="font-bold text-blue-600">
+                                        ₹{parseFloat(item.total_with_tax).toLocaleString("en-IN", {
+                                          minimumFractionDigits: 2,
+                                        })}
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  {/* Reason for change */}
+                                  {item.reason_for_change && (
+                                    <div className="mt-2 pt-2 border-t border-gray-200">
+                                      <p className="text-xs text-yellow-700">
+                                        <strong>📝 Reason:</strong> {item.reason_for_change}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+
+                            {/* Round total */}
+                            <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded p-4 text-white">
+                              <div className="flex justify-between items-center">
+                                <span className="font-semibold text-lg">Final Value for Round {round.version}</span>
+                                <span className="text-2xl font-bold">
+                                  ₹{totalForRound.toLocaleString("en-IN", {
+                                    minimumFractionDigits: 2,
+                                  })}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <p className="text-gray-500 text-lg">No history found.</p>
+                </div>
+              )}
+
+              {/* Summary section */}
+              {history.length > 0 && (
+                <div className="mt-8 pt-6 border-t-2 border-gray-200">
+                  <h3 className="font-bold text-lg text-gray-800 mb-4">Price Negotiation Summary</h3>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="bg-green-50 rounded p-4 border border-green-200">
+                      <p className="text-xs text-green-700 font-semibold">INITIAL PRICE</p>
+                      <p className="text-xl font-bold text-green-800 mt-2">
+                        ₹{history[history.length - 1].items.reduce(
+                          (sum, item) => sum + parseFloat(item.total_with_tax || 0),
+                          0
+                        ).toLocaleString("en-IN", {
+                          minimumFractionDigits: 2,
+                        })}
                       </p>
-                      <p>
-                        <strong>Updated On:</strong>{" "}
-                        {new Date(item.created_at).toLocaleString()}
+                      <p className="text-xs text-green-600 mt-1">Round {history[history.length - 1].version}</p>
+                    </div>
+                    <div className="bg-blue-50 rounded p-4 border border-blue-200">
+                      <p className="text-xs text-blue-700 font-semibold">CURRENT PRICE</p>
+                      <p className="text-xl font-bold text-blue-800 mt-2">
+                        ₹{history[0].items.reduce(
+                          (sum, item) => sum + parseFloat(item.total_with_tax || 0),
+                          0
+                        ).toLocaleString("en-IN", {
+                          minimumFractionDigits: 2,
+                        })}
                       </p>
-                      <p>
-                        <strong>Quantity:</strong> {item.quantity}
+                      <p className="text-xs text-blue-600 mt-1">Round {history[0].version}</p>
+                    </div>
+                    <div className="bg-purple-50 rounded p-4 border border-purple-200">
+                      <p className="text-xs text-purple-700 font-semibold">TOTAL ROUNDS</p>
+                      <p className="text-xl font-bold text-purple-800 mt-2">{history.length}</p>
+                      <p className="text-xs text-purple-600 mt-1">Negotiation Rounds</p>
+                    </div>
+                  </div>
+                  
+                  {history.length > 1 && (
+                    <div className="mt-4 p-4 bg-gradient-to-r from-red-50 to-orange-50 rounded border border-red-200">
+                      <p className="text-sm font-semibold text-gray-800">
+                        Price Change: 
+                        <span className="ml-2 text-lg font-bold text-orange-600">
+                          {(
+                            ((history[0].items.reduce((sum, item) => sum + parseFloat(item.total_with_tax || 0), 0) -
+                              history[history.length - 1].items.reduce((sum, item) => sum + parseFloat(item.total_with_tax || 0), 0)) /
+                              history[history.length - 1].items.reduce((sum, item) => sum + parseFloat(item.total_with_tax || 0), 0)) *
+                            100
+                          ).toFixed(2)}
+                          %
+                        </span>
                       </p>
-                      <p>
-                        <strong>Unit Price:</strong> ₹{item.unit_price}
-                      </p>
-                      <p>
-                        <strong>Tax %:</strong> {item.tax_percentage}%
-                      </p>
-                      <p>
-                        <strong>Tax Amount:</strong> ₹{item.tax_amount}
-                      </p>
-                      <p>
-                        <strong>Total Amount:</strong> ₹{item.total_amount}
-                      </p>
-                      <p>
-                        <strong>Total with Tax:</strong> ₹{item.total_with_tax}
-                      </p>
-                    </li>
-                  ))
-                ) : (
-                  <p>No history found.</p>
-                )}
-              </ul>
-              <button
-                className="mt-4 bg-blue-600 text-white px-4 py-2 rounded"
-                onClick={() => setShowHistoryModal(false)}
-              >
-                Close
-              </button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition"
+                  onClick={() => setShowHistoryModal(false)}
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -586,11 +805,17 @@ const Quotation = () => {
                           marginBottom: 8,
                         }}
                       >
-                        <img
-                          src="pdf-icon.png"
-                          alt="PDF"
-                          style={{ width: 24, height: 24 }}
-                        />
+                        {(() => {
+                          const fileInfo = getFileIcon(docName);
+                          return (
+                            <Icon 
+                              icon={fileInfo.icon} 
+                              width="24" 
+                              height="24" 
+                              style={{ color: fileInfo.color }} 
+                            />
+                          );
+                        })()}
                         <a
                           href={docUrl}
                           target="_blank"
@@ -795,6 +1020,242 @@ const Quotation = () => {
                 >
                   Reject
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {showFinalStatusModal && selectedQuotation && (
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100vw",
+              height: "100vh",
+              background: "rgba(0,0,0,0.3)",
+              zIndex: 1000,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <div
+              style={{
+                background: "#fff",
+                width: 500,
+                padding: 32,
+                borderRadius: 12,
+                boxShadow: "0 4px 32px rgba(0,0,0,0.15)",
+                position: "relative",
+              }}
+            >
+              <button
+                style={{
+                  position: "absolute",
+                  top: 12,
+                  right: 12,
+                  background: "none",
+                  border: "none",
+                  fontSize: 24,
+                  color: "#d32f2f",
+                  cursor: "pointer",
+                }}
+                onClick={() => {
+                  setShowFinalStatusModal(false);
+                  setRejectionReason("");
+                }}
+                aria-label="Close"
+              >
+                ×
+              </button>
+              
+              <h2 style={{ fontWeight: 700, fontSize: 20, marginBottom: 8 }}>
+                Final Status Action
+              </h2>
+              <p style={{ color: "#666", marginBottom: 24, fontSize: 14 }}>
+                Update the status of this quotation. If rejecting, please provide a reason.
+              </p>
+
+              <div style={{ display: "flex", gap: 12, marginBottom: 24 }}>
+                <button
+                  style={{
+                    flex: 1,
+                    background: "#10b981",
+                    color: "#fff",
+                    padding: "12px 20px",
+                    borderRadius: "8px",
+                    fontWeight: 600,
+                    fontSize: 16,
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                  onClick={async () => {
+                    try {
+                      await axios.put(
+                        `${process.env.REACT_APP_PURCHASE_API}/supplier_quotation/quotations/update-status/${selectedQuotation.quotation_id}`,
+                        {
+                          status: "Accepted",
+                          user_id: createdBy,
+                        },
+                        { headers: { Authorization: `Bearer ${token}` } }
+                      );
+                      setQuotations((prev) =>
+                        prev.map((q) =>
+                          q.quotation_id === selectedQuotation.quotation_id
+                            ? { ...q, status: "Accepted" }
+                            : q
+                        )
+                      );
+                      setShowFinalStatusModal(false);
+                      setRejectionReason("");
+                      setPopupModalProps({
+                        type: "success",
+                        title: "Success",
+                        message: "Quotation accepted successfully.",
+                      });
+                      setShowPopupModal(true);
+                    } catch (err) {
+                      setPopupModalProps({
+                        type: "error",
+                        title: "Error",
+                        message: err.response?.data?.message || "Failed to accept quotation.",
+                      });
+                      setShowPopupModal(true);
+                    }
+                  }}
+                >
+                  ✓ Accept
+                </button>
+                <button
+                  style={{
+                    flex: 1,
+                    background: "#ef4444",
+                    color: "#fff",
+                    padding: "12px 20px",
+                    borderRadius: "8px",
+                    fontWeight: 600,
+                    fontSize: 16,
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => {
+                    // Show reason field when reject is clicked
+                    const reasonField = document.getElementById("rejection-reason-field");
+                    if (reasonField) {
+                      reasonField.style.display = reasonField.style.display === "none" ? "block" : "none";
+                    }
+                  }}
+                >
+                  ✕ Reject
+                </button>
+              </div>
+
+              {/* Rejection Reason Field */}
+              <div id="rejection-reason-field" style={{ display: "none", marginBottom: 20 }}>
+                <label style={{ display: "block", marginBottom: 8, fontWeight: 600, fontSize: 14 }}>
+                  Reason for Rejection *
+                </label>
+                <textarea
+                  value={rejectionReason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                  placeholder="Please provide a detailed reason for rejection..."
+                  style={{
+                    width: "100%",
+                    minHeight: "120px",
+                    padding: "12px",
+                    border: "1px solid #ddd",
+                    borderRadius: "6px",
+                    fontFamily: "Arial, sans-serif",
+                    fontSize: "14px",
+                    resize: "vertical",
+                    boxSizing: "border-box",
+                  }}
+                />
+                <div style={{ display: "flex", gap: 12, marginTop: 16 }}>
+                  <button
+                    style={{
+                      flex: 1,
+                      background: "#ef4444",
+                      color: "#fff",
+                      padding: "12px 20px",
+                      borderRadius: "8px",
+                      fontWeight: 600,
+                      fontSize: 16,
+                      border: "none",
+                      cursor: rejectionReason.trim() ? "pointer" : "not-allowed",
+                      opacity: rejectionReason.trim() ? 1 : 0.6,
+                    }}
+                    onClick={async () => {
+                      if (!rejectionReason.trim()) {
+                        setPopupModalProps({
+                          type: "warning",
+                          title: "Required",
+                          message: "Please provide a reason for rejection.",
+                        });
+                        setShowPopupModal(true);
+                        return;
+                      }
+                      try {
+                        await axios.put(
+                          `${process.env.REACT_APP_PURCHASE_API}/supplier_quotation/quotations/update-status/${selectedQuotation.quotation_id}`,
+                          {
+                            status: "Rejected",
+                            rejection_reason: rejectionReason,
+                            user_id: createdBy,
+                          },
+                          { headers: { Authorization: `Bearer ${token}` } }
+                        );
+                        setQuotations((prev) =>
+                          prev.map((q) =>
+                            q.quotation_id === selectedQuotation.quotation_id
+                              ? { ...q, status: "Rejected" }
+                              : q
+                          )
+                        );
+                        setShowFinalStatusModal(false);
+                        setRejectionReason("");
+                        setPopupModalProps({
+                          type: "success",
+                          title: "Success",
+                          message: "Quotation rejected successfully.",
+                        });
+                        setShowPopupModal(true);
+                      } catch (err) {
+                        setPopupModalProps({
+                          type: "error",
+                          title: "Error",
+                          message: err.response?.data?.message || "Failed to reject quotation.",
+                        });
+                        setShowPopupModal(true);
+                      }
+                    }}
+                    disabled={!rejectionReason.trim()}
+                  >
+                    Confirm Rejection
+                  </button>
+                  <button
+                    style={{
+                      flex: 1,
+                      background: "#f3f4f6",
+                      color: "#666",
+                      padding: "12px 20px",
+                      borderRadius: "8px",
+                      fontWeight: 600,
+                      fontSize: 16,
+                      border: "1px solid #ddd",
+                      cursor: "pointer",
+                    }}
+                    onClick={() => {
+                      const reasonField = document.getElementById("rejection-reason-field");
+                      if (reasonField) {
+                        reasonField.style.display = "none";
+                      }
+                      setRejectionReason("");
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
               </div>
             </div>
           </div>

@@ -278,7 +278,6 @@ const RaiseRequest = ({ deptName }) => {
       // Fetch both APIs, but handle errors separately
       Promise.allSettled([
         axios.get(
-          // https://devapi.softtrails.net/saas/java/test/api/categories
           `${API.PRO_API}/categories/${formattedRequestFor}`,
           { headers: { Authorization: `Bearer ${token}` } }
         ),

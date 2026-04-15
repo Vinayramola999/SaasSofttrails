@@ -41,9 +41,9 @@ import LoadingSpinner from "../component/LoadingSpinner";
 import ErrorBoundary from "../component/ErrorBoundary";
 import ConfirmationModal from "../../../NewComponents/ConfirmationModal";
 import MessageModal from "../../../NewComponents/MessageModal";
+import { CRM_ENDPOINTS } from "../../config/api";
 import "../../../App.css";
 const Customer = () => {
-  const API_BASE_URL = process.env.REACT_APP_API_CRM_BASE_URL;
   const navigate = useNavigate();
 
   // ============================================================================
@@ -75,7 +75,7 @@ const Customer = () => {
   } = useFormValidation();
 
   // Access control hook
-  const { permissions, checkAccess } = useAccessControl(API_BASE_URL);
+  const { permissions, checkAccess } = useAccessControl(CRM_ENDPOINTS.CUSTOMERS);
 
   // ============================================================================
   // LOCAL STATE MANAGEMENT
@@ -195,7 +195,7 @@ const Customer = () => {
     }
 
     try {
-      const response = await axios.post(`https://globalparameters.softtrails.net/users/verify-token`, { token });
+      const response = await axios.post(CRM_ENDPOINTS.VERIFY_TOKEN, { token });
       console.log("Token is valid:", response.data);
     } catch (error) {
       console.error("Token verification failed:", error.response?.data || error.message);
@@ -203,7 +203,7 @@ const Customer = () => {
       sessionStorage.removeItem("tokenExpiry");
       navigate("/");
     }
-  }, [API_BASE_URL, getToken, navigate]);
+  }, [getToken, navigate]);
 
   // CUSTOMER CRUD OPERATIONS
 

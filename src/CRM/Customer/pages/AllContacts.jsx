@@ -11,10 +11,10 @@ import pdfIcon from "../../../assests/folder.png";
 import { PAGINATION } from "../utils/constants";
 import LoadingSpinner from "../component/LoadingSpinner";
 import ErrorBoundary from "../component/ErrorBoundary";
+import { CRM_ENDPOINTS } from "../../config/api";
 import { FaLessThan, FaGreaterThan } from "react-icons/fa";
 
 const CustomerContactTable = () => {
-  const API_BASE_URL = process.env.REACT_APP_API_CRM_BASE_URL;
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedContact, setSelectedContact] = useState(null);
@@ -35,7 +35,7 @@ const CustomerContactTable = () => {
     setLoading(true);
     try {
       const token = sessionStorage.getItem("token");
-      const res = await axios.get(`${API_BASE_URL}/contacts/with-customer-details`, {
+      const res = await axios.get(CRM_ENDPOINTS.CONTACTS_WITH_DETAILS, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setData(res.data.contacts || []);
@@ -45,7 +45,7 @@ const CustomerContactTable = () => {
     } finally {
       setLoading(false);
     }
-  }, [API_BASE_URL]);
+  }, []);
 
   useEffect(() => {
     fetchCustomerContacts();

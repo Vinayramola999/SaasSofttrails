@@ -2,7 +2,7 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import API_BASE_URL from "../config/api";
+import { CRM_ENDPOINTS } from "../config/api";
 
 const useCustomerData = () => {
   const navigate = useNavigate();
@@ -157,8 +157,8 @@ const useCustomerData = () => {
         let totalPages = 1;
 
         do {
-          const url = `${API_BASE_URL}/customers?page=${currentPage}`;
-          console.log(`� Fetching page ${currentPage}/${totalPages}...`);
+          const url = `${CRM_ENDPOINTS.CUSTOMERS}?page=${currentPage}`;
+          console.log(`📛 Fetching page ${currentPage}/${totalPages}...`);
 
           const response = await axios.get(url, {
             headers: { Authorization: `Bearer ${token}` },
@@ -166,15 +166,15 @@ const useCustomerData = () => {
 
           // Extract customers and pagination info
           const pageData = response.data?.data || response.data || {};
-          const customersArray = pageData.customers || response.data?.customers || response.data || [];
+          const pageCustomers = pageData.customers || response.data?.customers || response.data || [];
 
-          allCustomers = [...allCustomers, ...customersArray];
+          allCustomers = [...allCustomers, ...pageCustomers];
 
           // Update pagination info
           totalPages = pageData.totalPages || 1;
           currentPage++;
 
-          console.log(`✅ Page fetched: ${customersArray.length} customers (Total so far: ${allCustomers.length})`);
+          console.log(`✅ Page fetched: ${pageCustomers.length} customers (Total so far: ${allCustomers.length})`);
 
         } while (currentPage <= totalPages);
 
@@ -184,7 +184,7 @@ const useCustomerData = () => {
           console.log("📋 Sample stages from API:", allCustomers.slice(0, 5).map(c => ({ id: c.customer_id, stage: c.stage })));
         }
 
-        // Now use allCustomers instead of customersArray
+        // Now use allCustomers for filtering
         const customersArray = allCustomers;
 
         // ✅ Apply client-side filter if stageFilter is provided
@@ -235,7 +235,7 @@ const useCustomerData = () => {
         setLoading(false);
       }
     },
-    [API_BASE_URL, getToken, navigate]
+    [getToken, navigate]
   );
 
 
@@ -248,7 +248,7 @@ const useCustomerData = () => {
       if (!token) return { success: false, error: "Token does not exist." };
       console.log("🚀 Creating customer with payload in use customer :", payload);
       try {
-        const response = await fetch(`${API_BASE_URL}/customers`, {
+        const response = await fetch(CRM_ENDPOINTS.CUSTOMERS, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -282,7 +282,7 @@ const useCustomerData = () => {
         };
       }
     },
-    [API_BASE_URL, buildCustomerPayload, getToken, fetchCustomers]
+    [buildCustomerPayload, getToken, fetchCustomers]
   );
 
   const updateCustomerData = useCallback(
@@ -298,7 +298,7 @@ const useCustomerData = () => {
 
       try {
         const response = await fetch(
-          `${API_BASE_URL}/customers/${customerId}`,
+          CRM_ENDPOINTS.CUSTOMER(customerId),
           {
             method: "PUT",
             headers: {
@@ -323,7 +323,7 @@ const useCustomerData = () => {
         return { success: false, error: error.message };
       }
     },
-    [API_BASE_URL, buildCustomerPayload, getToken, fetchCustomers]
+    [buildCustomerPayload, getToken, fetchCustomers]
   );
 
 
@@ -337,7 +337,7 @@ const useCustomerData = () => {
 
       try {
         const response = await axios.delete(
-          `${API_BASE_URL}/customers/${customerId}`,
+          CRM_ENDPOINTS.CUSTOMER(customerId),
           { headers: { Authorization: `Bearer ${token}` } }
         );
 
@@ -358,7 +358,7 @@ const useCustomerData = () => {
         return { success: false, error: errorMsg };
       }
     },
-    [API_BASE_URL, getToken, fetchCustomers]
+    [getToken, fetchCustomers]
   );
 
   const flagCustomer = useCallback(
@@ -371,7 +371,7 @@ const useCustomerData = () => {
       try {
         // POST /customers/:id/flag - Flags (archives) a customer and stores a snapshot
         await axios.post(
-          `${API_BASE_URL}/customers/${customerId}/flag`,
+          CRM_ENDPOINTS.CUSTOMER_FLAG(customerId),
           { reason },
           {
             headers: {
@@ -388,7 +388,7 @@ const useCustomerData = () => {
         return { success: false, error: error.message };
       }
     },
-    [API_BASE_URL, getToken, fetchCustomers]
+    [getToken, fetchCustomers]
   );
 
   const updateCustomerStage = useCallback(
@@ -400,7 +400,7 @@ const useCustomerData = () => {
 
       try {
         const response = await axios.put(
-          `${API_BASE_URL}/customers/${customerId}`,
+          CRM_ENDPOINTS.CUSTOMER(customerId),
           updateData,
           {
             headers: {
@@ -423,7 +423,7 @@ const useCustomerData = () => {
         };
       }
     },
-    [API_BASE_URL, getToken]
+    [getToken]
   );
 
   // ✅ Updated 3 functions to refresh only approval-related stages (faster than full fetch)
@@ -473,7 +473,7 @@ const useCustomerData = () => {
       if (!token) return { success: false, error: "Token does not exist." };
 
       try {
-        await fetch(`${API_BASE_URL}/customers/${customerId}/verify`, {
+        await fetch(CRM_ENDPOINTS.CUSTOMER_VERIFY(customerId), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -493,7 +493,7 @@ const useCustomerData = () => {
         return { success: false, error: error.message };
       }
     },
-    [API_BASE_URL, getToken]
+    [getToken]
   );
 
   const fetchContactDetails = useCallback(
@@ -508,8 +508,8 @@ const useCustomerData = () => {
       setLoadingContacts(true);
       try {
         const url = customerId
-          ? `${API_BASE_URL}/contacts?customer_id=${customerId}`
-          : `${API_BASE_URL}/contacts`;
+          ? `${CRM_ENDPOINTS.CONTACTS}?customer_id=${customerId}`
+          : CRM_ENDPOINTS.CONTACTS;
 
         const response = await fetch(url, {
           headers: { Authorization: `Bearer ${token}` },
@@ -528,7 +528,7 @@ const useCustomerData = () => {
         setLoadingContacts(false);
       }
     },
-    [API_BASE_URL, getToken, navigate]
+    [getToken, navigate]
   );
 
   const createContact = useCallback(
@@ -562,7 +562,7 @@ const useCustomerData = () => {
       };
 
       try {
-        const response = await fetch(`${API_BASE_URL}/contacts`, {
+        const response = await fetch(CRM_ENDPOINTS.CONTACTS, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -583,7 +583,7 @@ const useCustomerData = () => {
         return { success: false, error: error.message };
       }
     },
-    [API_BASE_URL, getToken]
+    [getToken]
   );
 
   const updateContactData = useCallback(
@@ -592,7 +592,7 @@ const useCustomerData = () => {
       if (!token) return { success: false, error: "Token does not exist." };
 
       try {
-        const response = await fetch(`${API_BASE_URL}/contacts/${contactId}`, {
+        const response = await fetch(CRM_ENDPOINTS.CONTACT(contactId), {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -608,7 +608,7 @@ const useCustomerData = () => {
         return { success: false, error: error.message };
       }
     },
-    [API_BASE_URL, getToken]
+    [getToken]
   );
 
   const deleteContact = useCallback(
@@ -617,7 +617,7 @@ const useCustomerData = () => {
       if (!token) return { success: false, error: "Token does not exist." };
 
       try {
-        const response = await fetch(`${API_BASE_URL}/contacts/${contactId}`, {
+        const response = await fetch(CRM_ENDPOINTS.CONTACT(contactId), {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
@@ -636,7 +636,7 @@ const useCustomerData = () => {
         return { success: false, error: error.message };
       }
     },
-    [API_BASE_URL, getToken]
+    [getToken]
   );
 
   return {

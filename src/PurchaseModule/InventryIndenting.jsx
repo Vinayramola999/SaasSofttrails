@@ -575,8 +575,7 @@ const fetchRequests = async () => {
         doc_name,
       });
       const res = await axios.get(
-        API.DMS_MAPPING_CHECK ||
-          "https://devapi.softtrails.net/saas/mapping/check",
+        API.DMS_MAPPING_CHECK ,
         {
           params: { service_name, doctype, doc_name },
           headers: { Authorization: `Bearer ${token}` },
@@ -635,8 +634,7 @@ const fetchRequests = async () => {
         formData.append("custom_folder", folderName);
 
         const uploadRes = await axios.post(
-          API.DMS_UPLOAD ||
-            "https://devapi.softtrails.net/saas/dmsapi/upload-documents",
+          API.DMS_UPLOAD ,
           formData,
           {
             headers: {
