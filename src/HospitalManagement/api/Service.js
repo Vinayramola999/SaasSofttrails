@@ -695,7 +695,7 @@ export const getaddManageListItem = async (id) => {
 export const getManageListItems = async (chargeTypeId) => {
   try {
     // The API to return all manage-list items (no chargeType filter)
-    const url = `https://globalparameters.softtrails.net/api/manage-list`;
+    const url = `https://globalparameters.softtrails.net/hospital/api/manage-list`;
     const token = sessionStorage.getItem("token");
     const response = await axios.get(url, { 
       timeout: 10000,
