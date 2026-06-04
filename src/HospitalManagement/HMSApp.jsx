@@ -23,9 +23,9 @@ export default function HMSApp() {
 
   return (
     <div className="flex w-full h-screen overflow-hidden">
-   
+
       <div className="flex-1 p-4 overflow-y-auto w-full">
-      
+
         <Routes>
           <Route path="/" element={<Navigate to="patient-registration" replace />} />
           <Route path="patient-registration" element={<PatientRegistrationForm />} />

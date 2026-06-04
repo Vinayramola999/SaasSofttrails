@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const BASE_URL = 'https://globalparameters.softtrails.net/hospital/api';
+// const BASE_URL = 'https://globalparameters.softtrails.net/hospital/api';
+const BASE_URL = 'https://k8s-saasprod-saasprod-5af4d39a94-1939745635.ap-south-1.elb.amazonaws.com/hospital/api';
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -113,7 +114,8 @@ export const getDmsPublishId = async (service_name, doctype, doc_name) => {
     throw new Error("Missing required query parameters: service_name, doctype, doc_name");
   }
 
-  const url = `https://globalparameters.softtrails.net/mapping/check`;
+  // const url = `https://globalparameters.softtrails.net/mapping/check`;
+    const url = `https://k8s-saasprod-saasprod-5af4d39a94-1939745635.ap-south-1.elb.amazonaws.com/mapping/check`;
 const token= sessionStorage.getItem("token");
   try {
     const response = await axios.get(url, {
@@ -169,7 +171,8 @@ export const uploadDocument = async (
     ref,
     custom_folder
   });
-  const url = "https://globalparameters.softtrails.net/dmsapi/upload-documents";
+  // const url = "https://globalparameters.softtrails.net/dmsapi/upload-documents";
+  const url = "https://k8s-saasprod-saasprod-5af4d39a94-1939745635.ap-south-1.elb.amazonaws.com/dmsapi/upload-documents";
   const formData = new FormData();
   formData.append("documents", file);
   formData.append("ref", ref);
@@ -695,7 +698,8 @@ export const getaddManageListItem = async (id) => {
 export const getManageListItems = async (chargeTypeId) => {
   try {
     // The API to return all manage-list items (no chargeType filter)
-    const url = `https://globalparameters.softtrails.net/hospital/api/manage-list`;
+    // const url = `https://globalparameters.softtrails.net/hospital/api/manage-list`;
+     const url = `https://k8s-saasprod-saasprod-5af4d39a94-1939745635.ap-south-1.elb.amazonaws.com/hospital/api/manage-list`;
     const token = sessionStorage.getItem("token");
     const response = await axios.get(url, { 
       timeout: 10000,
@@ -1229,7 +1233,8 @@ export const getDiscounts = async () => {
 // GET: Fetch discounts from explicit external service URL (used by UI where required)
 export const getDiscountsExternal = async () => {
   try {
-    const url = "https://globalparameters.softtrails.net/api/discounts";
+    // const url = "https://globalparameters.softtrails.net/api/discounts";
+        const url = "https://k8s-saasprod-saasprod-5af4d39a94-1939745635.ap-south-1.elb.amazonaws.com/api/discounts";
     const token = sessionStorage.getItem("token");
     const response = await axios.get(url, { 
       timeout: 10000,

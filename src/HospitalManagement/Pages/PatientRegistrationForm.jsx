@@ -91,7 +91,7 @@ const PatientRegistrationForm = () => {
           const patient = data[0];
           // Store original data for edit mode
           setOriginalPatientData(patient);
-          
+
           // Set form data directly when there's only one patient
           setFormData(prev => ({
             ...prev,
@@ -115,25 +115,25 @@ const PatientRegistrationForm = () => {
             } : null,
             insurance: patient.insurances && patient.insurances[0]
               ? {
-                  insuranceCompany: patient.insurances[0].insuranceCompany || "",
-                  insuranceId: patient.insurances[0].insuranceId || "",
-                  insuranceCompanyContact: patient.insurances[0].insuranceCompanyContact || "",
-                  insuranceCompanyEmail: patient.insurances[0].insuranceCompanyEmail || "",
-                  insuranceDocLink: patient.insurances[0].insuranceDocLink || "",
-                  insuranceDocId: patient.insurances[0].insuranceDocId || "",
-                  status: patient.insurances[0].status || "ACTIVE",
-                  stages: patient.insurances[0].stages || "APPLIED"
-                }
+                insuranceCompany: patient.insurances[0].insuranceCompany || "",
+                insuranceId: patient.insurances[0].insuranceId || "",
+                insuranceCompanyContact: patient.insurances[0].insuranceCompanyContact || "",
+                insuranceCompanyEmail: patient.insurances[0].insuranceCompanyEmail || "",
+                insuranceDocLink: patient.insurances[0].insuranceDocLink || "",
+                insuranceDocId: patient.insurances[0].insuranceDocId || "",
+                status: patient.insurances[0].status || "ACTIVE",
+                stages: patient.insurances[0].stages || "APPLIED"
+              }
               : {
-                  insuranceCompany: "",
-                  insuranceId: "",
-                  insuranceCompanyContact: "",
-                  insuranceCompanyEmail: "",
-                  insuranceDocLink: "",
-                  insuranceDocId: "",
-                  status: "ACTIVE",
-                  stages: "APPLIED"
-                }
+                insuranceCompany: "",
+                insuranceId: "",
+                insuranceCompanyContact: "",
+                insuranceCompanyEmail: "",
+                insuranceDocLink: "",
+                insuranceDocId: "",
+                status: "ACTIVE",
+                stages: "APPLIED"
+              }
           }));
 
           // Set document preview link
@@ -185,9 +185,9 @@ const PatientRegistrationForm = () => {
   };
 
   const validateBasicInfo = () => {
-  const newErrors = validatePatientRegistration(formData);
-  setErrors(newErrors);
-  return Object.keys(newErrors).length === 0;
+    const newErrors = validatePatientRegistration(formData);
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleDocumentUpload = async (e) => {
@@ -197,11 +197,11 @@ const PatientRegistrationForm = () => {
     // Only allow specific file types: jpg, jpeg, png, pdf
     const allowedTypes = [
       "application/pdf",
-      "image/jpeg", 
+      "image/jpeg",
       "image/jpg",
       "image/png"
     ];
-    
+
     if (!allowedTypes.includes(file.type)) {
       setErrors((prev) => ({
         ...prev,
@@ -308,7 +308,7 @@ const PatientRegistrationForm = () => {
         }
 
         // For new patient registration, create new record
-  const patientToSave = getPatientToSave({ formData, identityDocLink, identityDocId, showInsurance });
+        const patientToSave = getPatientToSave({ formData, identityDocLink, identityDocId, showInsurance });
 
         const response = await createPatient(patientToSave);
         console.log("API response:", response);
@@ -337,7 +337,7 @@ const PatientRegistrationForm = () => {
           documentType: "",
           documentTypeOther: "",
           documentNumber: "",
-          documentFile: null, 
+          documentFile: null,
           insurance: {
             insuranceCompany: "",
             insuranceId: "",
@@ -510,7 +510,7 @@ const PatientRegistrationForm = () => {
   };
 
   return (
-    <div className="max-w-9xl bg-white rounded-lg shadow border border-gray-200 mx-auto" style={{ minHeight: "auto"}}>
+    <div className="max-w-9xl bg-white rounded-lg shadow border border-gray-200 mx-auto" style={{ minHeight: "auto" }}>
       <PatientNavBar currentPage="registration" />
       {/* Success/Error Toast Message */}
       {showToast && submitMessage && (
@@ -560,11 +560,10 @@ const PatientRegistrationForm = () => {
                   <button
                     type="button"
                     onClick={handleEditMode}
-                    className={`px-2 py-1 rounded text-xs transition-colors cursor-pointer ${
-                      isEditMode 
-                        ? 'bg-green-600 text-white hover:bg-green-700' 
+                    className={`px-2 py-1 rounded text-xs transition-colors cursor-pointer ${isEditMode
+                        ? 'bg-green-600 text-white hover:bg-green-700'
                         : 'bg-blue-600 text-white hover:bg-blue-700'
-                    }`}
+                      }`}
                   >
                     Edit
                   </button>
@@ -898,7 +897,7 @@ const PatientRegistrationForm = () => {
             />
           </div>
         )}
-        
+
         <div className="bg-blue-200  px-6 py-6 pt-6 pb-4 flex flex-col sm:flex-row justify-end gap-4  rounded-b-xl">
           <button
             className="w-full sm:w-auto px-12 py-2 bg-blue-700 text-white rounded-lg font-semibold cursor-pointer  border-blue-600 shadow transition"
